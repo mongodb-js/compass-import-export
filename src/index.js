@@ -1,3 +1,6 @@
+import 'any-observable/register/rxjs';
+import './rx-operators';
+
 import ImportExportPlugin from './plugin';
 import ImportExportActions from 'actions';
 import ImportExportStore from 'stores';

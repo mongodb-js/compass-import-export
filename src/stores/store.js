@@ -1,11 +1,19 @@
-import { createStore } from 'redux';
-import reducer from 'modules';
+import { createStore, applyMiddleware } from 'redux';
+import { createEpicMiddleware } from 'redux-observable';
+
+import { rootReducer, rootEpic } from 'modules';
+
 import { nsChanged } from 'modules/ns';
+import { dataServiceConnected } from 'modules/data-service';
 
 /**
  * The store has a combined reducer.
  */
-const store = createStore(reducer);
+const store = createStore(
+  rootReducer,
+  applyMiddleware(
+    createEpicMiddleware(rootEpic)
+  ));
 
 /**
  * Called when the app registry is activated.
@@ -14,6 +22,7 @@ const store = createStore(reducer);
  */
 store.onActivated = (appRegistry) => {
   appRegistry.on('collection-changed', nsChanged);
+  appRegistry.on('data-service-connected', (err, ds) => store.dispatch(dataServiceConnected(err, ds)));
 };
 
 export default store;
