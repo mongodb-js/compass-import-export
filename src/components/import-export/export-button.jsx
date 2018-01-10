@@ -2,11 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const propTypes = {
-  exportHandler: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired
 };
 
-const ExportButton = ({ exportHandler }) => (
-  <button onClick={exportHandler}>Export</button>
+const ExportButton = (props) => (
+  <button { ...props }>Export</button>
 );
 
 ExportButton.propTypes = propTypes;

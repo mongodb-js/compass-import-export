@@ -2,10 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const propTypes = {
-  importHandler: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired
 };
 
-const ImportButton = ({ importHandler }) => (<button onClick={ importHandler }>Import</button>);
+const ImportButton = (props) => (<button { ...props }>Import</button>);
 
 ImportButton.propTypes = propTypes;
 

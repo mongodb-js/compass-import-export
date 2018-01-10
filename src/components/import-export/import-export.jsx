@@ -6,12 +6,13 @@ import fs from 'fs';
 import streamToObservable from 'stream-to-observable';
 
 import { nsChanged } from 'modules/ns';
+import { exportStarted } from 'modules/export';
 
 import ImportButton from './import-button';
 import ExportButton from './export-button';
 import ProgressBar from './progress-bar';
+import CancelButton from './cancel-button';
 
-import exportCollection from 'utils/export';
 import importCollection from 'utils/import';
 import SplitLines from 'utils/split-lines-transform';
 
@@ -21,7 +22,9 @@ class ImportExport extends Component {
   static displayName = 'ImportExportComponent';
 
   static propTypes = {
-    dataService: PropTypes.object.isRequired
+    dataService: PropTypes.object.isRequired,
+    exportStarted: PropTypes.func.isRequired,
+    exportProgress: PropTypes.number
   };
 
   state = {
@@ -35,24 +38,8 @@ class ImportExport extends Component {
   }
 
   handleExport = () => {
-    const { client: { database } } = this.props.dataService;
-    const fws = fs.createWriteStream('export-file.json');
-
-    database.collection('users').stats()
-      .then(
-        ({ size: collectionSize }) => {
-          exportCollection(database, 'users')
-            .subscribe(
-              data => {
-                this.setState({ progress: (fws.bytesWritten * 100) / collectionSize });
-                fws.write(data);
-              },
-              err => console.error(err),
-              () => this.setState({ progress: 100 })
-            );
-        }
-      );
-  }
+    this.props.exportStarted('users');
+  };
 
   handleImport = () => {
     const { client: { database } } = this.props.dataService;
@@ -70,6 +57,8 @@ class ImportExport extends Component {
       );
   }
 
+  handleCancel = () => {}
+
   /**
    * Render ImportExport component.
    *
@@ -79,9 +68,18 @@ class ImportExport extends Component {
     return (
       <div className={classnames(styles['import-export'])}>
         <p>Compass Import/Export Plugin</p>
-        <ImportButton importHandler={ this.handleImport } />
-        <ExportButton exportHandler={ this.handleExport } />
-        { this.state.progress > 0 ? <ProgressBar progress={ this.state.progress } /> : null }
+        <ImportButton onClick={ this.handleImport } />
+        <ExportButton onClick={ this.handleExport } />
+        {
+          this.props.exportProgress > 0 || this.state.progress > 0
+            ? (
+              <div>
+                <ProgressBar progress={ this.props.exportProgress } />
+                <CancelButton onClick={ this.handleCancel } />
+              </div>
+            )
+            : null
+        }
       </div>
     );
   }
@@ -96,7 +94,8 @@ class ImportExport extends Component {
  */
 const mapStateToProps = (state) => ({
   ns: state.ns,
-  dataService: state.dataService
+  dataService: state.dataService,
+  exportProgress: state.exportData.progress
 });
 
 /**
@@ -104,5 +103,5 @@ const mapStateToProps = (state) => ({
  */
 export default connect(
   mapStateToProps,
-  { nsChanged }
+  { nsChanged, exportStarted }
 )(ImportExport);

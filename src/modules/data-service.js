@@ -1,17 +1,19 @@
 /**
- * Action for the ns changing.
+ * Action for the dataService connection.
  */
 const DATA_SERVICE_CONNECTED = 'import-export/ns/DATA_SERVICE_CONNECTED';
 
 /**
- * The initial ns state.
+ * The initial dataService state.
  */
 const INITIAL_STATE = {};
 
 /**
  * Create a ns changed action.
  *
- * @param {String} ns - The namespace.
+ * @param {Object} error - dataService connection error
+ *
+ * @param {DataService} dataService - data service instance.
  *
  * @returns {Object} The action.
  */
@@ -25,12 +27,12 @@ const dataServiceConnected = (error, dataService) => {
 
 const dataServiceEpic = $action =>
   $action.ofType(DATA_SERVICE_CONNECTED)
-  .map(
-    action => {
-      console.log(action);
-      return { type: '' };
-    }
-  );
+    .map(
+      action => {
+        console.log(action);
+        return { type: '' };
+      }
+    );
 
 
 /**
@@ -43,7 +45,10 @@ const dataServiceEpic = $action =>
  */
 const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === DATA_SERVICE_CONNECTED) {
-    return Object.assign(action.dataService, state);
+    return {
+      ...action.dataService,
+      ...state
+    };
   }
   return state;
 };
