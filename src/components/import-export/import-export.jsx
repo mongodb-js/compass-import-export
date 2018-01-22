@@ -11,6 +11,7 @@ import ImportButton from './import-button';
 import ExportButton from './export-button';
 import ProgressBar from './progress-bar';
 import CancelButton from './cancel-button';
+import ExportModal from './export-modal';
 
 import styles from './import-export.less';
 
@@ -82,6 +83,12 @@ class ImportExport extends Component {
         <p>Compass Import/Export Plugin</p>
         <ImportButton onClick={ this.handleImport } />
         <ExportButton onClick={ this.handleExport } />
+        <ExportModal
+          count={445}
+          query={{}}
+          cancelExport={this.props.exportCancelled}
+          exportCollection={this.props.exportStarted}
+          isOpen />
         <div>
           <ProgressBar
             progress={ this.state.progress }
