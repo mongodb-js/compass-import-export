@@ -23,7 +23,6 @@ const exportProgress = progress => ({
 
 const exportCompleted = file => ({
   type: EXPORT_COMPLETED,
-  progress: 100,
   file
 });
 
@@ -52,17 +51,16 @@ const exportStartedEpic = (action$, store) =>
       const fws = fs.createWriteStream('export-file.json');
       return exportCollection(database, collectionName)
         .takeUntil(action$.ofType(EXPORT_CANCELED))
-        .catch(exportFailed)
         .map(
           data => {
             fws.write(data);
             return exportProgress((fws.bytesWritten * 100) / stats.size);
           })
-        .catch(exportFailed)
-        .concat(
-          Observable.of(exportCompleted('export-file.json'))
-        );
-    });
+        .catch(exportFailed);
+    })
+    .concat(
+      Observable.of(exportCompleted('export-file.json'))
+    );
 
 const reducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
@@ -79,11 +77,13 @@ const reducer = (state = INITIAL_STATE, action) => {
     case EXPORT_COMPLETED:
       return {
         ...state,
+        progress: 100,
         file: action.file
       };
     case EXPORT_CANCELED:
       return {
         ...state,
+        progress: 0,
         reason: action.reason
       };
     case EXPORT_FAILED:

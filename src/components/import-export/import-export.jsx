@@ -2,21 +2,22 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
-import fs from 'fs';
-import streamToObservable from 'stream-to-observable';
 
 import { nsChanged } from 'modules/ns';
-import { exportStarted } from 'modules/export';
+import { exportStarted, exportCanceled } from 'modules/export';
+import { importStarted, importCanceled } from 'modules/import';
 
 import ImportButton from './import-button';
 import ExportButton from './export-button';
 import ProgressBar from './progress-bar';
 import CancelButton from './cancel-button';
 
-import importCollection from 'utils/import';
-import SplitLines from 'utils/split-lines-transform';
-
 import styles from './import-export.less';
+
+const PROCESS = {
+  IMPORT: 'IMPORT',
+  EXPORT: 'EXPORT'
+};
 
 class ImportExport extends Component {
   static displayName = 'ImportExportComponent';
@@ -24,40 +25,51 @@ class ImportExport extends Component {
   static propTypes = {
     dataService: PropTypes.object.isRequired,
     exportStarted: PropTypes.func.isRequired,
-    exportProgress: PropTypes.number
+    importStarted: PropTypes.func.isRequired,
+    exportCanceled: PropTypes.func.isRequired,
+    importCanceled: PropTypes.func.isRequired,
+    exportProgress: PropTypes.number,
+    importProgress: PropTypes.number
   };
 
   state = {
-    progress: 0
+    currentProcess: '',
+    progress: 0,
+    isLastProcessCanceled: false
   };
 
-  componentWillUpdate() {
-    if (this.state.progress === 100) {
-      setTimeout(() => this.setState({ progress: 0 }), 2000);
+  componentWillReceiveProps(nextProps) {
+    const { exportProgress, importProgress } = nextProps;
+    this.setState({ progress: exportProgress || importProgress });
+
+    if ( exportProgress === 100 || importProgress === 100) {
+      this.setState({ currentProcess: '' });
     }
   }
 
   handleExport = () => {
     this.props.exportStarted('users');
+    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false });
   };
 
   handleImport = () => {
-    const { client: { database } } = this.props.dataService;
-    const stats = fs.statSync('export-file.json');
-    const fileSizeInBytes = stats.size;
-    const frs = fs.createReadStream('export-file.json', 'utf8');
-    const splitLines = new SplitLines();
+    this.props.importStarted('users5');
+    this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
+  };
 
-    frs.pipe(splitLines);
-    importCollection(database, 'users_3', streamToObservable(splitLines))
-      .subscribe(
-        () => this.setState({ progress: (frs.bytesRead * 100) / fileSizeInBytes }),
-        err => console.log(err),
-        () => this.setState({ progress: 100 })
-      );
+  handleCancel = () => {
+    switch (this.state.currentProcess) {
+      case PROCESS.EXPORT:
+        this.props.exportCanceled();
+        break;
+      case PROCESS.IMPORT:
+        this.props.importCanceled();
+        break;
+      default:
+        this.setState({ currentProcess: '' });
+    }
+    this.setState({ currentProcess: '', isLastProcessCanceled: true });
   }
-
-  handleCancel = () => {}
 
   /**
    * Render ImportExport component.
@@ -70,16 +82,14 @@ class ImportExport extends Component {
         <p>Compass Import/Export Plugin</p>
         <ImportButton onClick={ this.handleImport } />
         <ExportButton onClick={ this.handleExport } />
-        {
-          this.props.exportProgress > 0 || this.state.progress > 0
-            ? (
-              <div>
-                <ProgressBar progress={ this.props.exportProgress } />
-                <CancelButton onClick={ this.handleCancel } />
-              </div>
-            )
-            : null
-        }
+        <div>
+          <ProgressBar
+            progress={ this.state.progress }
+            complete={ this.state.progress === 100 }
+            canceled={ this.state.isLastProcessCanceled }
+          />
+          <CancelButton onClick={ this.handleCancel } />
+        </div>
       </div>
     );
   }
@@ -95,7 +105,8 @@ class ImportExport extends Component {
 const mapStateToProps = (state) => ({
   ns: state.ns,
   dataService: state.dataService,
-  exportProgress: state.exportData.progress
+  exportProgress: state.exportData.progress,
+  importProgress: state.importData.progress
 });
 
 /**
@@ -103,5 +114,5 @@ const mapStateToProps = (state) => ({
  */
 export default connect(
   mapStateToProps,
-  { nsChanged, exportStarted }
+  { nsChanged, exportStarted, importStarted, exportCanceled, importCanceled }
 )(ImportExport);

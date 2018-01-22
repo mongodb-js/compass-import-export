@@ -4,11 +4,12 @@ import { combineEpics } from 'redux-observable';
 import ns from './ns';
 import dataService, { dataServiceEpic } from './data-service';
 import exportData, { exportStartedEpic } from './export';
+import importData, { importStartedEpic } from './import';
 
 export const rootReducer = combineReducers({
-  ns, dataService, exportData
+  ns, dataService, exportData, importData
 });
 
 export const rootEpic = combineEpics(
-  dataServiceEpic, exportStartedEpic
+  dataServiceEpic, exportStartedEpic, importStartedEpic
 );
