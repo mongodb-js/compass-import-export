@@ -10,7 +10,7 @@ const propTypes = {
 const ProgressBar = ({ progress, complete, canceled }) => (
   <span>
     { (complete || canceled) ? <span>{ complete ? 'Complete' : 'Canceled' }</span> : null }
-    { !(complete || canceled) ? progress.toFixed(2) + '%' : null }
+    { !(complete || canceled) ? progress + '%' : null }
   </span>
 );
 
