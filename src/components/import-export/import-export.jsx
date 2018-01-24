@@ -3,15 +3,15 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
 
+import { TextButton } from 'hadron-react-buttons';
+
 import { nsChanged } from 'modules/ns';
 import { exportStarted, exportCanceled } from 'modules/export';
 import { importStarted, importCanceled } from 'modules/import';
 
-import ImportButton from './import-button';
-import ExportButton from './export-button';
+import ExportModal from './export-modal';
 import ProgressBar from './progress-bar';
 import CancelButton from './cancel-button';
-import ExportModal from './export-modal';
 
 import styles from './import-export.less';
 
@@ -36,7 +36,8 @@ class ImportExport extends Component {
   state = {
     currentProcess: '',
     progress: 0,
-    isLastProcessCanceled: false
+    isLastProcessCanceled: false,
+    isModalOpen: false
   };
 
   componentWillReceiveProps(nextProps) {
@@ -49,8 +50,8 @@ class ImportExport extends Component {
   }
 
   handleExport = () => {
-    this.props.exportStarted('users');
-    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false });
+    // this.props.exportStarted('users');
+    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: true });
   };
 
   handleImport = () => {
@@ -72,6 +73,10 @@ class ImportExport extends Component {
     this.setState({ currentProcess: '', isLastProcessCanceled: true });
   }
 
+  handleModalClose = () => {
+    this.setState({ isModalOpen: false });
+  }
+
   /**
    * Render ImportExport component.
    *
@@ -81,20 +86,16 @@ class ImportExport extends Component {
     return (
       <div className={classnames(styles['import-export'])}>
         <p>Compass Import/Export Plugin</p>
-        <ImportButton onClick={ this.handleImport } />
-        <ExportButton onClick={ this.handleExport } />
-        <ExportModal
-          count={445}
-          query={{
-            filter: {
-              name: "Joe",
-              age: 25,
-              loc: "New York"
-            }
-          }}
-          cancelExport={this.props.exportCancelled}
-          exportCollection={this.props.exportStarted}
-          isOpen />
+        <TextButton
+          className="btn btn-default btn-sm"
+          clickHandler={ this.handleImport }
+          text="Import"
+        />
+        <TextButton
+          className="btn btn-default btn-sm"
+          clickHandler={ this.handleExport }
+          text="Export"
+        />
         <div>
           <ProgressBar
             progress={ this.state.progress }
@@ -103,6 +104,7 @@ class ImportExport extends Component {
           />
           <CancelButton onClick={ this.handleCancel } />
         </div>
+        <ExportModal open={ this.state.isModalOpen } handleClose={ this.handleModalClose } />
       </div>
     );
   }

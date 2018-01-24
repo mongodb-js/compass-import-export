@@ -31,10 +31,12 @@ const exportCanceled = reason => ({
   reason
 });
 
-const exportFailed = error => ({
-  type: EXPORT_FAILED,
-  error
-});
+const exportFailed = error => {
+  return {
+    type: EXPORT_FAILED,
+    error
+  };
+};
 
 const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_STARTED)
@@ -45,11 +47,9 @@ const exportStartedEpic = (action$, store) =>
       return Observable.fromPromise(database.collection(collectionName).stats());
     })
     .flatMap((stats) => {
-      const { client: { database } } = store.getState().dataService;
-      const collectionName = stats.ns.split('.')[1];
       // TODO: add check for disk space availability, emit failure if not enough empty space
       const fws = fs.createWriteStream('export-file.json');
-      return exportCollection(database, collectionName)
+      return exportCollection(store.getState().dataService, stats.ns)
         .takeUntil(action$.ofType(EXPORT_CANCELED))
         .map(
           data => {
@@ -72,12 +72,12 @@ const reducer = (state = INITIAL_STATE, action) => {
     case EXPORT_PROGRESS:
       return {
         ...state,
-        progress: action.progress
+        progress: action.progress.toFixed(2)
       };
     case EXPORT_COMPLETED:
       return {
         ...state,
-        progress: 100,
+        progress: '100',
         file: action.file
       };
     case EXPORT_CANCELED:

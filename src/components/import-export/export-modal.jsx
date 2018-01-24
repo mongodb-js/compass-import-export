@@ -1,45 +1,60 @@
-import React, { PureComponent } from 'react';
-import { Modal } from 'react-bootstrap';
-import { TextButton } from 'hadron-react-buttons';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
-import QueryViewer from './query-viewer';
+import { Modal, Button, FormGroup, InputGroup, FormControl, ControlLabel } from 'react-bootstrap';
+import { TextButton } from 'hadron-react-buttons';
 
 import styles from './export-modal.less';
 
-/**
- * Export modal dialog.
- */
-class ExportModal extends PureComponent {
+const { dialog } = require('electron').remote;
 
-  static displayName = 'ExportModalComponent';
+const FILE_TYPES = {
+  CSV: 'CSV',
+  JSON: 'JSON'
+};
+
+class ExportModal extends Component {
 
   static propTypes = {
-    count: PropTypes.number.isRequired,
-    cancelExport: PropTypes.func.isRequired,
+    open: PropTypes.bool,
     exportCollection: PropTypes.func.isRequired,
-    isOpen: PropTypes.bool.isRequired,
-    query: PropTypes.object.isRequired
+    handleClose: PropTypes.func.isRequired
   };
 
-  /**
-   * Render the modal dialog.
-   *
-   * @returns {React.Component} The react component.
-   */
-  render() {
-    return (
-      <Modal show={this.props.isOpen} backdrop="static">
-        <Modal.Header>
-          <Modal.Title>Export Collection</Modal.Title>
-        </Modal.Header>
+  state = {
+    exportFileType: FILE_TYPES.JSON,
+    fileName: ''
+  };
 
+  handleFileTypeSelect = type => () => this.setState({ exportFileType: type });
+
+  handleDialogOpen = () => {
+    const fileType = FILE_TYPES[this.state.exportFileType];
+    const file = dialog.showOpenDialog({
+      title: `Select ${fileType} target file`,
+      filters: [{
+        name: `${fileType} file`,
+        extensions: [fileType.toLowerCase()]
+      }],
+      properties: ['openFile', 'createDirectory', 'promptToCreate']
+    });
+
+    this.setState({ fileName: file[0] });
+  }
+
+  render() {
+    const { open, count, query, handleClose, exportCollection } = this.props;
+    return (
+      <Modal show={open} onHide={handleClose} >
+        <Modal.Header closeButton>
+          Export Collection
+        </Modal.Header>
         <Modal.Body>
           <div className={classnames(styles['export-modal-info'])}>
-            Exporting {this.props.count} documents returned by the following query:
+            Exporting {count} documents returned by the following query:
           </div>
           <div className={classnames(styles['export-modal-query'])}>
-            <QueryViewer query={this.props.query} />
+            <QueryViewer query={query} />
           </div>
           <div className={classnames(styles['export-modal-output'])}>
             Select Output File Type
@@ -51,18 +66,30 @@ class ExportModal extends PureComponent {
           </div>
           <div className={classnames(styles['export-modal-file-select'])}>
           </div>
+          <form>
+            <FormGroup controlId="export-file">
+              <ControlLabel>Select Output File Type</ControlLabel>
+              <InputGroup>
+                <FormControl
+                  type="text"
+                />
+                <InputGroup.Button>
+                  <Button onClick={this.handleDialogOpen}>Browse</Button>
+                </InputGroup.Button>
+              </InputGroup>
+            </FormGroup>
+          </form>
         </Modal.Body>
-
         <Modal.Footer>
           <TextButton
             className="btn btn-default btn-sm"
             text="Cancel"
-            clickHandler={this.props.cancelExport} />
+            clickHandler={handleClose} />
           <TextButton
             className="btn btn-primary btn-sm"
             dataTestId="insert-document-button"
             text="Export"
-            clickHandler={this.props.exportCollection} />
+          clickHandler={exportCollection} />
         </Modal.Footer>
       </Modal>
     );
