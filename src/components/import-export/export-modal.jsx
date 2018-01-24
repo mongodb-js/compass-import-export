@@ -4,6 +4,8 @@ import classnames from 'classnames';
 import { Modal, Button, FormGroup, InputGroup, FormControl, ControlLabel } from 'react-bootstrap';
 import { TextButton } from 'hadron-react-buttons';
 
+import QueryViewer from 'components/import-export/query-viewer';
+
 import styles from './export-modal.less';
 
 const { dialog } = require('electron').remote;
@@ -18,6 +20,7 @@ class ExportModal extends Component {
   static propTypes = {
     open: PropTypes.bool,
     count: PropTypes.number,
+    query: PropTypes.object,
     exportCollection: PropTypes.func.isRequired,
     handleClose: PropTypes.func.isRequired
   };
@@ -44,7 +47,7 @@ class ExportModal extends Component {
   }
 
   render() {
-    const { open, count, handleClose, exportCollection } = this.props;
+    const { open, count, query, handleClose, exportCollection } = this.props;
     return (
       <Modal show={open} onHide={handleClose} >
         <Modal.Header closeButton>
@@ -55,7 +58,7 @@ class ExportModal extends Component {
             Exporting {count} documents returned by the following query:
           </div>
           <div className={classnames(styles['export-modal-query'])}>
-            {/* <QueryViewer query={query} /> */}
+            <QueryViewer query={query} />
           </div>
           <div className={classnames(styles['export-modal-output'])}>
             Select Output File Type
