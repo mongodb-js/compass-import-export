@@ -72,7 +72,7 @@ appRegistry.emit('collection-changed', 'import-export.test');
 const query = {
   filter: { name: 'testing' },
   project: { name: 1 },
-  sort: { name: -1 },
+  sort: [[ name, -1 ]],
   skip: 0,
   limit: 20,
   ns: 'import-export.test'
