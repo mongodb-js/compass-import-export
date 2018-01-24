@@ -20,7 +20,8 @@ const OPTIONS = {
   showGutter: true,
   readOnly: true,
   highlightActiveLine: false,
-  highlightGutterLine: false
+  highlightGutterLine: false,
+  useWorker: false
 };
 
 /**
