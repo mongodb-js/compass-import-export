@@ -3,6 +3,7 @@ import { Modal } from 'react-bootstrap';
 import { TextButton } from 'hadron-react-buttons';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import QueryViewer from './query-viewer';
 
 import styles from './export-modal.less';
 
@@ -38,6 +39,7 @@ class ExportModal extends PureComponent {
             Exporting {this.props.count} documents returned by the following query:
           </div>
           <div className={classnames(styles['export-modal-query'])}>
+            <QueryViewer query={this.props.query} />
           </div>
           <div className={classnames(styles['export-modal-output'])}>
             Select Output File Type

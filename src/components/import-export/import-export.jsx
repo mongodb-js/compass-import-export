@@ -85,7 +85,13 @@ class ImportExport extends Component {
         <ExportButton onClick={ this.handleExport } />
         <ExportModal
           count={445}
-          query={{}}
+          query={{
+            filter: {
+              name: "Joe",
+              age: 25,
+              loc: "New York"
+            }
+          }}
           cancelExport={this.props.exportCancelled}
           exportCollection={this.props.exportStarted}
           isOpen />
