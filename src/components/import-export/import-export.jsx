@@ -104,7 +104,18 @@ class ImportExport extends Component {
           />
           <CancelButton onClick={ this.handleCancel } />
         </div>
-        <ExportModal open={ this.state.isModalOpen } handleClose={ this.handleModalClose } />
+        <ExportModal
+          open={ this.state.isModalOpen }
+          handleClose={ this.handleModalClose }
+          query={{
+            filter: {
+              name: 'Joe',
+              age: 25,
+              loc: 'New York'
+            }
+          }}
+          count={225}
+        />
       </div>
     );
   }

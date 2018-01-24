@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import { Modal, Button, FormGroup, InputGroup, FormControl, ControlLabel } from 'react-bootstrap';
@@ -15,7 +15,7 @@ const FILE_TYPES = {
   JSON: 'JSON'
 };
 
-class ExportModal extends Component {
+class ExportModal extends PureComponent {
 
   static propTypes = {
     open: PropTypes.bool,
@@ -63,16 +63,9 @@ class ExportModal extends Component {
           <div className={classnames(styles['export-modal-output'])}>
             Select Output File Type
           </div>
-          <div className={classnames(styles['export-modal-output-select'])}>
-          </div>
-          <div className={classnames(styles['export-modal-file'])}>
-            Select File
-          </div>
-          <div className={classnames(styles['export-modal-file-select'])}>
-          </div>
           <form>
             <FormGroup controlId="export-file">
-              <ControlLabel>Select Output File Type</ControlLabel>
+              <ControlLabel>Select File</ControlLabel>
               <InputGroup>
                 <FormControl
                   type="text"
