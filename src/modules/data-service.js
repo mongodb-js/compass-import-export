@@ -25,16 +25,6 @@ const dataServiceConnected = (error, dataService) => {
   };
 };
 
-const dataServiceEpic = $action =>
-  $action.ofType(DATA_SERVICE_CONNECTED)
-    .map(
-      action => {
-        console.log(action);
-        return { type: '' };
-      }
-    );
-
-
 /**
  * Handle ns changes on the state.
  *
@@ -45,10 +35,7 @@ const dataServiceEpic = $action =>
  */
 const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === DATA_SERVICE_CONNECTED) {
-    return {
-      ...action.dataService,
-      ...state
-    };
+    return action.dataService;
   }
   return state;
 };
@@ -56,6 +43,5 @@ const reducer = (state = INITIAL_STATE, action) => {
 export default reducer;
 export {
   dataServiceConnected,
-  dataServiceEpic,
   DATA_SERVICE_CONNECTED
 };

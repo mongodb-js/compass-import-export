@@ -9,6 +9,9 @@ import { nsChanged } from 'modules/ns';
 import { exportStarted, exportCanceled } from 'modules/export';
 import { importStarted, importCanceled } from 'modules/import';
 
+import fileOpenDialog from 'utils/file-open-dialog';
+import FILE_TYPES from 'constants/file-types';
+
 import ExportModal from './export-modal';
 import ProgressBar from './progress-bar';
 import CancelButton from './cancel-button';
@@ -49,14 +52,21 @@ class ImportExport extends Component {
     }
   }
 
-  handleExport = () => {
-    // this.props.exportStarted('users');
-    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: true });
+  handleExportModalOpen = () => {
+    this.setState({ isModalOpen: true });
   };
 
+  handleExport = fileName => {
+    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false });
+    this.props.exportStarted('users', fileName);
+  }
+
   handleImport = () => {
-    this.props.importStarted('users5');
-    this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
+    const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
+    if (fileName) {
+      this.props.importStarted('users', fileName[0]);
+      this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
+    }
   };
 
   handleCancel = () => {
@@ -93,7 +103,7 @@ class ImportExport extends Component {
         />
         <TextButton
           className="btn btn-default btn-sm"
-          clickHandler={ this.handleExport }
+          clickHandler={ this.handleExportModalOpen }
           text="Export"
         />
         <div>
@@ -107,6 +117,7 @@ class ImportExport extends Component {
         <ExportModal
           open={ this.state.isModalOpen }
           handleClose={ this.handleModalClose }
+          exportCollection={ this.handleExport }
           query={{
             filter: {
               name: 'Joe',

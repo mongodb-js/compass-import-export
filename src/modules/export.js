@@ -11,9 +11,10 @@ const EXPORT_FAILED = 'import-export/export/EXPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-const exportStarted = collectionName => ({
+const exportStarted = (collectionName, fileName) => ({
   type: EXPORT_STARTED,
-  collectionName
+  collectionName,
+  fileName
 });
 
 const exportProgress = progress => ({
@@ -31,32 +32,33 @@ const exportCanceled = reason => ({
   reason
 });
 
-const exportFailed = error => {
-  return {
-    type: EXPORT_FAILED,
-    error
-  };
-};
+const exportFailed = error => ({
+  type: EXPORT_FAILED,
+  error
+});
 
 const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_STARTED)
     .flatMap(action => {
       const { client: { database } } = store.getState().dataService;
-      const { collectionName } = action;
+      const { collectionName, fileName } = action;
 
-      return Observable.fromPromise(database.collection(collectionName).stats());
+      return Observable.of([{fileName}, database.collection(collectionName).stats()]);
     })
-    .flatMap((stats) => {
-      // TODO: add check for disk space availability, emit failure if not enough empty space
-      const fws = fs.createWriteStream('export-file.json');
-      return exportCollection(store.getState().dataService, stats.ns)
-        .takeUntil(action$.ofType(EXPORT_CANCELED))
-        .map(
-          data => {
-            fws.write(data);
-            return exportProgress((fws.bytesWritten * 100) / stats.size);
-          })
-        .catch(exportFailed);
+    .flatMap(([{ fileName }, stats]) => {
+      return stats.then(({ ns, size }) => {
+        // TODO: add check for disk space availability, emit failure if not enough empty space
+        const fws = fs.createWriteStream(fileName);
+        console.log(store.getState());
+        return exportCollection(store.getState().dataService, ns)
+          .takeUntil(action$.ofType(EXPORT_CANCELED))
+          .map(
+            data => {
+              fws.write(data);
+              return exportProgress((fws.bytesWritten * 100) / size);
+            })
+          .catch(exportFailed);
+      });
     })
     .concat(
       Observable.of(exportCompleted('export-file.json'))

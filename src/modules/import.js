@@ -13,9 +13,10 @@ const IMPORT_FAILED = 'import-export/import/IMPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-const importStarted = collectionName => ({
+const importStarted = (collectionName, fileName) => ({
   type: IMPORT_STARTED,
-  collectionName
+  collectionName,
+  fileName
 });
 
 const importProgress = progress => ({
@@ -41,10 +42,13 @@ const importStartedEpic = (action$, store) =>
   action$.ofType(IMPORT_STARTED)
     .flatMap(action => {
       const { client: { database } } = store.getState().dataService;
-      const { collectionName } = action;
-      const stats = fs.statSync('export-file.json');
+      const { collectionName, fileName } = action;
+      if (!fs.existsSync(fileName)) {
+        return importFailed('File not found');
+      }
+      const stats = fs.statSync(fileName);
       const fileSizeInBytes = stats.size;
-      const frs = fs.createReadStream('export-file.json', 'utf8');
+      const frs = fs.createReadStream(fileName, 'utf8');
       const splitLines = new SplitLines();
 
       frs.pipe(splitLines);
