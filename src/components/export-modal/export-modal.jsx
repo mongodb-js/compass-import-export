@@ -6,7 +6,7 @@ import {
 } from 'react-bootstrap';
 import { TextButton } from 'hadron-react-buttons';
 
-import QueryViewer from 'components/import-export/query-viewer';
+import QueryViewer from 'components/query-viewer';
 
 import fileOpenDialog from 'utils/file-open-dialog';
 import FILE_TYPES from 'constants/file-types';

@@ -12,9 +12,9 @@ import { importStarted, importCanceled } from 'modules/import';
 import fileOpenDialog from 'utils/file-open-dialog';
 import FILE_TYPES from 'constants/file-types';
 
-import ExportModal from './export-modal';
-import ProgressBar from './progress-bar';
-import CancelButton from './cancel-button';
+import ExportModal from 'components/export-modal';
+import ProgressBar from 'components/progress-bar';
+import CancelButton from 'components/cancel-button';
 
 import styles from './import-export.less';
 
