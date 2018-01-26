@@ -15,7 +15,8 @@ const store = createStore(
   rootReducer,
   applyMiddleware(
     epicMiddleware
-  ));
+  )
+);
 
 if (module.hot) {
   // Enable Webpack hot module replacement for reducers
@@ -34,6 +35,7 @@ if (module.hot) {
 store.onActivated = (appRegistry) => {
   appRegistry.on('collection-changed', nsChanged);
   appRegistry.on('data-service-connected', (err, ds) => store.dispatch(dataServiceConnected(err, ds)));
+  // appRegistry.on('open-export', openExport);
 };
 
 export default store;
