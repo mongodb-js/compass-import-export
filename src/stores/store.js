@@ -35,7 +35,11 @@ if (module.hot) {
 store.onActivated = (appRegistry) => {
   appRegistry.on('collection-changed', nsChanged);
   appRegistry.on('data-service-connected', (err, ds) => store.dispatch(dataServiceConnected(err, ds)));
-  // appRegistry.on('open-export', openExport);
+  // appRegistry.on('open-export', (ns, query) => {});
+  // appRegistry.on('open-import', (ns) => {});
+  appRegistry.getStore('CollectionStats.Store').listen((stats) => {
+    console.log(stats);
+  });
 };
 
 export default store;
