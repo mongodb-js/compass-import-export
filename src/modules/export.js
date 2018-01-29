@@ -11,9 +11,8 @@ const EXPORT_FAILED = 'import-export/export/EXPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-const exportStarted = (collectionName, fileName) => ({
+const exportStarted = fileName => ({
   type: EXPORT_STARTED,
-  collectionName,
   fileName
 });
 
@@ -40,25 +39,17 @@ const exportFailed = error => ({
 const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_STARTED)
     .flatMap(action => {
-      const { client: { database } } = store.getState().dataService;
-      const { collectionName, fileName } = action;
-
-      return Observable.of([{fileName}, database.collection(collectionName).stats()]);
-    })
-    .flatMap(([{ fileName }, stats]) => {
-      return stats.then(({ ns, size }) => {
-        // TODO: add check for disk space availability, emit failure if not enough empty space
-        const fws = fs.createWriteStream(fileName);
-        console.log(store.getState());
-        return exportCollection(store.getState().dataService, ns)
-          .takeUntil(action$.ofType(EXPORT_CANCELED))
-          .map(
-            data => {
-              fws.write(data);
-              return exportProgress((fws.bytesWritten * 100) / size);
-            })
-          .catch(exportFailed);
-      });
+      const { fileName } = action;
+      const { stats, ns } = store.getState();
+      const fws = fs.createWriteStream(fileName);
+      return exportCollection(store.getState().dataService, ns)
+        .map(
+          data => {
+            fws.write(data);
+            return exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize);
+          })
+        .takeUntil(action$.ofType(EXPORT_CANCELED))
+        .catch(exportFailed);
     })
     .concat(
       Observable.of(exportCompleted('export-file.json'))
@@ -69,7 +60,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case EXPORT_STARTED:
       return {
         ...state,
-        collectionName: action.collectionName
+        fileName: action.fileName
       };
     case EXPORT_PROGRESS:
       return {
@@ -97,6 +88,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       return state;
   }
 };
+
 
 export default reducer;
 export {

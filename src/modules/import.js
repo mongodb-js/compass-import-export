@@ -13,9 +13,8 @@ const IMPORT_FAILED = 'import-export/import/IMPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-const importStarted = (collectionName, fileName) => ({
+const importStarted = fileName => ({
   type: IMPORT_STARTED,
-  collectionName,
   fileName
 });
 
@@ -42,7 +41,8 @@ const importStartedEpic = (action$, store) =>
   action$.ofType(IMPORT_STARTED)
     .flatMap(action => {
       const { client: { database } } = store.getState().dataService;
-      const { collectionName, fileName } = action;
+      const { fileName } = action;
+      const { ns } = store.getState();
       if (!fs.existsSync(fileName)) {
         return importFailed('File not found');
       }
@@ -52,7 +52,7 @@ const importStartedEpic = (action$, store) =>
       const splitLines = new SplitLines();
 
       frs.pipe(splitLines);
-      return importCollection(database, collectionName, streamToObservable(splitLines))
+      return importCollection(database, ns, streamToObservable(splitLines))
         .takeUntil(action$.ofType(IMPORT_CANCELED))
         .map(() => importProgress((frs.bytesRead * 100) / fileSizeInBytes))
         .catch(importFailed);
@@ -66,7 +66,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case IMPORT_STARTED:
       return {
         ...state,
-        collectionName: action.collectionName
+        fileName: action.fileName
       };
     case IMPORT_PROGRESS:
       return {

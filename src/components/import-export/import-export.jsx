@@ -57,14 +57,14 @@ class ImportExport extends Component {
   };
 
   handleExport = fileName => {
-    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false });
-    this.props.exportStarted('users', fileName);
+    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: false });
+    this.props.exportStarted(fileName);
   }
 
   handleImport = () => {
     const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
     if (fileName) {
-      this.props.importStarted('users', fileName[0]);
+      this.props.importStarted(fileName[0]);
       this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
     }
   };

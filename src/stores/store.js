@@ -5,6 +5,7 @@ import { rootReducer, rootEpic } from 'modules';
 
 import { nsChanged } from 'modules/ns';
 import { dataServiceConnected } from 'modules/data-service';
+import { statsRecieved } from 'modules/stats';
 
 const epicMiddleware = createEpicMiddleware(rootEpic);
 
@@ -33,12 +34,12 @@ if (module.hot) {
  * @param {AppRegistry} appRegistry - The app registry.
  */
 store.onActivated = (appRegistry) => {
-  appRegistry.on('collection-changed', nsChanged);
+  appRegistry.on('collection-changed', ns => store.dispatch(nsChanged(ns)));
   appRegistry.on('data-service-connected', (err, ds) => store.dispatch(dataServiceConnected(err, ds)));
   // appRegistry.on('open-export', (ns, query) => {});
   // appRegistry.on('open-import', (ns) => {});
   appRegistry.getStore('CollectionStats.Store').listen((stats) => {
-    console.log(stats);
+    store.dispatch(statsRecieved(stats));
   });
 };
 

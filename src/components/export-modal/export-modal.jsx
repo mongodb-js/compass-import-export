@@ -28,6 +28,13 @@ class ExportModal extends PureComponent {
     fileName: ''
   };
 
+  componentWillReceiveProps() {
+    this.setState({
+      exportFileType: FILE_TYPES.JSON,
+      fileName: ''
+    });
+  }
+
   handleFileTypeSelect = type => () => this.setState({ exportFileType: type });
 
   handleDialogOpen = () => {
@@ -84,6 +91,7 @@ class ExportModal extends PureComponent {
                 <FormControl
                   type="text"
                   value={fileName}
+                  readOnly
                 />
                 <InputGroup.Button>
                   <Button onClick={this.handleDialogOpen}>Browse</Button>

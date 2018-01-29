@@ -82,7 +82,7 @@ const query = {
   skip: 0,
   limit: 20,
   ns: NS
-}
+};
 appRegistry.emit('query-applied', query);
 
 if (module.hot) {
