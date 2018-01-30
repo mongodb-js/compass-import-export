@@ -42,24 +42,31 @@ const exportStartedEpic = (action$, store) =>
       const { fileName } = action;
       const { stats, ns } = store.getState();
       const fws = fs.createWriteStream(fileName);
-      return exportCollection(store.getState().dataService, ns)
-        .map(
-          data => {
-            fws.write(data);
-            return exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize);
-          })
-        .takeUntil(action$.ofType(EXPORT_CANCELED))
-        .catch(exportFailed);
-    })
-    .concat(
-      Observable.of(exportCompleted('export-file.json'))
-    );
+      return Observable.concat(
+        exportCollection(store.getState().dataService, ns)
+          .map(
+            data => {
+              fws.write(data);
+              return exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize);
+            })
+          .race(
+            action$.ofType(EXPORT_CANCELED)
+              .map(() => {
+                fws.close();
+              })
+              .take(1)
+          )
+          .catch(exportFailed),
+        Observable.of(exportCompleted('export-file.json'))
+      );
+    });
 
 const reducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case EXPORT_STARTED:
       return {
         ...state,
+        progress: 0,
         fileName: action.fileName
       };
     case EXPORT_PROGRESS:
