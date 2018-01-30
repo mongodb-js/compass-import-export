@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const propTypes = {
-  progress: PropTypes.number.isRequired,
+  progress: PropTypes.number,
   complete: PropTypes.bool,
   canceled: PropTypes.bool
 };

@@ -4,7 +4,9 @@ import streamToObservable from 'stream-to-observable';
 
 import exportCollection from 'utils/export';
 
-const EXPORT_STARTED = 'import-export/export/EXPORT_STARTED';
+import EXPORT_STATUS from 'constants/export-status';
+
+const EXPORT_ACTION = 'import-export/export/EXPORT_ACTION';
 const EXPORT_PROGRESS = 'import-export/export/EXPORT_PROGRESS';
 const EXPORT_COMPLETED = 'import-export/export/EXPORT_COMPLETED';
 const EXPORT_CANCELED = 'import-export/export/EXPORT_CANCELED';
@@ -12,8 +14,11 @@ const EXPORT_FAILED = 'import-export/export/EXPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-const exportStarted = fileName => ({
-  type: EXPORT_STARTED,
+let exportStatus = EXPORT_STATUS.UNSPECIFIED;
+
+const exportAction = (status, fileName) => ({
+  type: EXPORT_ACTION,
+  status,
   fileName
 });
 
@@ -22,14 +27,8 @@ const exportProgress = progress => ({
   progress
 });
 
-const exportCompleted = file => ({
-  type: EXPORT_COMPLETED,
-  file
-});
-
-const exportCanceled = reason => ({
-  type: EXPORT_CANCELED,
-  reason
+const exportFinished = () => ({
+  type: exportStatus !== EXPORT_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
 });
 
 const exportFailed = error => ({
@@ -38,8 +37,13 @@ const exportFailed = error => ({
 });
 
 const exportStartedEpic = (action$, store) =>
-  action$.ofType(EXPORT_STARTED)
+  action$.ofType(EXPORT_ACTION)
     .flatMap(action => {
+      exportStatus = action.status;
+      if (exportStatus === EXPORT_STATUS.CANCELLED) {
+        return Observable.empty();
+      }
+
       const { fileName } = action;
       const { stats, ns } = store.getState();
       const fws = fs.createWriteStream(fileName);
@@ -48,9 +52,10 @@ const exportStartedEpic = (action$, store) =>
       docTransform.pipe(fws);
       return streamToObservable(docTransform)
         .map(() => exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize))
-        .takeUntil(action$.ofType(EXPORT_CANCELED))
+        .takeWhile(() => exportStatus !== EXPORT_STATUS.CANCELLED)
         .catch(exportFailed)
-        .concat(Observable.of(exportCompleted(fileName)))
+        .concat(Observable.of('')
+          .map(() => exportFinished()))
         .finally(() => {
           cursor.close();
           docTransform.end();
@@ -60,11 +65,12 @@ const exportStartedEpic = (action$, store) =>
 
 const reducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
-    case EXPORT_STARTED:
+    case EXPORT_ACTION:
       return {
         ...state,
         progress: 0,
-        fileName: action.fileName
+        fileName: action.fileName,
+        status: action.status
       };
     case EXPORT_PROGRESS:
       return {
@@ -74,14 +80,12 @@ const reducer = (state = INITIAL_STATE, action) => {
     case EXPORT_COMPLETED:
       return {
         ...state,
-        progress: 100,
-        file: action.file
+        progress: 100
       };
     case EXPORT_CANCELED:
       return {
         ...state,
-        progress: 0,
-        reason: action.reason
+        progress: 0
       };
     case EXPORT_FAILED:
       return {
@@ -97,6 +101,5 @@ const reducer = (state = INITIAL_STATE, action) => {
 export default reducer;
 export {
   exportStartedEpic,
-  exportStarted,
-  exportCanceled
+  exportAction
 };

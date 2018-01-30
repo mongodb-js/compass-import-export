@@ -6,11 +6,12 @@ import { connect } from 'react-redux';
 import { TextButton } from 'hadron-react-buttons';
 
 import { nsChanged } from 'modules/ns';
-import { exportStarted, exportCanceled } from 'modules/export';
+import { exportAction } from 'modules/export';
 import { importStarted, importCanceled } from 'modules/import';
 
 import fileOpenDialog from 'utils/file-open-dialog';
 import FILE_TYPES from 'constants/file-types';
+import EXPORT_STATUS from 'constants/export-status';
 
 import ExportModal from 'components/export-modal';
 import ProgressBar from 'components/progress-bar';
@@ -28,9 +29,8 @@ class ImportExport extends Component {
 
   static propTypes = {
     dataService: PropTypes.object.isRequired,
-    exportStarted: PropTypes.func.isRequired,
+    exportAction: PropTypes.func.isRequired,
     importStarted: PropTypes.func.isRequired,
-    exportCanceled: PropTypes.func.isRequired,
     importCanceled: PropTypes.func.isRequired,
     exportProgress: PropTypes.number,
     importProgress: PropTypes.number
@@ -58,7 +58,7 @@ class ImportExport extends Component {
 
   handleExport = fileName => {
     this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: false });
-    this.props.exportStarted(fileName);
+    this.props.exportAction(EXPORT_STATUS.STARTED, fileName);
   }
 
   handleImport = () => {
@@ -72,7 +72,7 @@ class ImportExport extends Component {
   handleCancel = () => {
     switch (this.state.currentProcess) {
       case PROCESS.EXPORT:
-        this.props.exportCanceled();
+        this.props.exportAction(EXPORT_STATUS.CANCELLED);
         break;
       case PROCESS.IMPORT:
         this.props.importCanceled();
@@ -135,7 +135,7 @@ class ImportExport extends Component {
 
 /**
  * Map the state of the store to component properties.
- *
+ *exportAction
  * @param {Object} state - The state.
  *
  * @returns {Object} The mapped properties.
@@ -152,5 +152,5 @@ const mapStateToProps = (state) => ({
  */
 export default connect(
   mapStateToProps,
-  { nsChanged, exportStarted, importStarted, exportCanceled, importCanceled }
+  { nsChanged, exportAction, importStarted, importCanceled }
 )(ImportExport);
