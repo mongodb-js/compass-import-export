@@ -112,7 +112,8 @@ class ImportExport extends Component {
             complete={ this.state.progress === 100 }
             canceled={ this.state.isLastProcessCanceled }
           />
-          <CancelButton onClick={ this.handleCancel } />
+          { this.state.currentProcess ? <CancelButton onClick={ this.handleCancel } /> : null }
+
         </div>
         <ExportModal
           open={ this.state.isModalOpen }

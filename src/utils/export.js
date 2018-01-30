@@ -1,5 +1,3 @@
-import streamToObservable from 'stream-to-observable';
-
 import DocumentTransform from './document-transform';
 
 export default function exportCollection(ds, name) {
@@ -8,5 +6,5 @@ export default function exportCollection(ds, name) {
   cursor.rewind();
 
   cursor.pipe(docTransform);
-  return streamToObservable(docTransform);
+  return { cursor, docTransform };
 }

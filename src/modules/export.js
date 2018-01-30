@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { Observable } from 'rxjs/Observable';
+import streamToObservable from 'stream-to-observable';
 
 import exportCollection from 'utils/export';
 
@@ -42,23 +43,19 @@ const exportStartedEpic = (action$, store) =>
       const { fileName } = action;
       const { stats, ns } = store.getState();
       const fws = fs.createWriteStream(fileName);
-      return Observable.concat(
-        exportCollection(store.getState().dataService, ns)
-          .map(
-            data => {
-              fws.write(data);
-              return exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize);
-            })
-          .race(
-            action$.ofType(EXPORT_CANCELED)
-              .map(() => {
-                fws.close();
-              })
-              .take(1)
-          )
-          .catch(exportFailed),
-        Observable.of(exportCompleted('export-file.json'))
-      );
+      const { cursor, docTransform } = exportCollection(store.getState().dataService, ns);
+
+      docTransform.pipe(fws);
+      return streamToObservable(docTransform)
+        .map(() => exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize))
+        .takeUntil(action$.ofType(EXPORT_CANCELED))
+        .catch(exportFailed)
+        .concat(Observable.of(exportCompleted(fileName)))
+        .finally(() => {
+          cursor.close();
+          docTransform.end();
+          fws.close();
+        });
     });
 
 const reducer = (state = INITIAL_STATE, action) => {
@@ -72,12 +69,12 @@ const reducer = (state = INITIAL_STATE, action) => {
     case EXPORT_PROGRESS:
       return {
         ...state,
-        progress: action.progress.toFixed(2)
+        progress: Number(action.progress.toFixed(2))
       };
     case EXPORT_COMPLETED:
       return {
         ...state,
-        progress: '100',
+        progress: 100,
         file: action.file
       };
     case EXPORT_CANCELED:
