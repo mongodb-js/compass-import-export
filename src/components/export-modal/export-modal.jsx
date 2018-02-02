@@ -24,21 +24,21 @@ class ExportModal extends PureComponent {
   };
 
   state = {
-    exportFileType: FILE_TYPES.JSON,
+    fileType: FILE_TYPES.JSON,
     fileName: ''
   };
 
   componentWillReceiveProps() {
     this.setState({
-      exportFileType: FILE_TYPES.JSON,
+      fileType: FILE_TYPES.JSON,
       fileName: ''
     });
   }
 
-  handleFileTypeSelect = type => () => this.setState({ exportFileType: type });
+  handleFileTypeSelect = type => () => this.setState({ fileType: type });
 
   handleDialogOpen = () => {
-    const fileType = FILE_TYPES[this.state.exportFileType];
+    const fileType = FILE_TYPES[this.state.fileType];
     const file = fileOpenDialog(fileType);
     if (file) {
       this.setState({ fileName: file[0] });
@@ -46,15 +46,15 @@ class ExportModal extends PureComponent {
   }
 
   handleExportClick = () => {
-    const { fileName } = this.state;
+    const { fileName, fileType } = this.state;
     if (fileName) {
-      this.props.exportCollection(fileName);
+      this.props.exportCollection(fileName, fileType);
     }
   }
 
   render() {
     const { open, count, query, handleClose } = this.props;
-    const { exportFileType, fileName } = this.state;
+    const { fileType, fileName } = this.state;
     return (
       <Modal show={open} onHide={handleClose} >
         <Modal.Header closeButton>
@@ -76,11 +76,11 @@ class ExportModal extends PureComponent {
             name="file-type-selector"
           >
             <Button
-              className={classnames({[styles.selected]: exportFileType === FILE_TYPES.JSON})}
+              className={classnames({[styles.selected]: fileType === FILE_TYPES.JSON})}
               onClick={this.handleFileTypeSelect(FILE_TYPES.JSON)}
             >JSON</Button>
             <Button
-              className={classnames({[styles.selected]: exportFileType === FILE_TYPES.CSV})}
+              className={classnames({[styles.selected]: fileType === FILE_TYPES.CSV})}
               onClick={this.handleFileTypeSelect(FILE_TYPES.CSV)}
             >CSV</Button>
           </div>

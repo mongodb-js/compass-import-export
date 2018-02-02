@@ -7,11 +7,11 @@ import { TextButton } from 'hadron-react-buttons';
 
 import { nsChanged } from 'modules/ns';
 import { exportAction } from 'modules/export';
-import { importStarted, importCanceled } from 'modules/import';
+import { importAction } from 'modules/import';
 
 import fileOpenDialog from 'utils/file-open-dialog';
 import FILE_TYPES from 'constants/file-types';
-import EXPORT_STATUS from 'constants/export-status';
+import PROCESS_STATUS from 'constants/process-status';
 
 import ExportModal from 'components/export-modal';
 import ProgressBar from 'components/progress-bar';
@@ -30,8 +30,7 @@ class ImportExport extends Component {
   static propTypes = {
     dataService: PropTypes.object.isRequired,
     exportAction: PropTypes.func.isRequired,
-    importStarted: PropTypes.func.isRequired,
-    importCanceled: PropTypes.func.isRequired,
+    importAction: PropTypes.func.isRequired,
     exportProgress: PropTypes.number,
     importProgress: PropTypes.number
   };
@@ -56,15 +55,15 @@ class ImportExport extends Component {
     this.setState({ isModalOpen: true });
   };
 
-  handleExport = fileName => {
+  handleExport = (fileName, fileType) => {
     this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: false });
-    this.props.exportAction(EXPORT_STATUS.STARTED, fileName);
+    this.props.exportAction(PROCESS_STATUS.STARTED, fileName, fileType);
   }
 
   handleImport = () => {
     const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
     if (fileName) {
-      this.props.importStarted(fileName[0]);
+      this.props.importAction(PROCESS_STATUS.STARTED, fileName[0]);
       this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
     }
   };
@@ -72,10 +71,10 @@ class ImportExport extends Component {
   handleCancel = () => {
     switch (this.state.currentProcess) {
       case PROCESS.EXPORT:
-        this.props.exportAction(EXPORT_STATUS.CANCELLED);
+        this.props.exportAction(PROCESS_STATUS.CANCELLED);
         break;
       case PROCESS.IMPORT:
-        this.props.importCanceled();
+        this.props.importAction(PROCESS_STATUS.CANCELLED);
         break;
       default:
         this.setState({ currentProcess: '' });
@@ -152,5 +151,5 @@ const mapStateToProps = (state) => ({
  */
 export default connect(
   mapStateToProps,
-  { nsChanged, exportAction, importStarted, importCanceled }
+  { nsChanged, exportAction, importAction }
 )(ImportExport);

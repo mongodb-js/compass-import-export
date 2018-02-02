@@ -4,7 +4,7 @@ import streamToObservable from 'stream-to-observable';
 
 import exportCollection from 'utils/export';
 
-import EXPORT_STATUS from 'constants/export-status';
+import PROCESS_STATUS from 'constants/process-status';
 
 const EXPORT_ACTION = 'import-export/export/EXPORT_ACTION';
 const EXPORT_PROGRESS = 'import-export/export/EXPORT_PROGRESS';
@@ -14,12 +14,13 @@ const EXPORT_FAILED = 'import-export/export/EXPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-let exportStatus = EXPORT_STATUS.UNSPECIFIED;
+let exportStatus = PROCESS_STATUS.UNSPECIFIED;
 
-const exportAction = (status, fileName) => ({
+const exportAction = (status, fileName, fileType) => ({
   type: EXPORT_ACTION,
   status,
-  fileName
+  fileName,
+  fileType
 });
 
 const exportProgress = progress => ({
@@ -28,7 +29,7 @@ const exportProgress = progress => ({
 });
 
 const exportFinished = () => ({
-  type: exportStatus !== EXPORT_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
+  type: exportStatus !== PROCESS_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
 });
 
 const exportFailed = error => ({
@@ -40,19 +41,19 @@ const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_ACTION)
     .flatMap(action => {
       exportStatus = action.status;
-      if (exportStatus === EXPORT_STATUS.CANCELLED) {
+      if (exportStatus === PROCESS_STATUS.CANCELLED) {
         return Observable.empty();
       }
 
-      const { fileName } = action;
+      const { fileName, fileType } = action;
       const { stats, ns } = store.getState();
       const fws = fs.createWriteStream(fileName);
-      const { cursor, docTransform } = exportCollection(store.getState().dataService, ns);
+      const { cursor, docTransform } = exportCollection(store.getState().dataService, ns, fileType);
 
       docTransform.pipe(fws);
       return streamToObservable(docTransform)
         .map(() => exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize))
-        .takeWhile(() => exportStatus !== EXPORT_STATUS.CANCELLED)
+        .takeWhile(() => exportStatus !== PROCESS_STATUS.CANCELLED)
         .catch(exportFailed)
         .concat(Observable.of('')
           .map(() => exportFinished()))
@@ -70,6 +71,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...state,
         progress: 0,
         fileName: action.fileName,
+        fileType: action.fileType,
         status: action.status
       };
     case EXPORT_PROGRESS:

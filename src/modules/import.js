@@ -5,7 +5,9 @@ import streamToObservable from 'stream-to-observable';
 import importCollection from 'utils/import';
 import SplitLines from 'utils/split-lines-transform';
 
-const IMPORT_STARTED = 'import-export/import/IMPORT_STARTED';
+import PROCESS_STATUS from 'constants/process-status';
+
+const IMPORT_ACTION = 'import-export/import/IMPORT_ACTION';
 const IMPORT_PROGRESS = 'import-export/import/IMPORT_PROGRESS';
 const IMPORT_COMPLETED = 'import-export/import/IMPORT_COMPLETED';
 const IMPORT_CANCELED = 'import-export/import/IMPORT_CANCELED';
@@ -13,8 +15,11 @@ const IMPORT_FAILED = 'import-export/import/IMPORT_FAILED';
 
 const INITIAL_STATE = {};
 
-const importStarted = fileName => ({
-  type: IMPORT_STARTED,
+let importStatus = PROCESS_STATUS.UNSPECIFIED;
+
+const importAction = (status, fileName) => ({
+  type: IMPORT_ACTION,
+  status,
   fileName
 });
 
@@ -23,13 +28,8 @@ const importProgress = progress => ({
   progress
 });
 
-const importCompleted = () => ({
-  type: IMPORT_COMPLETED
-});
-
-const importCanceled = reason => ({
-  type: IMPORT_CANCELED,
-  reason
+const importFinished = () => ({
+  type: importStatus !== PROCESS_STATUS.CANCELLED ? IMPORT_COMPLETED : IMPORT_CANCELED
 });
 
 const importFailed = error => ({
@@ -38,8 +38,13 @@ const importFailed = error => ({
 });
 
 const importStartedEpic = (action$, store) =>
-  action$.ofType(IMPORT_STARTED)
+  action$.ofType(IMPORT_ACTION)
     .flatMap(action => {
+      importStatus = action.status;
+      if (importStatus === PROCESS_STATUS.CANCELLED) {
+        return Observable.empty();
+      }
+
       const { client: { database } } = store.getState().dataService;
       const { fileName } = action;
       const { ns } = store.getState();
@@ -52,26 +57,31 @@ const importStartedEpic = (action$, store) =>
       const splitLines = new SplitLines();
 
       frs.pipe(splitLines);
-      return importCollection(database, ns, streamToObservable(splitLines))
-        .takeUntil(action$.ofType(IMPORT_CANCELED))
+      return importCollection(database, ns.split('.')[1], streamToObservable(splitLines))
+        .takeWhile(() => importStatus !== PROCESS_STATUS.CANCELLED)
         .map(() => importProgress((frs.bytesRead * 100) / fileSizeInBytes))
-        .catch(importFailed);
-    })
-    .concat(
-      Observable.of(importCompleted())
-    );
+        .catch(importFailed)
+        .concat(Observable.of('')
+          .map(() => importFinished()))
+        .finally(() => {
+          splitLines.end();
+          frs.close();
+        });
+    });
 
 const reducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
-    case IMPORT_STARTED:
+    case IMPORT_ACTION:
       return {
         ...state,
-        fileName: action.fileName
+        progress: 0,
+        fileName: action.fileName,
+        status: action.status
       };
     case IMPORT_PROGRESS:
       return {
         ...state,
-        progress: action.progress
+        progress: Number(action.progress.toFixed(2))
       };
     case IMPORT_COMPLETED:
       return {
@@ -97,6 +107,5 @@ const reducer = (state = INITIAL_STATE, action) => {
 export default reducer;
 export {
   importStartedEpic,
-  importStarted,
-  importCanceled
+  importAction
 };
