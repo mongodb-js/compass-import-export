@@ -54,7 +54,8 @@ const importStartedEpic = (action$, store) =>
       const stats = fs.statSync(fileName);
       const fileSizeInBytes = stats.size;
       const frs = fs.createReadStream(fileName, 'utf8');
-      const splitLines = new SplitLines();
+      const fileType = fileName.split('.')[fileName.split('.').length - 1];
+      const splitLines = new SplitLines(fileType);
 
       frs.pipe(splitLines);
       return importCollection(database, ns.split('.')[1], streamToObservable(splitLines))
