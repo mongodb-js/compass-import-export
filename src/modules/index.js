@@ -8,9 +8,14 @@ import exportData, { exportStartedEpic } from './export';
 import importData, { importStartedEpic } from './import';
 
 export const rootReducer = combineReducers({
-  ns, dataService, stats, exportData, importData
+  ns,
+  dataService,
+  stats,
+  exportData,
+  importData
 });
 
 export const rootEpic = combineEpics(
-  exportStartedEpic, importStartedEpic
+  exportStartedEpic,
+  importStartedEpic
 );

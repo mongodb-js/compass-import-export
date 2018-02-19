@@ -5,39 +5,109 @@ import streamToObservable from 'stream-to-observable';
 import exportCollection from 'utils/export';
 
 import PROCESS_STATUS from 'constants/process-status';
+import FILE_TYPES from 'constants/file-types';
 
-const EXPORT_ACTION = 'import-export/export/EXPORT_ACTION';
-const EXPORT_PROGRESS = 'import-export/export/EXPORT_PROGRESS';
-const EXPORT_COMPLETED = 'import-export/export/EXPORT_COMPLETED';
-const EXPORT_CANCELED = 'import-export/export/EXPORT_CANCELED';
-const EXPORT_FAILED = 'import-export/export/EXPORT_FAILED';
+/**
+ * Export action prefix.
+ */
+const PREFIX = 'import-export/export';
 
-const INITIAL_STATE = {};
+/**
+ * Export action name.
+ */
+const EXPORT_ACTION = `${PREFIX}/EXPORT_ACTION`;
+
+/**
+ * Export progress action name.
+ */
+const EXPORT_PROGRESS = `${PREFIX}/EXPORT_PROGRESS`;
+
+/**
+ * Export completed action name.
+ */
+const EXPORT_COMPLETED = `${PREFIX}/EXPORT_COMPLETED`;
+
+/**
+ * Export canceled action name.
+ */
+const EXPORT_CANCELED = `${PREFIX}/EXPORT_CANCELED`;
+
+/**
+ * Export failed action name.
+ */
+const EXPORT_FAILED = `${PREFIX}/EXPORT_FAILED`;
+
+/**
+ * The initial state.
+ */
+const INITIAL_STATE = {
+  isOpen: false,
+  progress: 0,
+  fileName: null,
+  fileType: FILE_TYPES.JSON,
+  status: PROCESS_STATUS.UNSPECIFIED
+};
 
 let exportStatus = PROCESS_STATUS.UNSPECIFIED;
 
-const exportAction = (status, fileName, fileType) => ({
+/**
+ * Export action creator.
+ *
+ * @param {String} status - The status.
+ * @param {String} fileName - The file name.
+ * @param {String} fileType - The file type.
+ *
+ * @returns {Object} The action.
+ */
+export const exportAction = (status, fileName, fileType) => ({
   type: EXPORT_ACTION,
-  status,
-  fileName,
-  fileType
+  status: status,
+  fileName: fileName,
+  fileType: fileType
 });
 
-const exportProgress = progress => ({
+/**
+ * Export progress action creator.
+ *
+ * @param {Number} progress - The progress.
+ *
+ * @returns {Object} The action.
+ */
+const exportProgress = (progress) => ({
   type: EXPORT_PROGRESS,
-  progress
+  progress: progress
 });
 
+/**
+ * Export finished action creator.
+ *
+ * @returns {Object} The action.
+ */
 const exportFinished = () => ({
   type: exportStatus !== PROCESS_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
 });
 
-const exportFailed = error => ({
+/**
+ * Export failed action creator.
+ *
+ * @param {Error} error - The error.
+ *
+ * @returns {Object} The action.
+ */
+const exportFailed = (error) => ({
   type: EXPORT_FAILED,
-  error
+  error: error
 });
 
-const exportStartedEpic = (action$, store) =>
+/**
+ * The export epic.
+ *
+ * @param {Object} action$ - The action.
+ * @param {Store} store - The store.
+ *
+ * @returns {Epic} The epic.
+ */
+export const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_ACTION)
     .flatMap(action => {
       exportStatus = action.status;
@@ -55,8 +125,7 @@ const exportStartedEpic = (action$, store) =>
         .map(() => exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize))
         .takeWhile(() => exportStatus !== PROCESS_STATUS.CANCELLED)
         .catch(exportFailed)
-        .concat(Observable.of('')
-          .map(() => exportFinished()))
+        .concat(Observable.of('').map(() => exportFinished()))
         .finally(() => {
           cursor.close();
           docTransform.end();
@@ -64,6 +133,14 @@ const exportStartedEpic = (action$, store) =>
         });
     });
 
+/**
+ * The export reducer.
+ *
+ * @param {Object} state - The state.
+ * @param {Object} action - The action.
+ *
+ * @returns {Object} state - The new state.
+ */
 const reducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case EXPORT_ACTION:
@@ -99,9 +176,4 @@ const reducer = (state = INITIAL_STATE, action) => {
   }
 };
 
-
 export default reducer;
-export {
-  exportStartedEpic,
-  exportAction
-};
