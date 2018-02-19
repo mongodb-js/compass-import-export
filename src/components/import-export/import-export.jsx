@@ -30,7 +30,7 @@ class ImportExport extends Component {
     exportProgress: PropTypes.number,
     exportCount: PropTypes.number,
     exportOpen: PropTypes.bool.isRequired,
-    exportError: PropTypes.object.isRequired,
+    exportError: PropTypes.object,
     exportQuery: PropTypes.object.isRequired,
     exportStatus: PropTypes.string.isRequired,
     selectExportFileType: PropTypes.func.isRequired,
@@ -82,8 +82,7 @@ class ImportExport extends Component {
           fileType={this.props.exportFileType}
           fileName={this.props.exportFileName}
           selectExportFileType={this.props.selectExportFileType}
-          selectExportFileName={this.props.selectExportFileName}
-        />
+          selectExportFileName={this.props.selectExportFileName} />
       </div>
     );
   }

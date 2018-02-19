@@ -2,14 +2,13 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import {
-  Modal, Button, FormGroup, InputGroup, FormControl, ControlLabel
+  Modal, Button, FormGroup, InputGroup, FormControl, ControlLabel, ProgressBar
 } from 'react-bootstrap';
 import { TextButton } from 'hadron-react-buttons';
 import QueryViewer from 'components/query-viewer';
 import fileOpenDialog from 'utils/file-open-dialog';
 import PROCESS_STATUS from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
-import ProgressBar from 'components/progress-bar';
 import CancelButton from 'components/cancel-button';
 
 import styles from './export-modal.less';
@@ -34,6 +33,17 @@ class ExportModal extends PureComponent {
     fileType: PropTypes.string,
     fileName: PropTypes.string
   };
+
+  /**
+   * Get the bootstrap progress bar style.
+   *
+   * @returns {String} The style.
+   */
+  getProgressStyle() {
+    if (this.props.status === PROCESS_STATUS.STARTED) return 'info';
+    if (this.props.status === PROCESS_STATUS.COMPLETED) return 'success';
+    if (this.props.status === PROCESS_STATUS.CANCELED) return 'warning';
+  }
 
   /**
    * Handle choosing a file from the file dialog.
@@ -118,9 +128,9 @@ class ExportModal extends PureComponent {
           </form>
           <div className={classnames(styles['export-modal-progress'])}>
             <ProgressBar
-              progress={this.props.progress}
-              complete={this.props.progress === 100}
-              canceled={this.props.status === PROCESS_STATUS.CANCELED} />
+              active
+              now={this.props.progress}
+              bsStyle={this.getProgressStyle()} />
             { this.props.status === PROCESS_STATUS.STARTED
                 ? <CancelButton onClick={ this.handleCancel } />
                 : null }

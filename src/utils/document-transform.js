@@ -19,7 +19,7 @@ class DocumentTransform extends Transform {
   toCSV(obj, withHeader) {
     let csv = withHeader ? Object.keys(obj).join(',') + '\n' : '';
     csv = csv.concat(
-      Object.values(obj).map(v => typeof v === 'object' ? JSON.stringify(v) : v.toString()).join(',')
+      Object.values(obj).map(v => typeof v === 'object' ? EJSON.stringify(v) : v.toString()).join(',')
     );
     return csv;
   }
