@@ -19,7 +19,7 @@ class ExportModal extends PureComponent {
     open: PropTypes.bool,
     ns: PropTypes.string.isRequired,
     count: PropTypes.number,
-    query: PropTypes.object,
+    query: PropTypes.object.isRequired,
     exportCollection: PropTypes.func.isRequired,
     handleClose: PropTypes.func.isRequired,
     selectExportFileType: PropTypes.func.isRequired,

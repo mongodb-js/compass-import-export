@@ -38,6 +38,9 @@ const EXPORT_CANCELED = `${PREFIX}/EXPORT_CANCELED`;
 const EXPORT_FAILED = `${PREFIX}/EXPORT_FAILED`;
 const SELECT_EXPORT_FILE_TYPE = `${PREFIX}/SELECT_EXPORT_FILE_TYPE`;
 const SELECT_EXPORT_FILE_NAME = `${PREFIX}/SELECT_EXPORT_FILE_NAME`;
+const OPEN_EXPORT = `${PREFIX}/OPEN_EXPORT`;
+const CLOSE_EXPORT = `${PREFIX}/CLOSE_EXPORT`;
+const UPDATE_EXPORT_COUNT = `${PREFIX}/UPDATE_EXPORT_COUNT`;
 
 /**
  * The initial state.
@@ -45,6 +48,8 @@ const SELECT_EXPORT_FILE_NAME = `${PREFIX}/SELECT_EXPORT_FILE_NAME`;
 const INITIAL_STATE = {
   isOpen: false,
   progress: 0,
+  query: {},
+  count: 0,
   fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED
@@ -76,6 +81,20 @@ export const selectExportFileType = (fileType) => ({
 export const selectExportFileName = (fileName) => ({
   type: SELECT_EXPORT_FILE_NAME,
   fileName: fileName
+});
+
+export const openExport = (query) => ({
+  type: OPEN_EXPORT,
+  query: query
+});
+
+export const closeExport = () => ({
+  type: CLOSE_EXPORT
+});
+
+export const updateExportCount = (count) => ({
+  type: UPDATE_EXPORT_COUNT,
+  count: count
 });
 
 /**
@@ -192,6 +211,22 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         fileName: action.fileName
+      };
+    case OPEN_EXPORT:
+      return {
+        ...state,
+        query: action.query,
+        isOpen: true
+      };
+    case CLOSE_EXPORT:
+      return {
+        ...state,
+        isOpen: false
+      };
+    case UPDATE_EXPORT_COUNT:
+      return {
+        ...state,
+        count: action.count
       };
     default:
       return state;

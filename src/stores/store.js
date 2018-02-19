@@ -4,6 +4,7 @@ import { createEpicMiddleware } from 'redux-observable';
 import { rootReducer, rootEpic } from 'modules';
 
 import { nsChanged } from 'modules/ns';
+import { openExport } from 'modules/export';
 import { dataServiceConnected } from 'modules/data-service';
 import { statsRecieved } from 'modules/stats';
 
@@ -36,8 +37,8 @@ if (module.hot) {
 store.onActivated = (appRegistry) => {
   appRegistry.on('collection-changed', ns => store.dispatch(nsChanged(ns)));
   appRegistry.on('data-service-connected', (err, ds) => store.dispatch(dataServiceConnected(err, ds)));
-  // appRegistry.on('open-export', (ns, query) => {});
-  // appRegistry.on('open-import', (ns) => {});
+  appRegistry.on('open-export', (ns, query) => store.dispatch(openExport(query)));
+  // appRegistry.on('open-import', () => {});
   appRegistry.getStore('CollectionStats.Store').listen((stats) => {
     store.dispatch(statsRecieved(stats));
   });

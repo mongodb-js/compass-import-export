@@ -9,7 +9,8 @@ import { nsChanged } from 'modules/ns';
 import {
   exportAction,
   selectExportFileType,
-  selectExportFileName
+  selectExportFileName,
+  closeExport
 } from 'modules/export';
 import { importAction } from 'modules/import';
 
@@ -34,12 +35,16 @@ class ImportExport extends Component {
   static propTypes = {
     ns: PropTypes.string.isRequired,
     dataService: PropTypes.object.isRequired,
-    exportAction: PropTypes.func.isRequired,
     importAction: PropTypes.func.isRequired,
+    importProgress: PropTypes.number,
+    exportAction: PropTypes.func.isRequired,
+    closeExport: PropTypes.func.isRequired,
     exportFileType: PropTypes.string.isRequired,
     exportFileName: PropTypes.string.isRequired,
     exportProgress: PropTypes.number,
-    importProgress: PropTypes.number,
+    exportCount: PropTypes.number.isRequired,
+    exportOpen: PropTypes.bool.isRequired,
+    exportQuery: PropTypes.object.isRequired,
     selectExportFileType: PropTypes.func.isRequired,
     selectExportFileName: PropTypes.func.isRequired
   };
@@ -47,8 +52,7 @@ class ImportExport extends Component {
   state = {
     currentProcess: '',
     progress: 0,
-    isLastProcessCanceled: false,
-    isModalOpen: false
+    isLastProcessCanceled: false
   };
 
   componentWillReceiveProps(nextProps) {
@@ -61,11 +65,12 @@ class ImportExport extends Component {
   }
 
   handleExportModalOpen = () => {
-    this.setState({ isModalOpen: true });
+    global.hadronApp.appRegistry.emit('open-export', this.props.ns, { filter: {}});
   };
 
   handleExport = (fileName, fileType) => {
-    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: false });
+    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false });
+    this.props.closeExport();
     this.props.exportAction(PROCESS_STATUS.STARTED, fileName, fileType);
   }
 
@@ -91,10 +96,6 @@ class ImportExport extends Component {
     this.setState({ currentProcess: '', isLastProcessCanceled: true });
   }
 
-  handleModalClose = () => {
-    this.setState({ isModalOpen: false });
-  }
-
   /**
    * Render ImportExport component.
    *
@@ -103,39 +104,28 @@ class ImportExport extends Component {
   render() {
     return (
       <div className={classnames(styles['import-export'])}>
-        <p>Compass Import/Export Plugin</p>
         <TextButton
           className="btn btn-default btn-sm"
           clickHandler={ this.handleImport }
-          text="Import"
-        />
+          text="Import" />
         <TextButton
           className="btn btn-default btn-sm"
           clickHandler={ this.handleExportModalOpen }
-          text="Export"
-        />
+          text="Export" />
         <div>
           <ProgressBar
             progress={ this.state.progress }
             complete={ this.state.progress === 100 }
-            canceled={ this.state.isLastProcessCanceled }
-          />
+            canceled={ this.state.isLastProcessCanceled } />
           { this.state.currentProcess ? <CancelButton onClick={ this.handleCancel } /> : null }
-
         </div>
         <ExportModal
-          open={ this.state.isModalOpen }
-          handleClose={ this.handleModalClose }
-          exportCollection={ this.handleExport }
+          open={this.props.exportOpen}
+          handleClose={this.props.closeExport}
+          exportCollection={this.handleExport}
           ns={this.props.ns}
-          query={{
-            filter: {
-              name: 'Joe',
-              age: 25,
-              loc: 'New York'
-            }
-          }}
-          count={225}
+          query={this.props.exportQuery}
+          count={this.props.exportCount}
           fileType={this.props.exportFileType}
           fileName={this.props.exportFileName}
           selectExportFileType={this.props.selectExportFileType}
@@ -156,8 +146,11 @@ class ImportExport extends Component {
 const mapStateToProps = (state) => ({
   ns: state.ns,
   dataService: state.dataService,
-  exportProgress: state.exportData.progress,
   importProgress: state.importData.progress,
+  exportProgress: state.exportData.progress,
+  exportCount: state.exportData.count,
+  exportQuery: state.exportData.query,
+  exportOpen: state.exportData.isOpen,
   exportFileType: state.exportData.fileType,
   exportFileName: state.exportData.fileName
 });
@@ -172,6 +165,7 @@ export default connect(
     exportAction,
     importAction,
     selectExportFileType,
-    selectExportFileName
+    selectExportFileName,
+    closeExport
   }
 )(ImportExport);

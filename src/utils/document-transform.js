@@ -1,4 +1,5 @@
 import { Transform } from 'stream';
+import EJSON from 'mongodb-extended-json';
 
 import FILE_TYPES from 'constants/file-types';
 
@@ -10,7 +11,7 @@ class DocumentTransform extends Transform {
   }
 
   _transform(chunk, encoding, callback) {
-    const data = this.type === FILE_TYPES.JSON ? JSON.stringify(chunk) : this.toCSV(chunk, this.isFirstRecord);
+    const data = this.type === FILE_TYPES.JSON ? EJSON.stringify(chunk) : this.toCSV(chunk, this.isFirstRecord);
     this.isFirstRecord = false;
     return callback(null, data + '\n');
   }
