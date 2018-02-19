@@ -1,3 +1,6 @@
+/**
+ * Process status constants.
+ */
 const PROCESS_STATUS = {
   UNSPECIFIED: 'UNSPECIFIED',
   STARTED: 'STARTED',

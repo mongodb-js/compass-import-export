@@ -7,6 +7,11 @@ import stats from './stats';
 import exportData, { exportStartedEpic } from './export';
 import importData, { importStartedEpic } from './import';
 
+/**
+ * The root reducer for the store.
+ *
+ * @returns {Function} The reducer.
+ */
 export const rootReducer = combineReducers({
   ns,
   dataService,
@@ -15,6 +20,11 @@ export const rootReducer = combineReducers({
   importData
 });
 
+/**
+ * The root epic for the store.
+ *
+ * @returns {Function} The root epic.
+ */
 export const rootEpic = combineEpics(
   exportStartedEpic,
   importStartedEpic

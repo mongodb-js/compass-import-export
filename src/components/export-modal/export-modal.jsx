@@ -36,8 +36,7 @@ class ExportModal extends PureComponent {
   }
 
   handleFileTypeSelect = (type) => {
-    // console.log(type);
-    // this.setState({ fileType: type });
+    this.setState({ fileType: type });
   }
 
   handleDialogOpen = () => {
