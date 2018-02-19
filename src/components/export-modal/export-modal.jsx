@@ -40,8 +40,7 @@ class ExportModal extends PureComponent {
   }
 
   handleDialogOpen = () => {
-    const fileType = FILE_TYPES[this.state.fileType];
-    const file = fileOpenDialog(fileType);
+    const file = fileOpenDialog(this.state.fileType);
     if (file) {
       this.setState({ fileName: file[0] });
     }
@@ -79,11 +78,11 @@ class ExportModal extends PureComponent {
           >
             <Button
               className={classnames({[styles.selected]: fileType === FILE_TYPES.JSON})}
-              onClick={this.handleFileTypeSelect(FILE_TYPES.JSON)}
+              onClick={this.handleFileTypeSelect.bind(this, FILE_TYPES.JSON)}
             >JSON</Button>
             <Button
               className={classnames({[styles.selected]: fileType === FILE_TYPES.CSV})}
-              onClick={this.handleFileTypeSelect(FILE_TYPES.CSV)}
+              onClick={this.handleFileTypeSelect.bind(this, FILE_TYPES.CSV)}
             >CSV</Button>
           </div>
           <form>
