@@ -2,32 +2,18 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
-
 import { TextButton } from 'hadron-react-buttons';
-
 import { nsChanged } from 'modules/ns';
+import { importAction } from 'modules/import';
+import ExportModal from 'components/export-modal';
 import {
   exportAction,
   selectExportFileType,
   selectExportFileName,
   closeExport
 } from 'modules/export';
-import { importAction } from 'modules/import';
-
-import fileOpenDialog from 'utils/file-open-dialog';
-import FILE_TYPES from 'constants/file-types';
-import PROCESS_STATUS from 'constants/process-status';
-
-import ExportModal from 'components/export-modal';
-import ProgressBar from 'components/progress-bar';
-import CancelButton from 'components/cancel-button';
 
 import styles from './import-export.less';
-
-const PROCESS = {
-  IMPORT: 'IMPORT',
-  EXPORT: 'EXPORT'
-};
 
 class ImportExport extends Component {
   static displayName = 'ImportExportComponent';
@@ -44,57 +30,28 @@ class ImportExport extends Component {
     exportProgress: PropTypes.number,
     exportCount: PropTypes.number,
     exportOpen: PropTypes.bool.isRequired,
+    exportError: PropTypes.object.isRequired,
     exportQuery: PropTypes.object.isRequired,
+    exportStatus: PropTypes.string.isRequired,
     selectExportFileType: PropTypes.func.isRequired,
     selectExportFileName: PropTypes.func.isRequired
   };
-
-  state = {
-    currentProcess: '',
-    progress: 0,
-    isLastProcessCanceled: false
-  };
-
-  componentWillReceiveProps(nextProps) {
-    const { exportProgress, importProgress } = nextProps;
-    this.setState({ progress: exportProgress || importProgress });
-
-    if ( exportProgress === 100 || importProgress === 100) {
-      this.setState({ currentProcess: '' });
-    }
-  }
 
   handleExportModalOpen = () => {
     global.hadronApp.appRegistry.emit('open-export', this.props.ns, { filter: {}});
   };
 
-  handleExport = (fileName, fileType) => {
-    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false });
-    this.props.closeExport();
-    this.props.exportAction(PROCESS_STATUS.STARTED, fileName, fileType);
-  }
+  // handleImport = () => {
+    // const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
+    // if (fileName) {
+      // this.props.importAction(PROCESS_STATUS.STARTED, fileName[0]);
+      // this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
+    // }
+  // };
 
-  handleImport = () => {
-    const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
-    if (fileName) {
-      this.props.importAction(PROCESS_STATUS.STARTED, fileName[0]);
-      this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
-    }
-  };
-
-  handleCancel = () => {
-    switch (this.state.currentProcess) {
-      case PROCESS.EXPORT:
-        this.props.exportAction(PROCESS_STATUS.CANCELLED);
-        break;
-      case PROCESS.IMPORT:
-        this.props.importAction(PROCESS_STATUS.CANCELLED);
-        break;
-      default:
-        this.setState({ currentProcess: '' });
-    }
-    this.setState({ currentProcess: '', isLastProcessCanceled: true });
-  }
+  // handleCancel = () => {
+    // this.props.importAction(PROCESS_STATUS.CANCELLED);
+  // }
 
   /**
    * Render ImportExport component.
@@ -112,19 +69,15 @@ class ImportExport extends Component {
           className="btn btn-default btn-sm"
           clickHandler={ this.handleExportModalOpen }
           text="Export" />
-        <div>
-          <ProgressBar
-            progress={ this.state.progress }
-            complete={ this.state.progress === 100 }
-            canceled={ this.state.isLastProcessCanceled } />
-          { this.state.currentProcess ? <CancelButton onClick={ this.handleCancel } /> : null }
-        </div>
         <ExportModal
           open={this.props.exportOpen}
-          handleClose={this.props.closeExport}
-          exportCollection={this.handleExport}
+          closeExport={this.props.closeExport}
+          exportAction={this.props.exportAction}
+          status={this.props.exportStatus}
+          progress={this.props.exportProgress}
           ns={this.props.ns}
           query={this.props.exportQuery}
+          error={this.props.exportError}
           count={this.props.exportCount}
           fileType={this.props.exportFileType}
           fileName={this.props.exportFileName}
@@ -151,8 +104,10 @@ const mapStateToProps = (state) => ({
   exportCount: state.stats.rawDocumentCount,
   exportQuery: state.exportData.query,
   exportOpen: state.exportData.isOpen,
+  exportError: state.exportData.error,
   exportFileType: state.exportData.fileType,
-  exportFileName: state.exportData.fileName
+  exportFileName: state.exportData.fileName,
+  exportStatus: state.exportData.status
 });
 
 /**

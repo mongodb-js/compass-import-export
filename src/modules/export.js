@@ -48,44 +48,65 @@ const INITIAL_STATE = {
   isOpen: false,
   progress: 0,
   query: {},
+  error: null,
   fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED
 };
 
-let exportStatus = PROCESS_STATUS.UNSPECIFIED;
-
 /**
  * Export action creator.
  *
  * @param {String} status - The status.
- * @param {String} fileName - The file name.
+ *
+ * @returns {Object} The action.
+ */
+export const exportAction = (status) => ({
+  type: EXPORT_ACTION,
+  status: status
+});
+
+/**
+ * Select the file type of the export.
+ *
  * @param {String} fileType - The file type.
  *
  * @returns {Object} The action.
  */
-export const exportAction = (status, fileName, fileType) => ({
-  type: EXPORT_ACTION,
-  status: status,
-  fileName: fileName,
-  fileType: fileType
-});
-
 export const selectExportFileType = (fileType) => ({
   type: SELECT_EXPORT_FILE_TYPE,
   fileType: fileType
 });
 
+/**
+ * Select the file name to export to.
+ *
+ * @param {String} fileName - The file name.
+ *
+ * @returns {Object} The action.
+ */
 export const selectExportFileName = (fileName) => ({
   type: SELECT_EXPORT_FILE_NAME,
   fileName: fileName
 });
 
+/**
+ * Open the export modal.
+ *
+ * @param {Object} query - The query.
+ *
+ * @returns {Object} The action.
+ */
 export const openExport = (query) => ({
   type: OPEN_EXPORT,
   query: query
 });
 
+/**
+ * Close the export modal.
+ *
+ * @returns {Object} The action.
+ */
 export const closeExport = () => ({
   type: CLOSE_EXPORT
 });
@@ -107,8 +128,8 @@ const exportProgress = (progress) => ({
  *
  * @returns {Object} The action.
  */
-const exportFinished = () => ({
-  type: exportStatus !== PROCESS_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
+const exportFinished = (action) => ({
+  type: action.status !== PROCESS_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
 });
 
 /**
@@ -133,23 +154,21 @@ const exportFailed = (error) => ({
  */
 export const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_ACTION)
-    .flatMap(action => {
-      exportStatus = action.status;
-      if (exportStatus === PROCESS_STATUS.CANCELLED) {
+    .flatMap(act => {
+      if (act.status === PROCESS_STATUS.CANCELLED) {
         return Observable.empty();
       }
 
-      const { fileName, fileType } = action;
-      const { stats, ns } = store.getState();
-      const fws = fs.createWriteStream(fileName);
-      const { cursor, docTransform } = exportCollection(store.getState().dataService, ns, fileType);
+      const { stats, ns, exportData, dataService } = store.getState();
+      const fws = fs.createWriteStream(exportData.fileName);
+      const { cursor, docTransform } = exportCollection(dataService, ns, exportData.fileType);
 
       docTransform.pipe(fws);
       return streamToObservable(docTransform)
         .map(() => exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize))
-        .takeWhile(() => exportStatus !== PROCESS_STATUS.CANCELLED)
+        .takeWhile((a) => a.status !== PROCESS_STATUS.CANCELLED)
         .catch(exportFailed)
-        .concat(Observable.of('').map(() => exportFinished()))
+        .concat(Observable.of('').map((a) => exportFinished(a)))
         .finally(() => {
           cursor.close();
           docTransform.end();
@@ -171,8 +190,6 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         progress: 0,
-        fileName: action.fileName,
-        fileType: action.fileType,
         status: action.status
       };
     case EXPORT_PROGRESS:
