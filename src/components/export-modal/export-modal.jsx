@@ -17,6 +17,7 @@ class ExportModal extends PureComponent {
 
   static propTypes = {
     open: PropTypes.bool,
+    ns: PropTypes.string.isRequired,
     count: PropTypes.number,
     query: PropTypes.object,
     exportCollection: PropTypes.func.isRequired,
@@ -45,7 +46,7 @@ class ExportModal extends PureComponent {
     return (
       <Modal show={open} onHide={handleClose} >
         <Modal.Header closeButton>
-          Export Collection
+          Export Collection {this.props.ns}
         </Modal.Header>
         <Modal.Body>
           <div className={classnames(styles['export-modal-info'])}>

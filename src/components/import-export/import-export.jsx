@@ -32,6 +32,7 @@ class ImportExport extends Component {
   static displayName = 'ImportExportComponent';
 
   static propTypes = {
+    ns: PropTypes.string.isRequired,
     dataService: PropTypes.object.isRequired,
     exportAction: PropTypes.func.isRequired,
     importAction: PropTypes.func.isRequired,
@@ -126,6 +127,7 @@ class ImportExport extends Component {
           open={ this.state.isModalOpen }
           handleClose={ this.handleModalClose }
           exportCollection={ this.handleExport }
+          ns={this.props.ns}
           query={{
             filter: {
               name: 'Joe',

@@ -6,7 +6,7 @@ const NS_CHANGED = 'import-export/ns/NS_CHANGED';
 /**
  * The initial ns state.
  */
-const INITIAL_STATE = {};
+const INITIAL_STATE = '';
 
 /**
  * Create a ns changed action.
