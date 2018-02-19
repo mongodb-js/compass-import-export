@@ -42,18 +42,17 @@ class ExportModal extends PureComponent {
   }
 
   render() {
-    const { open, count, query, handleClose } = this.props;
     return (
-      <Modal show={open} onHide={handleClose} >
+      <Modal show={this.props.open} onHide={this.props.handleClose} >
         <Modal.Header closeButton>
           Export Collection {this.props.ns}
         </Modal.Header>
         <Modal.Body>
           <div className={classnames(styles['export-modal-info'])}>
-            Exporting {count} documents returned by the following query:
+            Exporting {this.props.count} documents returned by the following query:
           </div>
           <div className={classnames(styles['export-modal-query'])}>
-            <QueryViewer query={query} />
+            <QueryViewer query={this.props.query} />
           </div>
           <div className={classnames(styles['export-modal-output'])}>
             Select Output File Type
@@ -85,7 +84,7 @@ class ExportModal extends PureComponent {
           <TextButton
             className="btn btn-default btn-sm"
             text="Cancel"
-            clickHandler={handleClose} />
+            clickHandler={this.props.handleClose} />
           <TextButton
             className="btn btn-primary btn-sm"
             dataTestId="insert-document-button"
