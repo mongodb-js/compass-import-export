@@ -36,6 +36,8 @@ const EXPORT_CANCELED = `${PREFIX}/EXPORT_CANCELED`;
  * Export failed action name.
  */
 const EXPORT_FAILED = `${PREFIX}/EXPORT_FAILED`;
+const SELECT_EXPORT_FILE_TYPE = `${PREFIX}/SELECT_EXPORT_FILE_TYPE`;
+const SELECT_EXPORT_FILE_NAME = `${PREFIX}/SELECT_EXPORT_FILE_NAME`;
 
 /**
  * The initial state.
@@ -43,7 +45,7 @@ const EXPORT_FAILED = `${PREFIX}/EXPORT_FAILED`;
 const INITIAL_STATE = {
   isOpen: false,
   progress: 0,
-  fileName: null,
+  fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED
 };
@@ -64,6 +66,16 @@ export const exportAction = (status, fileName, fileType) => ({
   status: status,
   fileName: fileName,
   fileType: fileType
+});
+
+export const selectExportFileType = (fileType) => ({
+  type: SELECT_EXPORT_FILE_TYPE,
+  fileType: fileType
+});
+
+export const selectExportFileName = (fileName) => ({
+  type: SELECT_EXPORT_FILE_NAME,
+  fileName: fileName
 });
 
 /**
@@ -170,6 +182,16 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         error: action.error
+      };
+    case SELECT_EXPORT_FILE_TYPE:
+      return {
+        ...state,
+        fileType: action.fileType
+      };
+    case SELECT_EXPORT_FILE_NAME:
+      return {
+        ...state,
+        fileName: action.fileName
       };
     default:
       return state;

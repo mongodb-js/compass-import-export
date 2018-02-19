@@ -20,42 +20,28 @@ class ExportModal extends PureComponent {
     count: PropTypes.number,
     query: PropTypes.object,
     exportCollection: PropTypes.func.isRequired,
-    handleClose: PropTypes.func.isRequired
+    handleClose: PropTypes.func.isRequired,
+    selectExportFileType: PropTypes.func.isRequired,
+    selectExportFileName: PropTypes.func.isRequired,
+    fileType: PropTypes.string,
+    fileName: PropTypes.string
   };
-
-  state = {
-    fileType: FILE_TYPES.JSON,
-    fileName: ''
-  };
-
-  componentWillReceiveProps() {
-    this.setState({
-      fileType: FILE_TYPES.JSON,
-      fileName: ''
-    });
-  }
-
-  handleFileTypeSelect = (type) => {
-    this.setState({ fileType: type });
-  }
 
   handleDialogOpen = () => {
-    const file = fileOpenDialog(this.state.fileType);
+    const file = fileOpenDialog(this.props.fileType);
     if (file) {
-      this.setState({ fileName: file[0] });
+      this.props.selectExportFileName(file[0]);
     }
   }
 
   handleExportClick = () => {
-    const { fileName, fileType } = this.state;
-    if (fileName) {
-      this.props.exportCollection(fileName, fileType);
+    if (this.props.fileName) {
+      this.props.exportCollection(this.props.fileName, this.props.fileType);
     }
   }
 
   render() {
     const { open, count, query, handleClose } = this.props;
-    const { fileType, fileName } = this.state;
     return (
       <Modal show={open} onHide={handleClose} >
         <Modal.Header closeButton>
@@ -74,26 +60,19 @@ class ExportModal extends PureComponent {
           <div
             className={classnames(styles['export-modal-type-selector'])}
             type="radio"
-            name="file-type-selector"
-          >
+            name="file-type-selector">
             <Button
-              className={classnames({[styles.selected]: fileType === FILE_TYPES.JSON})}
-              onClick={this.handleFileTypeSelect.bind(this, FILE_TYPES.JSON)}
-            >JSON</Button>
+              className={classnames({[styles.selected]: this.props.fileType === FILE_TYPES.JSON})}
+              onClick={this.props.selectExportFileType.bind(this, FILE_TYPES.JSON)}>JSON</Button>
             <Button
-              className={classnames({[styles.selected]: fileType === FILE_TYPES.CSV})}
-              onClick={this.handleFileTypeSelect.bind(this, FILE_TYPES.CSV)}
-            >CSV</Button>
+              className={classnames({[styles.selected]: this.props.fileType === FILE_TYPES.CSV})}
+              onClick={this.props.selectExportFileType.bind(this, FILE_TYPES.CSV)}>CSV</Button>
           </div>
           <form>
             <FormGroup controlId="export-file">
               <ControlLabel>Select File</ControlLabel>
               <InputGroup>
-                <FormControl
-                  type="text"
-                  value={fileName}
-                  readOnly
-                />
+                <FormControl type="text" value={this.props.fileName} readOnly />
                 <InputGroup.Button>
                   <Button onClick={this.handleDialogOpen}>Browse</Button>
                 </InputGroup.Button>

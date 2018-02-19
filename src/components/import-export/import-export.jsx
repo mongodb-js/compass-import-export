@@ -6,7 +6,11 @@ import { connect } from 'react-redux';
 import { TextButton } from 'hadron-react-buttons';
 
 import { nsChanged } from 'modules/ns';
-import { exportAction } from 'modules/export';
+import {
+  exportAction,
+  selectExportFileType,
+  selectExportFileName
+} from 'modules/export';
 import { importAction } from 'modules/import';
 
 import fileOpenDialog from 'utils/file-open-dialog';
@@ -31,8 +35,12 @@ class ImportExport extends Component {
     dataService: PropTypes.object.isRequired,
     exportAction: PropTypes.func.isRequired,
     importAction: PropTypes.func.isRequired,
+    exportFileType: PropTypes.string.isRequired,
+    exportFileName: PropTypes.string.isRequired,
     exportProgress: PropTypes.number,
-    importProgress: PropTypes.number
+    importProgress: PropTypes.number,
+    selectExportFileType: PropTypes.func.isRequired,
+    selectExportFileName: PropTypes.func.isRequired
   };
 
   state = {
@@ -126,6 +134,10 @@ class ImportExport extends Component {
             }
           }}
           count={225}
+          fileType={this.props.exportFileType}
+          fileName={this.props.exportFileName}
+          selectExportFileType={this.props.selectExportFileType}
+          selectExportFileName={this.props.selectExportFileName}
         />
       </div>
     );
@@ -143,7 +155,9 @@ const mapStateToProps = (state) => ({
   ns: state.ns,
   dataService: state.dataService,
   exportProgress: state.exportData.progress,
-  importProgress: state.importData.progress
+  importProgress: state.importData.progress,
+  exportFileType: state.exportData.fileType,
+  exportFileName: state.exportData.fileName
 });
 
 /**
@@ -151,5 +165,11 @@ const mapStateToProps = (state) => ({
  */
 export default connect(
   mapStateToProps,
-  { nsChanged, exportAction, importAction }
+  {
+    nsChanged,
+    exportAction,
+    importAction,
+    selectExportFileType,
+    selectExportFileName
+  }
 )(ImportExport);
