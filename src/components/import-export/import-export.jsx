@@ -19,16 +19,24 @@ import CancelButton from 'components/cancel-button';
 
 import styles from './import-export.less';
 
+const PROCESS = {
+  IMPORT: 'IMPORT',
+  EXPORT: 'EXPORT'
+};
+
 class ImportExport extends Component {
   static displayName = 'ImportExportComponent';
 
   static propTypes = {
     dataService: PropTypes.object.isRequired,
     exportAction: PropTypes.func.isRequired,
-    exportProgress: PropTypes.number
+    importAction: PropTypes.func.isRequired,
+    exportProgress: PropTypes.number,
+    importProgress: PropTypes.number
   };
 
   state = {
+    currentProcess: '',
     progress: 0,
     isLastProcessCanceled: false,
     isModalOpen: false
@@ -48,17 +56,30 @@ class ImportExport extends Component {
   };
 
   handleExport = (fileName, fileType) => {
-    this.setState({ isLastProcessCanceled: false, isModalOpen: false });
+    this.setState({ currentProcess: PROCESS.EXPORT, isLastProcessCanceled: false, isModalOpen: false });
     this.props.exportAction(PROCESS_STATUS.STARTED, fileName, fileType);
   }
+
+  handleImport = () => {
+    const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
+    if (fileName) {
+      this.props.importAction(PROCESS_STATUS.STARTED, fileName[0]);
+      this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
+    }
+  };
 
   handleCancel = () => {
     switch (this.state.currentProcess) {
       case PROCESS.EXPORT:
         this.props.exportAction(PROCESS_STATUS.CANCELLED);
         break;
+      case PROCESS.IMPORT:
+        this.props.importAction(PROCESS_STATUS.CANCELLED);
+        break;
+      default:
+        this.setState({ currentProcess: '' });
     }
-    this.setState({ isLastProcessCanceled: true });
+    this.setState({ currentProcess: '', isLastProcessCanceled: true });
   }
 
   handleModalClose = () => {
@@ -73,27 +94,39 @@ class ImportExport extends Component {
   render() {
     return (
       <div className={classnames(styles['import-export'])}>
+        <p>Compass Import/Export Plugin</p>
         <TextButton
           className="btn btn-default btn-sm"
           clickHandler={ this.handleImport }
-          text="Import" />
+          text="Import"
+        />
         <TextButton
           className="btn btn-default btn-sm"
           clickHandler={ this.handleExportModalOpen }
-          text="Export" />
+          text="Export"
+        />
         <div>
           <ProgressBar
             progress={ this.state.progress }
             complete={ this.state.progress === 100 }
-            canceled={ this.state.isLastProcessCanceled } />
+            canceled={ this.state.isLastProcessCanceled }
+          />
           { this.state.currentProcess ? <CancelButton onClick={ this.handleCancel } /> : null }
 
         </div>
         <ExportModal
-          open={this.props.isExportOpen}
-          exportCollection={this.handleExport}
-          query={this.props.query}
-          count={this.props.count} />
+          open={ this.state.isModalOpen }
+          handleClose={ this.handleModalClose }
+          exportCollection={ this.handleExport }
+          query={{
+            filter: {
+              name: 'Joe',
+              age: 25,
+              loc: 'New York'
+            }
+          }}
+          count={225}
+        />
       </div>
     );
   }
