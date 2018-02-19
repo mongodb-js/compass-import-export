@@ -1,6 +1,6 @@
-const { dialog } = require('electron').remote;
-
 export default function fileOpenDialog(fileType) {
+  const { dialog } = require('electron').remote;
+
   const isFileTypesArray = Array.isArray(fileType);
   const filters = isFileTypesArray ?
   fileType.map(ft => ({
