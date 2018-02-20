@@ -41,6 +41,10 @@ class ImportExport extends Component {
     global.hadronApp.appRegistry.emit('open-export', this.props.ns, { filter: {}});
   };
 
+  handleImportModalOpen = () => {
+    global.hadronApp.appRegistry.emit('open-import', this.props.ns);
+  };
+
   // handleImport = () => {
     // const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
     // if (fileName) {
@@ -63,11 +67,11 @@ class ImportExport extends Component {
       <div className={classnames(styles['import-export'])}>
         <TextButton
           className="btn btn-default btn-sm"
-          clickHandler={ this.handleImport }
+          clickHandler={this.handleImportModalOpen}
           text="Import" />
         <TextButton
           className="btn btn-default btn-sm"
-          clickHandler={ this.handleExportModalOpen }
+          clickHandler={this.handleExportModalOpen}
           text="Export" />
         <ExportModal
           open={this.props.exportOpen}
