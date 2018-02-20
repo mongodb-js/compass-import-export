@@ -59,7 +59,9 @@ class ExportModal extends PureComponent {
    * Handle clicking the cancel button.
    */
   handleCancel = () => {
-    this.props.exportAction(PROCESS_STATUS.CANCELLED);
+    if (this.props.status !== PROCESS_STATUS.COMPLETED) {
+      this.props.exportAction(PROCESS_STATUS.CANCELLED);
+    }
   }
 
   /**
@@ -127,13 +129,14 @@ class ExportModal extends PureComponent {
             </FormGroup>
           </form>
           <div className={classnames(styles['export-modal-progress'])}>
-            <ProgressBar
-              active
-              now={this.props.progress}
-              bsStyle={this.getProgressStyle()} />
-            { this.props.status === PROCESS_STATUS.STARTED
-                ? <CancelButton onClick={ this.handleCancel } />
-                : null }
+            <div className={classnames(styles['export-modal-progress-bar'])}>
+              <ProgressBar
+                now={this.props.progress}
+                bsStyle={this.getProgressStyle()} />
+            </div>
+            <div className={classnames(styles['export-modal-progress-cancel'])}>
+              <CancelButton onClick={ this.handleCancel } />
+            </div>
           </div>
           <div className={errorClassName}>
             {this.props.error ? this.props.error.message : null}
@@ -142,7 +145,7 @@ class ExportModal extends PureComponent {
         <Modal.Footer>
           <TextButton
             className="btn btn-default btn-sm"
-            text="Cancel"
+            text={this.props.status === PROCESS_STATUS.COMPLETED ? 'Close' : 'Cancel'}
             clickHandler={this.handleClose} />
           <TextButton
             className="btn btn-primary btn-sm"

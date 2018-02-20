@@ -120,6 +120,7 @@
     "javascript-stringify": "^1.6.0",
     "mongodb-ace-theme": "0.0.1",
     "mongodb-extended-json": "^1.10.0",
+    "pump": "^3.0.0",
     "react-ace": "^5.7.0",
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",

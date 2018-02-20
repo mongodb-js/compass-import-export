@@ -54,6 +54,8 @@ const INITIAL_STATE = {
   status: PROCESS_STATUS.UNSPECIFIED
 };
 
+let exportStatus = PROCESS_STATUS.UNSPECIFIED;
+
 /**
  * Export action creator.
  *
@@ -128,8 +130,8 @@ const exportProgress = (progress) => ({
  *
  * @returns {Object} The action.
  */
-const exportFinished = (action) => ({
-  type: action.status !== PROCESS_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
+const exportFinished = () => ({
+  type: exportStatus !== PROCESS_STATUS.CANCELLED ? EXPORT_COMPLETED : EXPORT_CANCELED
 });
 
 /**
@@ -155,7 +157,8 @@ const exportFailed = (error) => ({
 export const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_ACTION)
     .flatMap(act => {
-      if (act.status === PROCESS_STATUS.CANCELLED) {
+      exportStatus = act.status;
+      if (exportStatus === PROCESS_STATUS.CANCELLED) {
         return Observable.empty();
       }
 
@@ -166,13 +169,15 @@ export const exportStartedEpic = (action$, store) =>
       docTransform.pipe(fws);
       return streamToObservable(docTransform)
         .map(() => exportProgress((fws.bytesWritten * 100) / stats.rawTotalDocumentSize))
-        .takeWhile((a) => a.status !== PROCESS_STATUS.CANCELLED)
+        .takeWhile(() => exportStatus !== PROCESS_STATUS.CANCELLED)
         .catch(exportFailed)
-        .concat(Observable.of('').map((a) => exportFinished(a)))
+        .concat(Observable.of('').map(() => {
+          return exportFinished();
+        }))
         .finally(() => {
           cursor.close();
           docTransform.end();
-          fws.close();
+          fws.end();
         });
     });
 
@@ -200,17 +205,20 @@ const reducer = (state = INITIAL_STATE, action) => {
     case EXPORT_COMPLETED:
       return {
         ...state,
-        progress: 100
+        progress: 100,
+        status: PROCESS_STATUS.COMPLETED
       };
     case EXPORT_CANCELED:
       return {
         ...state,
-        progress: 0
+        progress: 0,
+        status: PROCESS_STATUS.CANCELED
       };
     case EXPORT_FAILED:
       return {
         ...state,
-        error: action.error
+        error: action.error,
+        status: PROCESS_STATUS.FAILED
       };
     case SELECT_EXPORT_FILE_TYPE:
       return {
@@ -224,7 +232,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       };
     case OPEN_EXPORT:
       return {
-        ...state,
+        ...INITIAL_STATE,
         query: action.query,
         isOpen: true
       };
