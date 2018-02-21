@@ -33,7 +33,7 @@
     "react-tooltip": "^3.2.6"
   },
   "devDependencies": {
-    "@mongodb-js/compass-collection-stats": "^2.0.1",
+    "@mongodb-js/compass-collection-stats": "^2.0.2",
     "@storybook/react": "^3.2.0",
     "autoprefixer": "^7.1.2",
     "babel-cli": "^6.10.1",
