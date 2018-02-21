@@ -138,7 +138,6 @@ export const importStartedEpic = (action$, store) =>
       frs.pipe(splitLines);
       return streamToObservable(splitLines)
         .map((docs) => {
-          console.log(docs);
           return dataService.putMany(ns, docs, { ordered: false }).catch((e) => {
             store.dispatch(importFailed(e));
           });
