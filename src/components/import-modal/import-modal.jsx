@@ -6,11 +6,16 @@ import {
 } from 'react-bootstrap';
 import { TextButton } from 'hadron-react-buttons';
 import fileOpenDialog from 'utils/file-open-dialog';
-import PROCESS_STATUS from 'constants/process-status';
+import PROCESS_STATUS, { FINISHED_STATUSES } from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import CancelButton from 'components/cancel-button';
 
 import styles from './import-modal.less';
+
+/**
+ * The error message.
+ */
+const ERROR = 'Import ran with errors:';
 
 /**
  * The import collection modal.
@@ -40,6 +45,7 @@ class ImportModal extends PureComponent {
     if (this.props.status === PROCESS_STATUS.STARTED) return 'info';
     if (this.props.status === PROCESS_STATUS.COMPLETED) return 'success';
     if (this.props.status === PROCESS_STATUS.CANCELED) return 'warning';
+    if (this.props.status === PROCESS_STATUS.FAILED) return 'warning';
   }
 
   /**
@@ -130,13 +136,13 @@ class ImportModal extends PureComponent {
             </div>
           </div>
           <div className={errorClassName}>
-            {this.props.error ? this.props.error.message : null}
+            {this.props.error ? `${ERROR} ${this.props.error.message}` : null}
           </div>
         </Modal.Body>
         <Modal.Footer>
           <TextButton
             className="btn btn-default btn-sm"
-            text={this.props.status === PROCESS_STATUS.COMPLETED ? 'Close' : 'Cancel'}
+            text={FINISHED_STATUSES.includes(this.props.status) ? 'Close' : 'Cancel'}
             clickHandler={this.handleClose} />
           <TextButton
             className="btn btn-primary btn-sm"

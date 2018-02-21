@@ -1,7 +1,6 @@
 import fs from 'fs';
 import { Observable } from 'rxjs';
 import streamToObservable from 'stream-to-observable';
-import importCollection from 'utils/import';
 import SplitLines from 'utils/split-lines-transform';
 import PROCESS_STATUS from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
@@ -29,10 +28,16 @@ const INITIAL_STATE = {
 
 let importStatus = PROCESS_STATUS.UNSPECIFIED;
 
-export const importAction = (status, fileName) => ({
+/**
+ * The import action.
+ *
+ * @param {String} status - The status.
+ *
+ * @returns {Object} The action.
+ */
+export const importAction = (status) => ({
   type: IMPORT_ACTION,
-  status,
-  fileName
+  status: status
 });
 
 /**
@@ -77,33 +82,53 @@ export const closeImport = () => ({
   type: CLOSE_IMPORT
 });
 
-const importProgress = progress => ({
+/**
+ * Import progress action.
+ *
+ * @param {Number} progress - The progress.
+ *
+ * @returns {Object} The action.
+ */
+const importProgress = (progress) => ({
   type: IMPORT_PROGRESS,
-  progress
+  progress: progress
 });
 
+/**
+ * Import finished action creator.
+ *
+ * @returns {Object} The action.
+ */
 const importFinished = () => ({
   type: importStatus !== PROCESS_STATUS.CANCELLED ? IMPORT_COMPLETED : IMPORT_CANCELED
 });
 
-const importFailed = error => ({
+/**
+ * Action creator for imports that fail.
+ *
+ * @param {Error} error - The error.
+ *
+ * @returns {Object} The action.
+ */
+const importFailed = (error) => ({
   type: IMPORT_FAILED,
-  error
+  error: error
 });
 
 export const importStartedEpic = (action$, store) =>
   action$.ofType(IMPORT_ACTION)
     .flatMap(action => {
       importStatus = action.status;
-      if (importStatus === PROCESS_STATUS.CANCELLED) {
+      if (importStatus === PROCESS_STATUS.CANCELLED ||
+          importStatus === PROCESS_STATUS.FAILED) {
         return Observable.empty();
       }
 
       const { ns, dataService, importData } = store.getState();
       const { fileName, fileType } = importData;
       if (!fs.existsSync(fileName)) {
-        // @todo: This breaks.
-        return importFailed('File not found');
+        store.dispatch(importFailed(`File ${fileName} not found`));
+        return Observable.empty();
       }
       const stats = fs.statSync(fileName);
       const fileSizeInBytes = stats.size;
@@ -111,12 +136,17 @@ export const importStartedEpic = (action$, store) =>
       const splitLines = new SplitLines(fileType);
 
       frs.pipe(splitLines);
-      return importCollection(dataService, ns, streamToObservable(splitLines))
+      return streamToObservable(splitLines)
+        .map((docs) => {
+          console.log(docs);
+          return dataService.putMany(ns, docs, { ordered: false }).catch((e) => {
+            store.dispatch(importFailed(e));
+          });
+        })
         .takeWhile(() => importStatus !== PROCESS_STATUS.CANCELLED)
         .map(() => importProgress((frs.bytesRead * 100) / fileSizeInBytes))
         .catch(importFailed)
-        .concat(Observable.of('')
-          .map(() => importFinished()))
+        .concat(Observable.of('').map(() => importFinished()))
         .finally(() => {
           splitLines.end();
           frs.close();
