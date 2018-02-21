@@ -1,6 +1,6 @@
-export default function importCollection(db, name, source) {
-  return source
-    .map(
-      docs => db.collection(name).insertMany(docs, { ordered: false })
-    );
+export default function importCollection(dataService, ns, source) {
+  const collection = dataService.client._collection(ns);
+  return source.map((docs) => {
+    return collection.insertMany(docs, { ordered: false });
+  });
 }

@@ -1,4 +1,5 @@
 import { Transform } from 'stream';
+import EJSON from 'mongodb-extended-json';
 
 import FILE_TYPES from 'constants/file-types';
 
@@ -16,7 +17,7 @@ class SplitLines extends Transform {
   isJSON(line) {
     let o;
     try {
-      o = JSON.parse(line);
+      o = this.parseJsonLine(line);
     } catch (e) {
       return false;
     }
@@ -35,10 +36,14 @@ class SplitLines extends Transform {
     const obj = {};
     this.keys.forEach(
       (key, i) => {
-        obj[key] = this.isJSON(values[i]) ? JSON.parse(values[i]) : values[i];
+        obj[key] = this.isJSON(values[i]) ? this.parseJsonLine(values[i]) : values[i];
       }
     );
     return obj;
+  }
+
+  parseJsonLine(line) {
+    return EJSON.parse(line, null, 'strict');
   }
 
   _transform(chunk, encoding, callback) {
@@ -56,12 +61,12 @@ class SplitLines extends Transform {
 
       if (this.isLastLineComplete(lines[lines.length - 1])) {
         this[kSource] = '';
-        const parsedLines = this.type === FILE_TYPES.JSON ? lines.map(JSON.parse) : lines.map(this.toCSV);
+        const parsedLines = this.type === FILE_TYPES.JSON ? lines.map(this.parseJsonLine) : lines.map(this.toCSV);
         return callback(null, parsedLines);
       }
       const linesToWrite = lines.splice(0, lines.length - 1);
       this[kSource] = lines[0];
-      const parsedLines = this.type === FILE_TYPES.JSON ? linesToWrite.map(JSON.parse) : linesToWrite.map(this.toCSV);
+      const parsedLines = this.type === FILE_TYPES.JSON ? linesToWrite.map(this.parseJsonLine) : linesToWrite.map(this.toCSV);
       return callback(null, parsedLines);
     }
   }

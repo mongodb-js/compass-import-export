@@ -5,6 +5,7 @@ import { rootReducer, rootEpic } from 'modules';
 
 import { nsChanged } from 'modules/ns';
 import { openExport } from 'modules/export';
+import { openImport } from 'modules/import';
 import { dataServiceConnected } from 'modules/data-service';
 import { statsRecieved } from 'modules/stats';
 
@@ -38,7 +39,7 @@ store.onActivated = (appRegistry) => {
   appRegistry.on('collection-changed', ns => store.dispatch(nsChanged(ns)));
   appRegistry.on('data-service-connected', (err, ds) => store.dispatch(dataServiceConnected(err, ds)));
   appRegistry.on('open-export', (ns, query) => store.dispatch(openExport(query)));
-  // appRegistry.on('open-import', () => {});
+  appRegistry.on('open-import', () => store.dispatch(openImport()));
   appRegistry.getStore('CollectionStats.Store').listen((stats) => {
     store.dispatch(statsRecieved(stats));
   });

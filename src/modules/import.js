@@ -1,26 +1,80 @@
 import fs from 'fs';
 import { Observable } from 'rxjs';
 import streamToObservable from 'stream-to-observable';
-
 import importCollection from 'utils/import';
 import SplitLines from 'utils/split-lines-transform';
-
 import PROCESS_STATUS from 'constants/process-status';
+import FILE_TYPES from 'constants/file-types';
 
-const IMPORT_ACTION = 'import-export/import/IMPORT_ACTION';
-const IMPORT_PROGRESS = 'import-export/import/IMPORT_PROGRESS';
-const IMPORT_COMPLETED = 'import-export/import/IMPORT_COMPLETED';
-const IMPORT_CANCELED = 'import-export/import/IMPORT_CANCELED';
-const IMPORT_FAILED = 'import-export/import/IMPORT_FAILED';
+const PREFIX = 'import-export/import';
 
-const INITIAL_STATE = {};
+const IMPORT_ACTION = `${PREFIX}/IMPORT_ACTION`;
+const IMPORT_PROGRESS = `${PREFIX}/IMPORT_PROGRESS`;
+const IMPORT_COMPLETED = `${PREFIX}/IMPORT_COMPLETED`;
+const IMPORT_CANCELED = `${PREFIX}/IMPORT_CANCELED`;
+const IMPORT_FAILED = `${PREFIX}/IMPORT_FAILED`;
+const SELECT_IMPORT_FILE_TYPE = `${PREFIX}/SELECT_IMPORT_FILE_TYPE`;
+const SELECT_IMPORT_FILE_NAME = `${PREFIX}/SELECT_IMPORT_FILE_NAME`;
+const OPEN_IMPORT = `${PREFIX}/OPEN_IMPORT`;
+const CLOSE_IMPORT = `${PREFIX}/CLOSE_IMPORT`;
+
+const INITIAL_STATE = {
+  isOpen: false,
+  progress: 0,
+  error: null,
+  fileName: '',
+  fileType: FILE_TYPES.JSON,
+  status: PROCESS_STATUS.UNSPECIFIED
+};
 
 let importStatus = PROCESS_STATUS.UNSPECIFIED;
 
-const importAction = (status, fileName) => ({
+export const importAction = (status, fileName) => ({
   type: IMPORT_ACTION,
   status,
   fileName
+});
+
+/**
+ * Select the file type of the import.
+ *
+ * @param {String} fileType - The file type.
+ *
+ * @returns {Object} The action.
+ */
+export const selectImportFileType = (fileType) => ({
+  type: SELECT_IMPORT_FILE_TYPE,
+  fileType: fileType
+});
+
+/**
+ * Select the file name to import to.
+ *
+ * @param {String} fileName - The file name.
+ *
+ * @returns {Object} The action.
+ */
+export const selectImportFileName = (fileName) => ({
+  type: SELECT_IMPORT_FILE_NAME,
+  fileName: fileName
+});
+
+/**
+ * Open the import modal.
+ *
+ * @returns {Object} The action.
+ */
+export const openImport = () => ({
+  type: OPEN_IMPORT
+});
+
+/**
+ * Close the import modal.
+ *
+ * @returns {Object} The action.
+ */
+export const closeImport = () => ({
+  type: CLOSE_IMPORT
 });
 
 const importProgress = progress => ({
@@ -37,7 +91,7 @@ const importFailed = error => ({
   error
 });
 
-const importStartedEpic = (action$, store) =>
+export const importStartedEpic = (action$, store) =>
   action$.ofType(IMPORT_ACTION)
     .flatMap(action => {
       importStatus = action.status;
@@ -45,20 +99,19 @@ const importStartedEpic = (action$, store) =>
         return Observable.empty();
       }
 
-      const { client: { database } } = store.getState().dataService;
-      const { fileName } = action;
-      const { ns } = store.getState();
+      const { ns, dataService, importData } = store.getState();
+      const { fileName, fileType } = importData;
       if (!fs.existsSync(fileName)) {
+        // @todo: This breaks.
         return importFailed('File not found');
       }
       const stats = fs.statSync(fileName);
       const fileSizeInBytes = stats.size;
       const frs = fs.createReadStream(fileName, 'utf8');
-      const fileType = fileName.split('.')[fileName.split('.').length - 1];
       const splitLines = new SplitLines(fileType);
 
       frs.pipe(splitLines);
-      return importCollection(database, ns.split('.')[1], streamToObservable(splitLines))
+      return importCollection(dataService, ns, streamToObservable(splitLines))
         .takeWhile(() => importStatus !== PROCESS_STATUS.CANCELLED)
         .map(() => importProgress((frs.bytesRead * 100) / fileSizeInBytes))
         .catch(importFailed)
@@ -76,7 +129,6 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         progress: 0,
-        fileName: action.fileName,
         status: action.status
       };
     case IMPORT_PROGRESS:
@@ -87,18 +139,40 @@ const reducer = (state = INITIAL_STATE, action) => {
     case IMPORT_COMPLETED:
       return {
         ...state,
-        progress: 100
+        progress: 100,
+        status: PROCESS_STATUS.COMPLETED
       };
     case IMPORT_CANCELED:
       return {
         ...state,
         progress: 0,
-        reason: action.reason
+        status: PROCESS_STATUS.CANCELED
       };
     case IMPORT_FAILED:
       return {
         ...state,
-        error: action.error
+        error: action.error,
+        status: PROCESS_STATUS.FAILED
+      };
+    case SELECT_IMPORT_FILE_TYPE:
+      return {
+        ...state,
+        fileType: action.fileType
+      };
+    case SELECT_IMPORT_FILE_NAME:
+      return {
+        ...state,
+        fileName: action.fileName
+      };
+    case OPEN_IMPORT:
+      return {
+        ...INITIAL_STATE,
+        isOpen: true
+      };
+    case CLOSE_IMPORT:
+      return {
+        ...state,
+        isOpen: false
       };
     default:
       return state;
@@ -106,7 +180,3 @@ const reducer = (state = INITIAL_STATE, action) => {
 };
 
 export default reducer;
-export {
-  importStartedEpic,
-  importAction
-};

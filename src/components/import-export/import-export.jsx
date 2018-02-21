@@ -4,8 +4,14 @@ import classnames from 'classnames';
 import { connect } from 'react-redux';
 import { TextButton } from 'hadron-react-buttons';
 import { nsChanged } from 'modules/ns';
-import { importAction } from 'modules/import';
+import {
+  importAction,
+  selectImportFileType,
+  selectImportFileName,
+  closeImport
+} from 'modules/import';
 import ExportModal from 'components/export-modal';
+import ImportModal from 'components/import-modal';
 import {
   exportAction,
   selectExportFileType,
@@ -20,9 +26,17 @@ class ImportExport extends Component {
 
   static propTypes = {
     ns: PropTypes.string.isRequired,
-    dataService: PropTypes.object.isRequired,
     importAction: PropTypes.func.isRequired,
+    closeImport: PropTypes.func.isRequired,
     importProgress: PropTypes.number,
+    importFileType: PropTypes.string.isRequired,
+    importFileName: PropTypes.string.isRequired,
+    importCount: PropTypes.number,
+    importOpen: PropTypes.bool.isRequired,
+    importError: PropTypes.object,
+    importStatus: PropTypes.string.isRequired,
+    selectImportFileType: PropTypes.func.isRequired,
+    selectImportFileName: PropTypes.func.isRequired,
     exportAction: PropTypes.func.isRequired,
     closeExport: PropTypes.func.isRequired,
     exportFileType: PropTypes.string.isRequired,
@@ -45,18 +59,6 @@ class ImportExport extends Component {
     global.hadronApp.appRegistry.emit('open-import', this.props.ns);
   };
 
-  // handleImport = () => {
-    // const fileName = fileOpenDialog([FILE_TYPES.JSON, FILE_TYPES.CSV]);
-    // if (fileName) {
-      // this.props.importAction(PROCESS_STATUS.STARTED, fileName[0]);
-      // this.setState({ currentProcess: PROCESS.IMPORT, isLastProcessCanceled: false });
-    // }
-  // };
-
-  // handleCancel = () => {
-    // this.props.importAction(PROCESS_STATUS.CANCELLED);
-  // }
-
   /**
    * Render ImportExport component.
    *
@@ -73,6 +75,19 @@ class ImportExport extends Component {
           className="btn btn-default btn-sm"
           clickHandler={this.handleExportModalOpen}
           text="Export" />
+        <ImportModal
+          open={this.props.importOpen}
+          closeImport={this.props.closeImport}
+          importAction={this.props.importAction}
+          status={this.props.importStatus}
+          progress={this.props.importProgress}
+          ns={this.props.ns}
+          error={this.props.importError}
+          count={this.props.importCount}
+          fileType={this.props.importFileType}
+          fileName={this.props.importFileName}
+          selectImportFileType={this.props.selectImportFileType}
+          selectImportFileName={this.props.selectImportFileName} />
         <ExportModal
           open={this.props.exportOpen}
           closeExport={this.props.closeExport}
@@ -101,8 +116,13 @@ class ImportExport extends Component {
  */
 const mapStateToProps = (state) => ({
   ns: state.ns,
-  dataService: state.dataService,
   importProgress: state.importData.progress,
+  importCount: state.stats.rawDocumentCount,
+  importOpen: state.importData.isOpen,
+  importError: state.importData.error,
+  importFileType: state.importData.fileType,
+  importFileName: state.importData.fileName,
+  importStatus: state.importData.status,
   exportProgress: state.exportData.progress,
   exportCount: state.stats.rawDocumentCount,
   exportQuery: state.exportData.query,
@@ -120,8 +140,11 @@ export default connect(
   mapStateToProps,
   {
     nsChanged,
-    exportAction,
     importAction,
+    selectImportFileType,
+    selectImportFileName,
+    closeImport,
+    exportAction,
     selectExportFileType,
     selectExportFileName,
     closeExport
