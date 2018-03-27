@@ -39,9 +39,10 @@ class SplitLines extends Transform {
       this.keys = this[kSource].split('\n')[0].split(',');
     }
     if (this[kSource].indexOf('\n') > -1) {
-      const lines = this[kSource].split('\n').filter(Boolean);
+      const endsWithNewLine = this[kSource].endsWith('\n');
+      const lines = this[kSource].split('\n');
 
-      if (this.isLastLineComplete(lines[lines.length - 1])) {
+      if (this.isLastLineComplete(lines[lines.length - 1], endsWithNewLine)) {
         this[kSource] = '';
         try {
           // Drop the header row for CSV.
@@ -58,7 +59,6 @@ class SplitLines extends Transform {
         }
       }
       const linesToWrite = lines.splice(0, lines.length - 1);
-      console.log(linesToWrite);
       if (this.isFirstRecord && this.type === FILE_TYPES.CSV) {
         linesToWrite.splice(0, 1);
       }
@@ -85,11 +85,11 @@ class SplitLines extends Transform {
     return typeof o === 'object';
   }
 
-  isLastLineComplete(line) {
+  isLastLineComplete(line, endsWithNewLine) {
     if (this.type === FILE_TYPES.JSON) {
       return this.isJSON(line);
     }
-    return line.match(/(.+)$/g) !== null;
+    return endsWithNewLine;
   }
 
   toCSV = (line) => {

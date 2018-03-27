@@ -335,7 +335,6 @@ describe('SplitLinesTransform', () => {
                 f2: 'val2',
                 f3: 'val3'
               });
-              expect(transform.source).to.equal('');
               expect(error).to.equal(null);
               done();
             });
