@@ -35,7 +35,10 @@ const dataServiceConnected = (error, dataService) => {
  */
 const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === DATA_SERVICE_CONNECTED) {
-    return action.dataService;
+    return {
+      error: action.error,
+      dataService: action.dataService
+    };
   }
   return state;
 };
