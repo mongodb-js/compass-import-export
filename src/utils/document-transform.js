@@ -1,5 +1,5 @@
 /* eslint no-extend-native: 0 */
-import { TransformStream } from 'stream';
+import { Transform } from 'stream';
 import EJSON from 'mongodb-extended-json';
 import FILE_TYPES from 'constants/file-types';
 
@@ -128,7 +128,7 @@ const CSV_MAPPINGS = {
 /**
  * Transforms documents into lines in an export file.
  */
-class DocumentTransform extends TransformStream {
+class DocumentTransform extends Transform {
   constructor(type) {
     super({ writableObjectMode: true, encoding: 'utf8' });
     this.type = type;
