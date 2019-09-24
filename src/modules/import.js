@@ -12,7 +12,9 @@ const PREFIX = 'import-export/import';
 /**
  * Import action name.
  */
-export const IMPORT_ACTION = `${PREFIX}/IMPORT_ACTION`;
+export const START_IMPORT = `${PREFIX}/START_IMPORT`;
+
+export const CANCEL_IMPORT = `${PREFIX}/CANCEL_IMPORT`;
 
 /**
  * Progress action name.
@@ -79,9 +81,12 @@ let importStatus = PROCESS_STATUS.UNSPECIFIED;
  *
  * @returns {Object} The action.
  */
-export const importAction = (status) => ({
-  type: IMPORT_ACTION,
-  status: status
+export const startImport = () => ({
+  type: START_IMPORT
+});
+
+export const cancelImport = () => ({
+  type: CANCEL_IMPORT
 });
 
 /**
@@ -169,6 +174,8 @@ const isFinished = () => {
   return FINISHED_STATUS.includes(importStatus);
 };
 
+
+
 /**
  * Epic for handling the start of an import.
  *
@@ -221,15 +228,7 @@ export const importStartedEpic = (action$, store) =>
       });
     });
 
-/**
- * Returns the state after the import action.
- *
- * @param {Object} state - The state.
- * @param {Object} action - The action.
- *
- * @returns {Object} The new state.
- */
-export const doImportAction = (state, action) => ({
+export const doStartImport = (state, action) => ({
   ...state,
   progress: 0,
   status: action.status
@@ -266,6 +265,12 @@ export const doImportFinished = (state) => {
     status: (state.status === PROCESS_STATUS.STARTED) ? PROCESS_STATUS.COMPLETED : state.status
   };
 };
+
+export const doCancelImport = () => {
+  return (dispatch, getState) => {
+    debugger;
+  };
+}
 
 /**
  * Returns the state after the import failed action.
@@ -330,11 +335,32 @@ export const doCloseImport = (state) => ({
   isOpen: false
 });
 
+// const doImport = () => {
+//   return (dispatch, getState) => {
+//     const state = getState();
+//     const dataService = state.dataService.dataService;
+//     const ns = state.namespace;
+//     if (dataService) {
+//       dispatch(loadingInputDocuments());
+//       dataService.count(ns, FILTER, OPTIONS, (error, count) => {
+//         dataService.aggregate(ns, SAMPLE, OPTIONS, (err, cursor) => {
+//           if (err) return dispatch(updateInputDocuments(error ? NA : count, [], err));
+//           cursor.toArray((e, docs) => {
+//             dispatch(updateInputDocuments(error ? NA : count, docs, e));
+//             cursor.close();
+//           });
+//         });
+//       });
+//     }
+//   };
+// };
+
 /**
  * The reducer function mappings.
  */
 const MAPPINGS = {
-  [IMPORT_ACTION]: doImportAction,
+  [START_IMPORT]: doStartImport,
+  [CANCEL_IMPORT]: doCancelImport,
   [IMPORT_PROGRESS]: doImportProgress,
   [IMPORT_FINISHED]: doImportFinished,
   [IMPORT_FAILED]: doImportFailed,

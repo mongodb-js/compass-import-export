@@ -11,7 +11,8 @@ import PROCESS_STATUS, { FINISHED_STATUSES } from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import ProgressBar from 'components/progress-bar';
 import {
-  importAction,
+  startImport,
+  cancelImport,
   selectImportFileType,
   selectImportFileName,
   closeImport
@@ -39,7 +40,8 @@ class ImportModal extends PureComponent {
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
     error: PropTypes.object,
-    importAction: PropTypes.func.isRequired,
+    startImport: PropTypes.func.isRequired,
+    cancelImport: PropTypes.func.isRequired,
     closeImport: PropTypes.func.isRequired,
     selectImportFileType: PropTypes.func.isRequired,
     selectImportFileName: PropTypes.func.isRequired,
@@ -71,7 +73,7 @@ class ImportModal extends PureComponent {
    */
   handleCancel = () => {
     if (this.props.status === PROCESS_STATUS.STARTED) {
-      this.props.importAction(PROCESS_STATUS.CANCELED);
+      this.props.cancelImport();
     }
   }
 
@@ -88,7 +90,7 @@ class ImportModal extends PureComponent {
    */
   handleImport = () => {
     if (this.props.fileName) {
-      this.props.importAction(PROCESS_STATUS.STARTED);
+      this.props.startImport();
     }
   }
 
@@ -104,7 +106,7 @@ class ImportModal extends PureComponent {
           progress={this.props.progress}
           status={this.props.status}
           message={this.getStatusMessage()}
-          action={this.props.importAction} />
+          cancelImport={this.props.cancelImport} />
       );
     }
   }
@@ -189,7 +191,8 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   {
-    importAction,
+    startImport,
+    cancelImport,
     selectImportFileType,
     selectImportFileName,
     closeImport
