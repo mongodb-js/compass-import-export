@@ -13,12 +13,14 @@ import importData from './import';
  *
  * @returns {Function} The reducer.
  */
-export const rootReducer = combineReducers({
-  ns,
+const rootReducer = combineReducers({
+  appRegistry,
+  globalAppRegistry,
   dataService,
+  ns,
   stats,
   exportData,
-  importData,
-  appRegistry,
-  globalAppRegistry
+  importData
 });
+
+export default rootReducer;
