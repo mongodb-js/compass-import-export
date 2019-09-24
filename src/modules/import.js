@@ -1,10 +1,8 @@
 import fs from 'fs';
-import { Observable } from 'rxjs';
-import streamToObservable from 'stream-to-observable';
-import SplitLines from 'utils/split-lines-transform';
 import PROCESS_STATUS from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import { appRegistryEmit } from 'modules/app-registry';
+import stream from 'stream';
 
 /**
  * The prefix.
@@ -184,45 +182,43 @@ export const importStartedEpic = (action$, store) =>
     .flatMap(action => {
       importStatus = action.status;
       if (isFinished()) {
-        return Observable.empty();
+        return;
       }
 
       const { ns, dataService, importData } = store.getState();
       const { fileName, fileType } = importData;
-      if (!fs.existsSync(fileName)) {
-        return Observable.of(importFailed(new Error(`File ${fileName} not found`)));
-      }
-      const stats = fs.statSync(fileName);
-      const fileSizeInBytes = stats.size;
-      const frs = fs.createReadStream(fileName, 'utf8');
-      const splitLines = new SplitLines(fileType);
-      frs.pipe(splitLines);
-      return streamToObservable(splitLines)
-        .concatMap((docs) => {
-          if (docs.length > 0) {
-            return dataService.putMany(ns, docs, { ordered: false })
-              .then(() => {
-                return importProgress((frs.bytesRead * 100) / fileSizeInBytes);
-              });
+
+      fs.exists(fileName, function(exists) {
+        if (!exists) {
+          return importFailed(new Error(`File ${fileName} not found`));
+        }
+
+        const source = fs.createReadStream(fileName, 'utf8');
+        const parser = csv();
+        // TODO progress name for multi checkpoints in same pipeline.
+  
+        const progress = new stream.Transform({
+          writableObjectMode: true,
+        
+          transform(chunk, encoding, callback) {
+            console.log('progress');
+        
+            // Push the data onto the readable queue.
+            callback(null, chunk);
           }
-          return Observable.of(importProgress((frs.bytesRead * 100) / fileSizeInBytes));
-        })
-        .takeWhile(() => {
-          return importStatus !== PROCESS_STATUS.CANCELED;
-        })
-        .catch((error) => {
-          return Observable.of(importFailed(error));
-        })
-        .concat(Observable.of('').map(() => {
-          return importFinished();
-        }))
-        .concat(Observable.of('').map(() => {
-          return appRegistryEmit('import-finished', fileSizeInBytes, fileType);
-        }))
-        .finally(() => {
-          splitLines.end();
-          frs.close();
         });
+  
+        const dest = dataServiceWriteStream(dataService, ns);
+  
+        stream.pipeline(source, parser, progress, dest, function(err, res) {
+          if (err) {
+            return importFailed(err);
+          }
+          console.log('done', err, res);
+          importFinished();
+          appRegistryEmit('import-finished', fileSizeInBytes, fileType);
+        });
+      });
     });
 
 /**

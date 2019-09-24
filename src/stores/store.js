@@ -1,8 +1,6 @@
 import { createStore, applyMiddleware } from 'redux';
-import { createEpicMiddleware } from 'redux-observable';
-
-import { rootReducer, rootEpic } from 'modules';
-
+import thunk from 'redux-thunk';
+import reducer from 'modules';
 import { nsChanged } from 'modules/ns';
 import { openExport, queryChanged } from 'modules/export';
 import { openImport } from 'modules/import';
@@ -25,15 +23,13 @@ export const setDataProvider = (store, error, provider) => {
 };
 
 const configureStore = (options = {}) => {
-  const epicMiddleware = createEpicMiddleware(rootEpic);
-
   /**
    * The store has a combined reducer.
    */
   const store = createStore(
-    rootReducer,
+    reducer,
     applyMiddleware(
-      epicMiddleware
+      thunk
     )
   );
 
@@ -71,6 +67,9 @@ const configureStore = (options = {}) => {
     store.dispatch(nsChanged(options.namespace));
   }
 
+  /**
+   * TODO: Make this use `hadron-ipc`/"unified compass API".
+   */
   if (ipcRenderer) {
     /**
      * Listen for compass:open-export messages.

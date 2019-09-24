@@ -1,6 +1,4 @@
 import fs from 'fs';
-import { Observable } from 'rxjs/Observable';
-import streamToObservable from 'stream-to-observable';
 import exportCollection from 'utils/export';
 import PROCESS_STATUS from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
@@ -206,7 +204,7 @@ export const exportStartedEpic = (action$, store) =>
   action$.ofType(EXPORT_ACTION).flatMap(act => {
     exportStatus = act.status;
     if (exportStatus === PROCESS_STATUS.CANCELED) {
-      return Observable.empty();
+      return;
     }
 
     const { stats, ns, exportData, dataService } = store.getState();
