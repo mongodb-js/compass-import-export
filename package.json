@@ -139,6 +139,7 @@
     "javascript-stringify": "^1.6.0",
     "lodash.throttle": "^4.1.1",
     "mongodb-extended-json": "^1.10.1",
+    "progress-stream": "^2.0.0",
     "react-ios-switch": "^0.1.19",
     "redux-observable": "^0.17.0",
     "redux-thunk": "^2.3.0",

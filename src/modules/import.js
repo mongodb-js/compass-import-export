@@ -3,9 +3,12 @@ import PROCESS_STATUS from 'constants/process-status';
 import { appRegistryEmit } from 'modules/app-registry';
 import stream from 'stream';
 
+// const throttle = require('lodash.throttle');
+const createProgressStream = require('progress-stream');
+
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/writable-collection-stream';
-import { createCSVParser } from 'utils/parsers';
+import { createCSVParser, createJSONParser, createEJSONDeserializer } from 'utils/parsers';
 
 const debug = createLogger('import');
 
@@ -189,31 +192,57 @@ export const startImport = () => {
     const { ns, dataService: { dataService }, importData } = state;
     const { fileName, fileType, fileStats: { size } } = importData;
     const source = fs.createReadStream(fileName, 'utf8');
-    var throttle = require('lodash.throttle');
-    var f = throttle(function() {
-      debug('progress', (source.bytesRead / size) * 100);
-      dispatch(updateProgress((source.bytesRead / size) * 100));
-    }, 500);
-    const progress = new stream.Transform({
-      objectMode: true,
-      transform(chunk, encoding, callback) {
-        f();
-        callback(null, chunk);
-      }
+
+    const progress = createProgressStream({
+      length: size,
+      time: 250 /* ms */
     });
+
+    progress.on('progress', function(info) {
+      console.log(info);
+      dispatch(updateProgress(info.percentage));
+
+      /*
+      {
+        percentage: 9.05,
+        transferred: 949624,
+        length: 10485760,
+        remaining: 9536136,
+        eta: 42,
+        runtime: 3,
+        delta: 295396,
+        speed: 949624
+      }
+      */
+    });
+    
+    // const f = throttle(function() {
+    //   debug('progress', (source.bytesRead / size) * 100);
+    //   dispatch(updateProgress((source.bytesRead / size) * 100));
+    // }, 250);
+
+    // const progress = new stream.Transform({
+    //   objectMode: true,
+    //   transform(chunk, encoding, callback) {
+    //     f();
+    //     callback(null, chunk);
+    //   }
+    // });
+
+    const deserializer = createEJSONDeserializer();
 
     let parser;
     if (fileType === 'csv') {
       parser = createCSVParser();
     } else {
-      throw new Error('json next.');
+      parser = createJSONParser();
     }
 
     const dest = createCollectionWriteStream(dataService, ns);
     debug('executing pipeline');
 
     dispatch(importStarted(source, dest));
-    stream.pipeline(source, parser, progress, dest, function(err, res) {
+    stream.pipeline(source, parser, deserializer, progress, dest, function(err, res) {
       if (err) {
         return dispatch(importFailed(err));
       }
