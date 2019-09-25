@@ -7,7 +7,7 @@ import stream from 'stream';
 const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
-import { createCollectionWriteStream } from 'utils/writable-collection-stream';
+import { createCollectionWriteStream } from 'utils/collection-stream';
 import { createCSVParser, createJSONParser, createEJSONDeserializer } from 'utils/parsers';
 
 const debug = createLogger('import');

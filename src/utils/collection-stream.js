@@ -1,6 +1,6 @@
 const stream = require('stream');
 const Writable = stream.Writable;
-const debug = require('./logger').createLogger('writable-collection-stream');
+const debug = require('./logger').createLogger('collection-stream');
 
 class WritableCollectionStream extends Writable {
   constructor(dataService, ns) {
@@ -54,8 +54,10 @@ class WritableCollectionStream extends Writable {
   }
 }
 
-export default WritableCollectionStream;
-
 export const createCollectionWriteStream = function(dataService, ns) {
   return new WritableCollectionStream(dataService, ns);
+};
+
+export const createReadableCollectionStream = function(dataService, ns, spec) {
+  return dataService.fetch(ns, spec.filter || {});
 };
