@@ -9,23 +9,23 @@ class WritableCollectionStream extends Writable {
     this.ns = ns;
     this.BATCH_SIZE = 1000;
     this.buf = [];
+    this.docsWritten = 0;
   }
 
   _write(chunk, encoding, next) {
     this.buf.push(chunk);
     if (this.buf.length === this.BATCH_SIZE) {
-      debug('insertMany');
       return this.dataService.insertMany(
         this.ns,
         this.buf,
         { ordered: false },
         (err) => {
+          this.docsWritten += this.buf.length;
           this.buf = [];
           if (err) {
             debug('error', err);
             return next(err);
           }
-          debug('success. next()');
           next();
         }
       );
@@ -37,6 +37,7 @@ class WritableCollectionStream extends Writable {
     debug('running _final()');
     if (this.buf.length === 0) {
       debug('nothing left in buffer');
+      debug('%d docs written', this.docsWritten);
       return;
     }
     debug('draining buffered docs', this.buf.length);
@@ -44,8 +45,10 @@ class WritableCollectionStream extends Writable {
     this.dataService.insertMany(this.ns, this.buf, { ordered: false }, (
       err
     ) => {
+      this.docsWritten += this.buf.length;
       this.buf = [];
       debug('buffer drained', err);
+      debug('%d docs written', this.docsWritten);
       callback(err);
     });
   }

@@ -42,7 +42,7 @@ class ImportModal extends PureComponent {
       return this.props.error.message;
     }
     if (this.props.status === PROCESS_STATUS.STARTED) {
-      return 'Importing...';
+      return `Importing...`;
     }
     if (this.props.status === PROCESS_STATUS.CANCELED) {
       return 'Import canceled.';

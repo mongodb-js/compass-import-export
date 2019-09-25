@@ -90,7 +90,7 @@ class ProgressBar extends PureComponent {
   render() {
     return (
       <div className={this.getWrapperClassName()}>
-        <div className={this.getBarClassName()} style={{ width: this.getWidth() }}>
+        <div className={this.getBarClassName()} style={{ width: this.getWidth(), transition: 'width 0.2s ease' }}>
           {this.props.message}
         </div>
         {this.renderCancelButton()}

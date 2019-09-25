@@ -120,14 +120,17 @@ const reducer = (state = INITIAL_STATE, action) => {
       ...state,
       error: null,
       progress: 0,
-      status: PROCESS_STATUS.STARTED
+      status: PROCESS_STATUS.STARTED,
+      source: action.source,
+      dest: action.dest
     };
   }
 
   if (action.type === IMPORT_PROGRESS) {
     return {
       ...state,
-      progress: Number(action.progress.toFixed(2))
+      // progress: Number(action.progress.toFixed(2))
+      progress: action.progress
     };
   }
 
@@ -186,12 +189,15 @@ export const startImport = () => {
     const { ns, dataService: { dataService }, importData } = state;
     const { fileName, fileType, fileStats: { size } } = importData;
     const source = fs.createReadStream(fileName, 'utf8');
-    
+    var throttle = require('lodash.throttle');
+    var f = throttle(function() {
+      debug('progress', (source.bytesRead / size) * 100);
+      dispatch(updateProgress((source.bytesRead / size) * 100));
+    }, 500);
     const progress = new stream.Transform({
       objectMode: true,
       transform(chunk, encoding, callback) {
-        debug('progress', source.bytesRead, size);
-        updateProgress(source.bytesRead / size);
+        f();
         callback(null, chunk);
       }
     });
@@ -220,14 +226,17 @@ export const startImport = () => {
 
 export const cancelImport = () => {
   return (dispatch, getState) => {
-    const { source, dest } = getState();
+    const { importData } = getState();
+    const { source, dest } = importData;
 
     if (!source || !dest) {
       debug('no active import to cancel.');
       return;
     }
+    debug('cancelling');
     source.unpipe();
     dest.end();
+    debug('import cancelled by user');
     dispatch({type: IMPORT_CANCELLED});
   };
 };
