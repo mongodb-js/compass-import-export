@@ -1,55 +1,28 @@
 import fs from 'fs';
 import PROCESS_STATUS from 'constants/process-status';
-import FILE_TYPES from 'constants/file-types';
 import { appRegistryEmit } from 'modules/app-registry';
 import stream from 'stream';
 
+import { createLogger } from 'utils/logger';
+import { createCollectionWriteStream } from 'utils/writable-collection-stream';
+import { createCSVParser } from 'utils/parsers';
+
+const debug = createLogger('import');
+
+
 /**
- * The prefix.
+ * ## Action names
  */
 const PREFIX = 'import-export/import';
-
-/**
- * Import action name.
- */
-export const START_IMPORT = `${PREFIX}/START_IMPORT`;
-
-export const CANCEL_IMPORT = `${PREFIX}/CANCEL_IMPORT`;
-
-/**
- * Progress action name.
- */
-export const IMPORT_PROGRESS = `${PREFIX}/IMPORT_PROGRESS`;
-
-/**
- * Finised action name.
- */
-export const IMPORT_FINISHED = `${PREFIX}/IMPORT_FINISHED`;
-
-/**
- * Failed action name.
- */
-export const IMPORT_FAILED = `${PREFIX}/IMPORT_FAILED`;
-
-/**
- * Select file type action name.
- */
-export const SELECT_IMPORT_FILE_TYPE = `${PREFIX}/SELECT_IMPORT_FILE_TYPE`;
-
-/**
- * Select file name action name.
- */
-export const SELECT_IMPORT_FILE_NAME = `${PREFIX}/SELECT_IMPORT_FILE_NAME`;
-
-/**
- * Open action name.
- */
-export const OPEN_IMPORT = `${PREFIX}/OPEN_IMPORT`;
-
-/**
- * Close action name.
- */
-export const CLOSE_IMPORT = `${PREFIX}/CLOSE_IMPORT`;
+const IMPORT_STARTED = `${PREFIX}/STARTED`;
+const IMPORT_CANCELLED = `${PREFIX}/CANCELLED`;
+const IMPORT_PROGRESS = `${PREFIX}/PROGRESS`;
+const IMPORT_FINISHED = `${PREFIX}/FINISHED`;
+const IMPORT_FAILED = `${PREFIX}/FAILED`;
+const IMPORT_FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
+const IMPORT_FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
+const OPEN_IMPORT = `${PREFIX}/OPEN`;
+const CLOSE_IMPORT = `${PREFIX}/CLOSE`;
 
 /**
  * Initial state.
@@ -59,35 +32,11 @@ const INITIAL_STATE = {
   progress: 0,
   error: null,
   fileName: '',
-  fileType: FILE_TYPES.JSON,
-  status: PROCESS_STATUS.UNSPECIFIED
+  fileType: undefined,
+  status: PROCESS_STATUS.UNSPECIFIED,
+  fileStats: null,
+  docsWritten: 0
 };
-
-/**
- * Finished statuses.
- */
-const FINISHED_STATUS = [
-  PROCESS_STATUS.COMPLETED,
-  PROCESS_STATUS.CANCELED,
-  PROCESS_STATUS.FAILED
-];
-
-let importStatus = PROCESS_STATUS.UNSPECIFIED;
-
-/**
- * The import action.
- *
- * @param {String} status - The status.
- *
- * @returns {Object} The action.
- */
-export const startImport = () => ({
-  type: START_IMPORT
-});
-
-export const cancelImport = () => ({
-  type: CANCEL_IMPORT
-});
 
 /**
  * Select the file type of the import.
@@ -97,20 +46,8 @@ export const cancelImport = () => ({
  * @returns {Object} The action.
  */
 export const selectImportFileType = (fileType) => ({
-  type: SELECT_IMPORT_FILE_TYPE,
+  type: IMPORT_FILE_TYPE_SELECTED,
   fileType: fileType
-});
-
-/**
- * Select the file name to import to.
- *
- * @param {String} fileName - The file name.
- *
- * @returns {Object} The action.
- */
-export const selectImportFileName = (fileName) => ({
-  type: SELECT_IMPORT_FILE_NAME,
-  fileName: fileName
 });
 
 /**
@@ -131,244 +68,26 @@ export const closeImport = () => ({
   type: CLOSE_IMPORT
 });
 
-/**
- * Import progress action.
- *
- * @param {Number} progress - The progress.
- *
- * @returns {Object} The action.
- */
-export const importProgress = (progress) => ({
+const updateProgress = (progress) => ({
   type: IMPORT_PROGRESS,
   progress: progress,
   error: null
 });
 
-/**
- * Import finished action creator.
- *
- * @returns {Object} The action.
- */
-export const importFinished = () => ({
+const importStarted = (source, dest) => ({
+  type: IMPORT_STARTED,
+  source: source,
+  dest: dest
+});
+
+const importFinished = () => ({
   type: IMPORT_FINISHED
 });
 
-/**
- * Action creator for imports that fail.
- *
- * @param {Error} error - The error.
- *
- * @returns {Object} The action.
- */
-export const importFailed = (error) => ({
+const importFailed = (error) => ({
   type: IMPORT_FAILED,
   error: error
 });
-
-/**
- * Is the import finished?
- *
- * @returns {Boolean} If the import is finished.
- */
-const isFinished = () => {
-  return FINISHED_STATUS.includes(importStatus);
-};
-
-
-
-/**
- * Epic for handling the start of an import.
- *
- * @param {ActionsObservable} action$ - The actions observable.
- * @param {Store} store - The store.
- *
- * @returns {Epic} The epic.
- */
-export const importStartedEpic = (action$, store) =>
-  action$.ofType(IMPORT_ACTION)
-    .flatMap(action => {
-      importStatus = action.status;
-      if (isFinished()) {
-        return;
-      }
-
-      const { ns, dataService, importData } = store.getState();
-      const { fileName, fileType } = importData;
-
-      fs.exists(fileName, function(exists) {
-        if (!exists) {
-          return importFailed(new Error(`File ${fileName} not found`));
-        }
-
-        const source = fs.createReadStream(fileName, 'utf8');
-        const parser = csv();
-        // TODO progress name for multi checkpoints in same pipeline.
-  
-        const progress = new stream.Transform({
-          writableObjectMode: true,
-        
-          transform(chunk, encoding, callback) {
-            console.log('progress');
-        
-            // Push the data onto the readable queue.
-            callback(null, chunk);
-          }
-        });
-  
-        const dest = dataServiceWriteStream(dataService, ns);
-  
-        stream.pipeline(source, parser, progress, dest, function(err, res) {
-          if (err) {
-            return importFailed(err);
-          }
-          console.log('done', err, res);
-          importFinished();
-          appRegistryEmit('import-finished', fileSizeInBytes, fileType);
-        });
-      });
-    });
-
-export const doStartImport = (state, action) => ({
-  ...state,
-  progress: 0,
-  status: action.status
-});
-
-/**
- * Returns the state after the import progress action.
- *
- * @param {Object} state - The state.
- * @param {Object} action - The action.
- *
- * @returns {Object} The new state.
- */
-export const doImportProgress = (state, action) => ({
-  ...state,
-  progress: Number(action.progress.toFixed(2))
-});
-
-/**
- * Returns the state after the import completed action.
- *
- * @param {Object} state - The state.
- *
- * @returns {Object} The new state.
- */
-export const doImportFinished = (state) => {
-  const isNotComplete = state.error ||
-    state.status === PROCESS_STATUS.CANCELED ||
-    state.status === PROCESS_STATUS.FAILED;
-  return {
-    ...state,
-    progress: 100,
-    isOpen: isNotComplete ? true : false,
-    status: (state.status === PROCESS_STATUS.STARTED) ? PROCESS_STATUS.COMPLETED : state.status
-  };
-};
-
-export const doCancelImport = () => {
-  return (dispatch, getState) => {
-    debugger;
-  };
-}
-
-/**
- * Returns the state after the import failed action.
- *
- * @param {Object} state - The state.
- * @param {Object} action - The action.
- *
- * @returns {Object} The new state.
- */
-export const doImportFailed = (state, action) => ({
-  ...state,
-  error: action.error,
-  progress: 100,
-  status: PROCESS_STATUS.FAILED
-});
-
-/**
- * Returns the state after the file type selected action.
- *
- * @param {Object} state - The state.
- * @param {Object} action - The action.
- *
- * @returns {Object} The new state.
- */
-export const doImportFileTypeSelected = (state, action) => ({
-  ...state,
-  fileType: action.fileType
-});
-
-/**
- * Returns the state after the file name selected action.
- *
- * @param {Object} state - The state.
- * @param {Object} action - The action.
- *
- * @returns {Object} The new state.
- */
-export const doImportFileNameSelected = (state, action) => ({
-  ...state,
-  fileName: action.fileName
-});
-
-/**
- * Returns the state after the open action.
- *
- * @returns {Object} The new state.
- */
-export const doOpenImport = () => ({
-  ...INITIAL_STATE,
-  isOpen: true
-});
-
-/**
- * Returns the state after the close action.
- *
- * @param {Object} state - The state.
- *
- * @returns {Object} The new state.
- */
-export const doCloseImport = (state) => ({
-  ...state,
-  isOpen: false
-});
-
-// const doImport = () => {
-//   return (dispatch, getState) => {
-//     const state = getState();
-//     const dataService = state.dataService.dataService;
-//     const ns = state.namespace;
-//     if (dataService) {
-//       dispatch(loadingInputDocuments());
-//       dataService.count(ns, FILTER, OPTIONS, (error, count) => {
-//         dataService.aggregate(ns, SAMPLE, OPTIONS, (err, cursor) => {
-//           if (err) return dispatch(updateInputDocuments(error ? NA : count, [], err));
-//           cursor.toArray((e, docs) => {
-//             dispatch(updateInputDocuments(error ? NA : count, docs, e));
-//             cursor.close();
-//           });
-//         });
-//       });
-//     }
-//   };
-// };
-
-/**
- * The reducer function mappings.
- */
-const MAPPINGS = {
-  [START_IMPORT]: doStartImport,
-  [CANCEL_IMPORT]: doCancelImport,
-  [IMPORT_PROGRESS]: doImportProgress,
-  [IMPORT_FINISHED]: doImportFinished,
-  [IMPORT_FAILED]: doImportFailed,
-  [SELECT_IMPORT_FILE_TYPE]: doImportFileTypeSelected,
-  [SELECT_IMPORT_FILE_NAME]: doImportFileNameSelected,
-  [OPEN_IMPORT]: doOpenImport,
-  [CLOSE_IMPORT]: doCloseImport
-};
 
 /**
  * The import module reducer.
@@ -379,8 +98,161 @@ const MAPPINGS = {
  * @returns {Object} The state.
  */
 const reducer = (state = INITIAL_STATE, action) => {
-  const fn = MAPPINGS[action.type];
-  return fn ? fn(state, action) : state;
+  if (action.type === IMPORT_FILE_SELECTED) {
+    return {
+      ...state,
+      fileName: action.fileName,
+      fileStats: action.fileStats
+    };
+  }
+
+  if (action.type === IMPORT_FAILED) {
+    return {
+      ...state,
+      error: action.error,
+      progress: 100,
+      status: PROCESS_STATUS.FAILED
+    };
+  }
+
+  if (action.type === IMPORT_STARTED) {
+    return {
+      ...state,
+      error: null,
+      progress: 0,
+      status: PROCESS_STATUS.STARTED
+    };
+  }
+
+  if (action.type === IMPORT_PROGRESS) {
+    return {
+      ...state,
+      progress: Number(action.progress.toFixed(2))
+    };
+  }
+
+  if (action.type === IMPORT_FINISHED) {
+    const isComplete = !(state.error || state.status === PROCESS_STATUS.CANCELED);
+    return {
+      ...state,
+      progress: 100,
+      // isOpen: !isComplete,
+      status: (isComplete) ? PROCESS_STATUS.COMPLETED : state.status,
+      source: undefined,
+      dest: undefined
+    };
+  }
+
+  if (action.type === IMPORT_CANCELLED) {
+    return {
+      ...state,
+      progress: 100,
+      // isOpen: !isComplete,
+      status: PROCESS_STATUS.CANCELED,
+      source: undefined,
+      dest: undefined
+    };
+  }
+
+  /**
+   * Open the `<ImportModal />`
+   */
+  if (action.type === OPEN_IMPORT) {
+    return {
+      ...INITIAL_STATE,
+      isOpen: true
+    };
+  }
+
+  if (action.type === CLOSE_IMPORT) {
+    return {
+      ...state,
+      isOpen: false
+    };
+  }
+
+  if (action.type === IMPORT_FILE_TYPE_SELECTED) {
+    return {
+      ...state,
+      fileType: action.fileType
+    };
+  }
+  return state;
+};
+
+export const startImport = () => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const { ns, dataService: { dataService }, importData } = state;
+    const { fileName, fileType, fileStats: { size } } = importData;
+    const source = fs.createReadStream(fileName, 'utf8');
+    
+    const progress = new stream.Transform({
+      objectMode: true,
+      transform(chunk, encoding, callback) {
+        debug('progress', source.bytesRead, size);
+        updateProgress(source.bytesRead / size);
+        callback(null, chunk);
+      }
+    });
+
+    let parser;
+    if (fileType === 'csv') {
+      parser = createCSVParser();
+    } else {
+      throw new Error('json next.');
+    }
+
+    const dest = createCollectionWriteStream(dataService, ns);
+    debug('executing pipeline');
+
+    dispatch(importStarted(source, dest));
+    stream.pipeline(source, parser, progress, dest, function(err, res) {
+      if (err) {
+        return dispatch(importFailed(err));
+      }
+      debug('done', err, res);
+      dispatch(importFinished());
+      dispatch(appRegistryEmit('import-finished', size, fileType));
+    });
+  };
+};
+
+export const cancelImport = () => {
+  return (dispatch, getState) => {
+    const { source, dest } = getState();
+
+    if (!source || !dest) {
+      debug('no active import to cancel.');
+      return;
+    }
+    source.unpipe();
+    dest.end();
+    dispatch({type: IMPORT_CANCELLED});
+  };
+};
+
+
+export const selectImportFileName = (fileName) => {
+  return (dispatch) => {
+    fs.exists(fileName, function(exists) {
+      if (!exists) {
+        return dispatch(importFailed(new Error(`File ${fileName} not found`)));
+      }
+      fs.stat(fileName, function(err, stats) {
+        if (err) {
+          return dispatch(importFailed(err));
+        }
+
+        // TODO: Use peek-stream to detect import file type.
+        dispatch({
+          type: IMPORT_FILE_SELECTED,
+          fileName: fileName,
+          fileStats: stats
+        });
+      });
+    });
+  };
 };
 
 export default reducer;

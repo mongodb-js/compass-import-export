@@ -20,18 +20,6 @@ import {
 
 import styles from './import-modal.less';
 
-/**
- * Progress messages.
- */
-const MESSAGES = {
-  [ PROCESS_STATUS.STARTED ]: 'Importing...',
-  [ PROCESS_STATUS.CANCELED ]: 'Import canceled.',
-  [ PROCESS_STATUS.COMPLETED ]: 'Import completed!'
-};
-
-/**
- * The import collection modal.
- */
 class ImportModal extends PureComponent {
 
   static propTypes = {
@@ -49,13 +37,21 @@ class ImportModal extends PureComponent {
     fileName: PropTypes.string
   };
 
-  /**
-   * Get the status message.
-   *
-   * @returns {String} The status message.
-   */
   getStatusMessage = () => {
-    return MESSAGES[this.props.status] || (this.props.error ? this.props.error.message : '');
+    if (this.props.error) {
+      return this.props.error.message;
+    }
+    if (this.props.status === PROCESS_STATUS.STARTED) {
+      return 'Importing...';
+    }
+    if (this.props.status === PROCESS_STATUS.CANCELED) {
+      return 'Import canceled.';
+    }
+    if (this.props.status === PROCESS_STATUS.COMPLETED) {
+      return 'Import completed!';
+    }
+    
+    return 'UNKNOWN';
   }
 
   /**
@@ -72,9 +68,7 @@ class ImportModal extends PureComponent {
    * Handle clicking the cancel button.
    */
   handleCancel = () => {
-    if (this.props.status === PROCESS_STATUS.STARTED) {
-      this.props.cancelImport();
-    }
+    this.props.cancelImport();
   }
 
   /**
@@ -88,10 +82,8 @@ class ImportModal extends PureComponent {
   /**
    * Handle clicking the import button.
    */
-  handleImport = () => {
-    if (this.props.fileName) {
-      this.props.startImport();
-    }
+  handleImportBtnClicked = () => {
+    this.props.startImport();
   }
 
   /**
@@ -161,7 +153,7 @@ class ImportModal extends PureComponent {
             className="btn btn-primary btn-sm"
             text="Import"
             disabled={this.props.status === PROCESS_STATUS.STARTED}
-            clickHandler={this.handleImport} />
+            clickHandler={this.handleImportBtnClicked} />
         </Modal.Footer>
       </Modal>
     );
