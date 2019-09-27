@@ -102,7 +102,7 @@ class ImportModal extends PureComponent {
           progress={this.props.progress}
           status={this.props.status}
           message={this.getStatusMessage()}
-          cancelImport={this.props.cancelImport}
+          cancel={this.props.cancelImport}
         />
       );
     }

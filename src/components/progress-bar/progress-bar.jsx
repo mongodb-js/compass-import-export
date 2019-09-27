@@ -6,11 +6,6 @@ import PROCESS_STATUS from 'constants/process-status';
 import styles from './progress-bar.less';
 
 /**
- * Cancel text.
- */
-const CANCEL = 'Cancel';
-
-/**
  * The progress bar component.
  */
 class ProgressBar extends PureComponent {
@@ -20,7 +15,7 @@ class ProgressBar extends PureComponent {
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
     message: PropTypes.string.isRequired,
-    cancelImport: PropTypes.func.isRequired
+    cancel: PropTypes.func.isRequired
   }
 
   /**
@@ -64,7 +59,7 @@ class ProgressBar extends PureComponent {
    * Handle clicking the cancel button.
    */
   handleCancel = () => {
-    this.props.cancelImport();
+    this.props.cancel();
   }
 
   /**
@@ -76,7 +71,7 @@ class ProgressBar extends PureComponent {
     if (this.props.status === PROCESS_STATUS.STARTED) {
       return (
         <div className={classnames(styles['progress-bar-cancel'])} onClick={this.handleCancel}>
-          {CANCEL}
+          Cancel
         </div>
       );
     }

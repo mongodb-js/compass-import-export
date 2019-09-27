@@ -13,7 +13,8 @@ import fileSaveDialog from 'utils/file-save-dialog';
 import PROCESS_STATUS from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import {
-  exportAction,
+  startExport,
+  cancelExport,
   toggleFullCollection,
   selectExportFileType,
   selectExportFileName,
@@ -44,7 +45,8 @@ class ExportModal extends PureComponent {
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
     error: PropTypes.object,
-    exportAction: PropTypes.func.isRequired,
+    startExport: PropTypes.func.isRequired,
+    cancelExport: PropTypes.func.isRequired,
     closeExport: PropTypes.func.isRequired,
     isFullCollection: PropTypes.bool.isRequired,
     toggleFullCollection: PropTypes.func.isRequired,
@@ -77,9 +79,7 @@ class ExportModal extends PureComponent {
    * Handle clicking the cancel button.
    */
   handleCancel = () => {
-    if (this.props.status === PROCESS_STATUS.STARTED) {
-      this.props.exportAction(PROCESS_STATUS.CANCELED);
-    }
+    this.props.cancelExport();
   }
 
   /**
@@ -94,9 +94,7 @@ class ExportModal extends PureComponent {
    * Handle clicking the export button.
    */
   handleExport = () => {
-    if (this.props.fileName) {
-      this.props.exportAction(PROCESS_STATUS.STARTED);
-    }
+    this.props.startExport();
   }
 
   /**
@@ -111,7 +109,7 @@ class ExportModal extends PureComponent {
           progress={this.props.progress}
           status={this.props.status}
           message={this.getStatusMessage()}
-          action={this.props.exportAction} />
+          cancel={this.props.cancelExport} />
       );
     }
   }
@@ -223,7 +221,8 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   {
-    exportAction,
+    startExport,
+    cancelExport,
     toggleFullCollection,
     selectExportFileType,
     selectExportFileName,

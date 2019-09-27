@@ -6,11 +6,6 @@ import stats from './stats';
 import exportData from './export';
 import importData from './import';
 
-/**
- * The root reducer for the store.
- *
- * @returns {Function} The reducer.
- */
 const rootReducer = combineReducers({
   appRegistry,
   globalAppRegistry,

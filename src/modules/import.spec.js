@@ -1,4 +1,4 @@
-import reducer, * as actions from 'modules/import';
+import reducer, * as actions from './import';
 import PROCESS_STATUS from 'constants/process-status';
 
 describe('import [module]', () => {
