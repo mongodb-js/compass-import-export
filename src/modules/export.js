@@ -11,7 +11,10 @@ import { createReadableCollectionStream } from 'utils/collection-stream';
 const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
-import { createCSVFormatter, createJSONFormatter, createEJSONSerializer } from 'utils/formatters';
+import {
+  createCSVFormatter,
+  createJSONFormatter
+} from 'utils/formatters';
 
 const debug = createLogger('export');
 
@@ -60,7 +63,7 @@ const onStarted = (source, dest) => ({
   dest: dest
 });
 
-const onProgress = (progress) => ({
+const onProgress = progress => ({
   type: PROGRESS,
   progress: progress
 });
@@ -69,13 +72,14 @@ const onFinished = () => ({
   type: FINISHED
 });
 
-const onError = (error) => ({
+const onError = error => ({
   type: ERROR,
   error: error
 });
 
 // TODO: Refactor this so import and export reuse as much
 // base logic as possible.
+// eslint-disable-next-line complexity
 const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === TOGGLE_FULL_COLLECTION) {
     return {
@@ -125,12 +129,14 @@ const reducer = (state = INITIAL_STATE, action) => {
   }
 
   if (action.type === FINISHED) {
-    const isComplete = !(state.error || state.status === PROCESS_STATUS.CANCELED);
+    const isComplete = !(
+      state.error || state.status === PROCESS_STATUS.CANCELED
+    );
     return {
       ...state,
       progress: 100,
       // isOpen: !isComplete,
-      status: (isComplete) ? PROCESS_STATUS.COMPLETED : state.status,
+      status: isComplete ? PROCESS_STATUS.COMPLETED : state.status,
       source: undefined,
       dest: undefined
     };
@@ -173,7 +179,6 @@ const reducer = (state = INITIAL_STATE, action) => {
   return state;
 };
 
-
 /**
  * Toggle the full collection flag.
  * @api public
@@ -187,7 +192,7 @@ export const toggleFullCollection = () => ({
  * @api public
  * @param {String} fileType
  */
-export const selectExportFileType = (fileType) => ({
+export const selectExportFileType = fileType => ({
   type: SELECT_FILE_TYPE,
   fileType: fileType
 });
@@ -197,7 +202,7 @@ export const selectExportFileType = (fileType) => ({
  * @api public
  * @param {String} fileName
  */
-export const selectExportFileName = (fileName) => ({
+export const selectExportFileName = fileName => ({
   type: SELECT_FILE_NAME,
   fileName: fileName
 });
@@ -207,7 +212,7 @@ export const selectExportFileName = (fileName) => ({
  * @api public
  * @param {Object} query
  */
-export const queryChanged = (query) => ({
+export const queryChanged = query => ({
   type: QUERY_CHANGED,
   query: query
 });
@@ -234,8 +239,16 @@ export const closeExport = () => ({
  */
 export const startExport = () => {
   return (dispatch, getState) => {
-    const { stats, ns, exportData, dataService: { dataService } } = getState();
-    const query = exportData.isFullCollection ? {filter: {}} : exportData.query;
+    const {
+      stats,
+      ns,
+      exportData,
+      dataService: { dataService }
+    } = getState();
+    const query = exportData.isFullCollection
+      ? { filter: {} }
+      : exportData.query;
+
     const source = createReadableCollectionStream(dataService, ns, query);
 
     // TODO: Lucas: stats.rawTotalDocumentSize should instead be a doc counter.
@@ -249,8 +262,6 @@ export const startExport = () => {
       dispatch(onProgress(info.percentage));
     });
 
-    const serializer = createEJSONSerializer();
-
     let formatter;
     if (exportData.fileType === 'csv') {
       formatter = createCSVFormatter();
@@ -263,13 +274,19 @@ export const startExport = () => {
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
-    stream.pipeline(source, serializer, formatter, progress, dest, function(err, res) {
+    stream.pipeline(source, formatter, progress, dest, function(err, res) {
       if (err) {
         return dispatch(onError(err));
       }
       debug('done', err, res);
       dispatch(onFinished());
-      dispatch(appRegistryEmit('export-finished', stats.rawTotalDocumentSize, exportData.fileType));
+      dispatch(
+        appRegistryEmit(
+          'export-finished',
+          stats.rawTotalDocumentSize,
+          exportData.fileType
+        )
+      );
     });
   };
 };
@@ -291,7 +308,7 @@ export const cancelExport = () => {
     source.unpipe();
     dest.end();
     debug('cancelled by user');
-    dispatch({type: CANCELLED});
+    dispatch({ type: CANCELLED });
   };
 };
 
