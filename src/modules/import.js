@@ -100,6 +100,7 @@ const importFailed = (error) => ({
  *
  * @returns {Object} The state.
  */
+// eslint-disable-next-line complexity
 const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === IMPORT_FILE_SELECTED) {
     return {

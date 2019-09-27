@@ -4,13 +4,16 @@ import { ipcRenderer } from 'electron';
 
 import reducer from 'modules';
 
-import { dataServiceConnected, appRegistryActivated, globalAppRegistryActivated, nsChanged } from 'modules/shared';
+import {
+  dataServiceConnected,
+  appRegistryActivated,
+  globalAppRegistryActivated,
+  nsChanged
+} from 'modules/shared';
 
 import { openExport, queryChanged } from 'modules/export';
 import { openImport } from 'modules/import';
 import { statsReceived } from 'modules/stats';
-
-
 
 /**
  * Set the data provider.
@@ -27,12 +30,7 @@ const configureStore = (options = {}) => {
   /**
    * The store has a combined reducer.
    */
-  const store = createStore(
-    reducer,
-    applyMiddleware(
-      thunk
-    )
-  );
+  const store = createStore(reducer, applyMiddleware(thunk));
 
   /**
    * Called when the app registry is activated.
@@ -43,10 +41,12 @@ const configureStore = (options = {}) => {
     const appRegistry = options.localAppRegistry;
     store.dispatch(appRegistryActivated(appRegistry));
 
-    appRegistry.on('query-applied', (query) => store.dispatch(queryChanged(query)));
+    appRegistry.on('query-applied', query =>
+      store.dispatch(queryChanged(query))
+    );
     appRegistry.on('open-import', () => store.dispatch(openImport()));
     appRegistry.on('open-export', () => store.dispatch(openExport()));
-    appRegistry.getStore('CollectionStats.Store').listen((stats) => {
+    appRegistry.getStore('CollectionStats.Store').listen(stats => {
       store.dispatch(statsReceived(stats));
     });
   }
