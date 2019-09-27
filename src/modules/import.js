@@ -132,7 +132,6 @@ const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === IMPORT_PROGRESS) {
     return {
       ...state,
-      // progress: Number(action.progress.toFixed(2))
       progress: action.progress
     };
   }
