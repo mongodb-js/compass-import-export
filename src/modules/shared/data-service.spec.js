@@ -1,4 +1,4 @@
-import reducer, * as actions from 'modules/data-service';
+import reducer, * as actions from './data-service';
 
 describe('data-service [module]', () => {
   describe('#reducer', () => {

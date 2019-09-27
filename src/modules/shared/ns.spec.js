@@ -1,4 +1,4 @@
-import reducer, * as actions from 'modules/ns';
+import reducer, * as actions from './ns';
 
 describe('ns [module]', () => {
   describe('#reducer', () => {

@@ -1,4 +1,4 @@
-import reducer, * as actions from 'modules/global-app-registry';
+import reducer, * as actions from './global-app-registry';
 
 describe('global-app-registry [module]', () => {
   const spy = sinon.spy();

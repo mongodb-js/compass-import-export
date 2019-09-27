@@ -1,10 +1,8 @@
 import { combineReducers } from 'redux';
 
-import ns from './ns';
-import dataService from './data-service';
+import { ns, dataService, appRegistry, globalAppRegistry } from './shared';
+
 import stats from './stats';
-import appRegistry from './app-registry';
-import globalAppRegistry from './global-app-registry';
 import exportData from './export';
 import importData from './import';
 

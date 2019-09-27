@@ -1,15 +1,16 @@
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
+import { ipcRenderer } from 'electron';
+
 import reducer from 'modules';
-import { nsChanged } from 'modules/ns';
+
+import { dataServiceConnected, appRegistryActivated, globalAppRegistryActivated, nsChanged } from 'modules/shared';
+
 import { openExport, queryChanged } from 'modules/export';
 import { openImport } from 'modules/import';
-import { dataServiceConnected } from 'modules/data-service';
-import { appRegistryActivated } from 'modules/app-registry';
-import { globalAppRegistryActivated } from 'modules/global-app-registry';
 import { statsReceived } from 'modules/stats';
 
-import { ipcRenderer } from 'electron';
+
 
 /**
  * Set the data provider.

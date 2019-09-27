@@ -198,35 +198,9 @@ export const startImport = () => {
     });
 
     progress.on('progress', function(info) {
-      console.log(info);
+      debug('progress', info);
       dispatch(updateProgress(info.percentage));
-
-      /*
-      {
-        percentage: 9.05,
-        transferred: 949624,
-        length: 10485760,
-        remaining: 9536136,
-        eta: 42,
-        runtime: 3,
-        delta: 295396,
-        speed: 949624
-      }
-      */
     });
-    
-    // const f = throttle(function() {
-    //   debug('progress', (source.bytesRead / size) * 100);
-    //   dispatch(updateProgress((source.bytesRead / size) * 100));
-    // }, 250);
-
-    // const progress = new stream.Transform({
-    //   objectMode: true,
-    //   transform(chunk, encoding, callback) {
-    //     f();
-    //     callback(null, chunk);
-    //   }
-    // });
 
     const deserializer = createEJSONDeserializer();
 

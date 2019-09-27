@@ -1,10 +1,10 @@
-import reducer, * as actions from 'modules/app-registry';
+import reducer, * as actions from './app-registry';
 
 describe('app-registry [module]', () => {
   const spy = sinon.spy();
 
   describe('#reducer', () => {
-    context('when the action type is APP_REGISTRY_ACTIVATED', () => {
+    context('when the action type is ACTIVATED', () => {
       const action = actions.appRegistryActivated(spy);
 
       it('returns the new state', () => {
@@ -22,7 +22,7 @@ describe('app-registry [module]', () => {
   describe('#statsReceived', () => {
     it('returns the action', () => {
       expect(actions.appRegistryActivated(spy)).to.deep.equal({
-        type: actions.APP_REGISTRY_ACTIVATED,
+        type: actions.ACTIVATED,
         appRegistry: spy
       });
     });
@@ -31,7 +31,7 @@ describe('app-registry [module]', () => {
   describe('#appRegistryEmit', () => {
     it('returns the action', () => {
       expect(actions.appRegistryEmit('refresh-documents', spy)).to.deep.equal({
-        type: actions.APP_REGISTRY_EMIT,
+        type: actions.EMIT,
         name: 'refresh-documents',
         args: [ spy ]
       });
