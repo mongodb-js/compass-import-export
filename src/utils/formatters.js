@@ -1,5 +1,5 @@
 import csv from 'fast-csv';
-import EJSON from 'mongodb-extended-json';
+import { EJSON } from 'bson';
 import { Transform } from 'stream';
 
 /**

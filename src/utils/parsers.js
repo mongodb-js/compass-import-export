@@ -1,7 +1,7 @@
-import csv from 'fast-csv';
-import EJSON from 'mongodb-extended-json';
-import Parser from 'JSONStream';
 import { Transform } from 'stream';
+const Parser = require('JSONStream').parse;
+import { EJSON } from 'bson';
+import csv from 'fast-csv';
 
 /**
  * TODO: Switch to papaparse for `dynamicTyping` of values
@@ -43,14 +43,16 @@ export const createEJSONDeserializer = function() {
     objectMode: true,
     transform: function(data, encoding, done) {
       const parsed = EJSON.deserialize(data);
-      if (!Array.isArray(parsed)) {
-        this.push(parsed);
-      } else {
-        for (let i = 0; i < parsed.length; i++) {
-          this.push(parsed[i]);
-        }
-      }
-      done();
+      done(null, parsed);
+      // debugger;
+      // if (!Array.isArray(parsed)) {
+      //   this.push(parsed);
+      // } else {
+      //   for (let i = 0; i < parsed.length; i++) {
+      //     this.push(parsed[i]);
+      //   }
+      // }
+      // done();
     }
   });
 };

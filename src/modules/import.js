@@ -1,10 +1,10 @@
 import fs from 'fs';
 import PROCESS_STATUS from 'constants/process-status';
-import { appRegistryEmit } from 'modules/app-registry';
+import { appRegistryEmit } from 'modules/compass/app-registry';
 import stream from 'stream';
 
-// const throttle = require('lodash.throttle');
-const createProgressStream = require('progress-stream');
+const throttle = require('lodash.throttle');
+// const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/collection-stream';
@@ -35,7 +35,7 @@ const INITIAL_STATE = {
   progress: 0,
   error: null,
   fileName: '',
-  fileType: undefined,
+  fileType: 'json',
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0
@@ -193,15 +193,28 @@ export const startImport = () => {
     const { fileName, fileType, fileStats: { size } } = importData;
     const source = fs.createReadStream(fileName, 'utf8');
 
-    const progress = createProgressStream({
-      length: size,
-      time: 250 /* ms */
+    const f = throttle(function() {
+      debug('progress', (source.bytesRead / size) * 100);
+      dispatch(updateProgress((source.bytesRead / size) * 100));
+    }, 250);
+    const progress = new stream.Transform({
+      objectMode: true,
+      transform(chunk, encoding, callback) {
+        // debug('progress', (source.bytesRead / size) * 100);
+        // dispatch(updateProgress((source.bytesRead / size) * 100));
+        f();
+        callback(null, chunk);
+      }
     });
+    // const progress = createProgressStream({
+    //   length: size,
+    //   time: 250 /* ms */
+    // });
 
-    progress.on('progress', function(info) {
-      debug('progress', info);
-      dispatch(updateProgress(info.percentage));
-    });
+    // progress.on('progress', function(info) {
+    //   debug('progress', info);
+    //   dispatch(updateProgress(info.percentage));
+    // });
 
     const deserializer = createEJSONDeserializer();
 
@@ -218,6 +231,7 @@ export const startImport = () => {
     dispatch(importStarted(source, dest));
     stream.pipeline(source, parser, deserializer, progress, dest, function(err, res) {
       if (err) {
+        debugger;
         return dispatch(importFailed(err));
       }
       debug('done', err, res);

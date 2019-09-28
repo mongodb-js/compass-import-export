@@ -38,7 +38,7 @@ class WritableCollectionStream extends Writable {
     if (this.buf.length === 0) {
       debug('nothing left in buffer');
       debug('%d docs written', this.docsWritten);
-      return;
+      return callback();
     }
     debug('draining buffered docs', this.buf.length);
 

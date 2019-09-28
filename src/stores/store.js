@@ -9,7 +9,7 @@ import {
   appRegistryActivated,
   globalAppRegistryActivated,
   nsChanged
-} from 'modules/shared';
+} from 'modules/compass';
 
 import { openExport, queryChanged } from 'modules/export';
 import { openImport } from 'modules/import';

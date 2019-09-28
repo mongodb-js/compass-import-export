@@ -1,5 +1,3 @@
-require('debug').enable('*');
-
 import Plugin from './plugin';
 import ImportPlugin from './import-plugin';
 import ExportPlugin from './export-plugin';

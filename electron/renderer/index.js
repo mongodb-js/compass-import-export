@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable no-var */
 import React from 'react';
 import ReactDOM from 'react-dom';
 import app from 'hadron-app';
@@ -14,10 +16,50 @@ import { activate as activateStats } from '@mongodb-js/compass-collection-stats'
 import 'bootstrap/less/bootstrap.less';
 import 'less/index.less';
 
-const NS = 'echo.artists';
+/**
+ * Customize data service for your sandbox.
+ */
+const NS = process.env.NS || 'test.people_imported';
+// test.people
+// test.people_missing_fields
+// crimedb.incidents
+
+import Connection from 'mongodb-connection-model';
+const connection = new Connection({
+  hostname: '127.0.0.1',
+  port: 27017
+});
+
+/**
+ * Plugins based on query execution can customize
+ * the top-level state the sandbox will use.
+ *
+ * @example
+ * ```javascript
+ * var QUERY_BAR = {
+ *   filter: { name: 'testing' },
+ *   project: { name: 1 },
+ *   sort: [[ name, -1 ]],
+ *   skip: 0,
+ *   limit: 20,
+ *   ns: NS
+ * };
+ * ```
+ */
+var QUERY_BAR = {
+  filter: {}
+};
+
+console.group('Compass Plugin Sandbox');
+console.log('db.collection', NS);
+console.log('connect', connection.driver_url, {options: connection.driver_options});
+console.groupEnd();
+
+function onDataServiceConnected(_registry) {
+  _registry.emit('query-applied', { QUERY_BAR});
+}
 
 const appRegistry = new AppRegistry();
-
 global.hadronApp = app;
 global.hadronApp.appRegistry = appRegistry;
 
@@ -58,21 +100,12 @@ const render = Component => {
 render(ImportExportPlugin);
 
 // // Data service initialization and connection.
-import Connection from 'mongodb-connection-model';
 import DataService from 'mongodb-data-service';
-
-const connection = new Connection({
-  hostname: '127.0.0.1',
-  port: 27017,
-  ns: 'import-export',
-  mongodb_database_name: 'import-export'
-});
-
 const dataService = new DataService(connection);
 
 dataService.connect((error, ds) => {
   setDataProvider(store, error, ds);
-  localAppRegistry.emit('query-applied', { filter: {}});
+  onDataServiceConnected(localAppRegistry);
 });
 
 // For automatic switching to specific namespaces, uncomment below as needed.
@@ -90,24 +123,24 @@ dataService.connect((error, ds) => {
 // };
 // appRegistry.emit('query-applied', query);
 
-if (module.hot) {
-  /**
-   * Warning from React Router, caused by react-hot-loader.
-   * The warning can be safely ignored, so filter it from the console.
-   * Otherwise you'll see it every time something changes.
-   * See https://github.com/gaearon/react-hot-loader/issues/298
-   */
-  const orgError = console.error; // eslint-disable-line no-console
-  console.error = (message) => { // eslint-disable-line no-console
-    if (message && message.indexOf('You cannot change <Router routes>;') === -1) {
-      // Log the error as normally
-      orgError.apply(console, [message]);
-    }
-  };
+// if (module.hot) {
+//   /**
+//    * Warning from React Router, caused by react-hot-loader.
+//    * The warning can be safely ignored, so filter it from the console.
+//    * Otherwise you'll see it every time something changes.
+//    * See https://github.com/gaearon/react-hot-loader/issues/298
+//    */
+//   const orgError = console.error; // eslint-disable-line no-console
+//   console.error = (message) => { // eslint-disable-line no-console
+//     if (message && message.indexOf('You cannot change <Router routes>;') === -1) {
+//       // Log the error as normally
+//       orgError.apply(console, [message]);
+//     }
+//   };
 
-  module.hot.accept('plugin', () => {
-    // Because Webpack 2 has built-in support for ES2015 modules,
-    // you won't need to re-require your app root in module.hot.accept
-    render(ImportExportPlugin);
-  });
-}
+//   module.hot.accept('plugin', () => {
+//     // Because Webpack 2 has built-in support for ES2015 modules,
+//     // you won't need to re-require your app root in module.hot.accept
+//     render(ImportExportPlugin);
+//   });
+// }
