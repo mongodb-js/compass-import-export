@@ -4,7 +4,7 @@ import stream from 'stream';
 
 import PROCESS_STATUS from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
-import { appRegistryEmit } from 'modules/compass';
+import { appRegistryEmit } from 'modules/compass/app-registry';
 
 import { createReadableCollectionStream } from 'utils/collection-stream';
 
@@ -258,7 +258,7 @@ export const startExport = () => {
       dispatch(onProgress((source.bytesRead / stats.rawTotalDocumentSize) * 100));
     }, 500);
     const progress = new stream.Transform({
-      objectMode: true,
+      objectMode: false,
       transform(chunk, encoding, callback) {
         f();
         callback(null, chunk);

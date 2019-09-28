@@ -19,10 +19,10 @@ import 'less/index.less';
 /**
  * Customize data service for your sandbox.
  */
-const NS = process.env.NS || 'test.people_imported';
+// const NS = process.env.NS || 'test.people_imported';
 // test.people
 // test.people_missing_fields
-// crimedb.incidents
+const NS = 'crimedb.incidents';
 
 import Connection from 'mongodb-connection-model';
 const connection = new Connection({
@@ -56,7 +56,7 @@ console.log('connect', connection.driver_url, {options: connection.driver_option
 console.groupEnd();
 
 function onDataServiceConnected(_registry) {
-  _registry.emit('query-applied', { QUERY_BAR});
+  _registry.emit('query-applied', QUERY_BAR);
 }
 
 const appRegistry = new AppRegistry();

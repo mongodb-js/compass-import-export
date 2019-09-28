@@ -1,6 +1,6 @@
 import fs from 'fs';
 import PROCESS_STATUS from 'constants/process-status';
-import { appRegistryEmit } from 'modules/compass/app-registry';
+import { appRegistryEmit } from 'modules/compass';
 import stream from 'stream';
 
 const throttle = require('lodash.throttle');
