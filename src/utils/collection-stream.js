@@ -8,46 +8,47 @@ class WritableCollectionStream extends Writable {
     this.dataService = dataService;
     this.ns = ns;
     this.BATCH_SIZE = 1000;
-    this.buf = [];
     this.docsWritten = 0;
+    this.batch = this._collection().initializeOrderedBulkOp();
+  }
+
+  _collection() {
+    return this.dataService.client._collection(this.ns);
   }
 
   _write(chunk, encoding, next) {
-    this.buf.push(chunk);
-    if (this.buf.length === this.BATCH_SIZE) {
-      return this.dataService.insertMany(
-        this.ns,
-        this.buf,
-        { ordered: false },
-        (err) => {
-          this.docsWritten += this.buf.length;
-          this.buf = [];
-          if (err) {
-            debug('error', err);
-            return next(err);
-          }
-          next();
+    this.batch.insert(chunk);
+    if (this.batch.length === this.BATCH_SIZE) {
+      /**
+       * TODO: lucas: expose finer-grained bulk op results:
+       * https://mongodb.github.io/node-mongodb-native/3.3/api/BulkWriteResult.html
+       */
+      return this.batch.execute((err, res) => {
+        this.docsWritten += this.batch.length;
+        this.batch = this._collection().initializeOrderedBulkOp();
+        if (err) {
+          debug('error', err);
+          return next(err);
         }
-      );
+        debug('batch result', res);
+        next();
+      });
     }
     next();
   }
 
   _final(callback) {
     debug('running _final()');
-    if (this.buf.length === 0) {
+    if (this.batch.length === 0) {
       debug('nothing left in buffer');
       debug('%d docs written', this.docsWritten);
       return callback();
     }
-    debug('draining buffered docs', this.buf.length);
-
-    this.dataService.insertMany(this.ns, this.buf, { ordered: false }, (
-      err
-    ) => {
-      this.docsWritten += this.buf.length;
-      this.buf = [];
-      debug('buffer drained', err);
+    debug('draining buffered docs', this.batch.length);
+    this.batch.execute((err, res) => {
+      this.docsWritten += this.batch.length;
+      this.batch = null;
+      debug('buffer drained', err, res);
       debug('%d docs written', this.docsWritten);
       callback(err);
     });
