@@ -38,7 +38,8 @@ class ImportModal extends PureComponent {
     selectImportFileType: PropTypes.func.isRequired,
     selectImportFileName: PropTypes.func.isRequired,
     fileType: PropTypes.string,
-    fileName: PropTypes.string
+    fileName: PropTypes.string,
+    docsWritten: PropTypes.number
   };
 
   getStatusMessage = () => {
@@ -98,12 +99,15 @@ class ImportModal extends PureComponent {
   renderProgressBar = () => {
     if (this.props.status !== PROCESS_STATUS.UNSPECIFIED) {
       return (
+        <div>
         <ProgressBar
           progress={this.props.progress}
           status={this.props.status}
           message={this.getStatusMessage()}
           cancel={this.props.cancelImport}
         />
+        <p>{this.props.docsWritten} documents imported</p>
+        </div>
       );
     }
   };
@@ -203,7 +207,8 @@ const mapStateToProps = state => ({
   error: state.importData.error,
   fileType: state.importData.fileType,
   fileName: state.importData.fileName,
-  status: state.importData.status
+  status: state.importData.status,
+  docsWritten: state.importData.docsWritten
 });
 
 /**
