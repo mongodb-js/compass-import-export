@@ -1,5 +1,5 @@
 import { Transform } from 'stream';
-const Parser = require('JSONStream').parse;
+const JSONParser = require('JSONStream').parse;
 import { EJSON } from 'bson';
 import csv from 'fast-csv';
 
@@ -19,7 +19,10 @@ import csv from 'fast-csv';
  * @returns {Stream.Transform}
  */
 export const createCSVParser = function() {
-  return csv.parse({ headers: true, ignoreEmpty: true });
+  return csv.parse({
+    headers: true,
+    ignoreEmpty: true
+  });
 };
 
 /**
@@ -28,8 +31,8 @@ export const createCSVParser = function() {
  *
  * @returns {Stream.Transform}
  */
-export const createJSONParser = function() {
-  return new Parser('*');
+export const createJSONParser = function({ selector = '*' } = {}) {
+  return new JSONParser(selector);
 };
 
 /**
@@ -44,15 +47,6 @@ export const createEJSONDeserializer = function() {
     transform: function(data, encoding, done) {
       const parsed = EJSON.deserialize(data);
       done(null, parsed);
-      // debugger;
-      // if (!Array.isArray(parsed)) {
-      //   this.push(parsed);
-      // } else {
-      //   for (let i = 0; i < parsed.length; i++) {
-      //     this.push(parsed[i]);
-      //   }
-      // }
-      // done();
     }
   });
 };

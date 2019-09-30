@@ -3,8 +3,8 @@ import PROCESS_STATUS from 'constants/process-status';
 import { appRegistryEmit } from 'modules/compass';
 import stream from 'stream';
 
-const throttle = require('lodash.throttle');
-// const createProgressStream = require('progress-stream');
+// const throttle = require('lodash.throttle');
+const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/collection-stream';
@@ -71,10 +71,11 @@ export const closeImport = () => ({
   type: CLOSE_IMPORT
 });
 
-const updateProgress = (progress) => ({
+const updateProgress = (progress, docsWritten) => ({
   type: IMPORT_PROGRESS,
   progress: progress,
-  error: null
+  error: null,
+  docsWritten: docsWritten
 });
 
 const importStarted = (source, dest) => ({
@@ -83,8 +84,9 @@ const importStarted = (source, dest) => ({
   dest: dest
 });
 
-const importFinished = () => ({
-  type: IMPORT_FINISHED
+const importFinished = (docsWritten) => ({
+  type: IMPORT_FINISHED,
+  docsWritten: docsWritten
 });
 
 const importFailed = (error) => ({
@@ -133,7 +135,8 @@ const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === IMPORT_PROGRESS) {
     return {
       ...state,
-      progress: action.progress
+      progress: action.progress,
+      docsWritten: action.docsWritten
     };
   }
 
@@ -191,30 +194,20 @@ export const startImport = () => {
     const state = getState();
     const { ns, dataService: { dataService }, importData } = state;
     const { fileName, fileType, fileStats: { size } } = importData;
+
     const source = fs.createReadStream(fileName, 'utf8');
+    const dest = createCollectionWriteStream(dataService, ns);
 
-    const f = throttle(function() {
-      debug('progress', (source.bytesRead / size) * 100);
-      dispatch(updateProgress((source.bytesRead / size) * 100));
-    }, 250);
-    const progress = new stream.Transform({
+    const progress = createProgressStream({
       objectMode: true,
-      transform(chunk, encoding, callback) {
-        // debug('progress', (source.bytesRead / size) * 100);
-        // dispatch(updateProgress((source.bytesRead / size) * 100));
-        f();
-        callback(null, chunk);
-      }
+      length: size,
+      time: 250 /* ms */
     });
-    // const progress = createProgressStream({
-    //   length: size,
-    //   time: 250 /* ms */
-    // });
 
-    // progress.on('progress', function(info) {
-    //   debug('progress', info);
-    //   dispatch(updateProgress(info.percentage));
-    // });
+    progress.on('progress', function(info) {
+      debug('progress', info);
+      dispatch(updateProgress(info.percentage, dest.docsWritten));
+    });
 
     const deserializer = createEJSONDeserializer();
 
@@ -225,17 +218,16 @@ export const startImport = () => {
       parser = createJSONParser();
     }
 
-    const dest = createCollectionWriteStream(dataService, ns);
+    
     debug('executing pipeline');
 
     dispatch(importStarted(source, dest));
     stream.pipeline(source, parser, deserializer, progress, dest, function(err, res) {
       if (err) {
-        debugger;
         return dispatch(importFailed(err));
       }
       debug('done', err, res);
-      dispatch(importFinished());
+      dispatch(importFinished(dest.docsWritten));
       dispatch(appRegistryEmit('import-finished', size, fileType));
     });
   };

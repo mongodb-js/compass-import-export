@@ -1,10 +1,11 @@
+/* eslint-disable no-var */
+/* eslint-disable callback-return */
 import csv from 'fast-csv';
 import { EJSON } from 'bson';
 import { Transform } from 'stream';
-var flatten = require('flat')
+var flatten = require('flat');
 
 /**
- * TODO: Options for csv.format
  * @returns {Stream.Transform}
  */
 export const createCSVFormatter = function() {
@@ -17,21 +18,25 @@ export const createCSVFormatter = function() {
 /**
  * @returns {Stream.Transform}
  */
-export const createJSONFormatter = function() {
+export const createJSONFormatter = function({ brackets = true } = {}) {
   return new Transform({
     readableObjectMode: false,
     writableObjectMode: true,
     transform: function(doc, encoding, callback) {
-      let s = EJSON.stringify(doc);
+      const s = EJSON.stringify(doc);
       if (this._counter === undefined) {
         this._counter = 0;
-        s = `[${s}`;
+        if (brackets) {
+          this.push('[');
+        }
       }
-      this._counter++;
       callback(null, s);
+      this._counter++;
     },
     final: function(done) {
-      this.push(']');
+      if (brackets) {
+        this.push(']');
+      }
       done();
     }
   });

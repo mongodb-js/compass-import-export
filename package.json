@@ -4,6 +4,14 @@
   "version": "4.0.0",
   "apiVersion": "3.0.0",
   "description": "Compass Import/Export Plugin",
+  "homepage": "http://github.com/mongodb-js/compass-import-export",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mongodb-js/compass-import-export.git"
+  },
+  "bugs": {
+    "url": "git://github.com/mongodb-js/compass-import-export.git/issues"
+  },
   "main": "lib/index.js",
   "scripts": {
     "clean": "rimraf lib",
@@ -132,13 +140,12 @@
   "dependencies": {
     "JSONStream": "^1.3.5",
     "bson": "^4.0.2",
-    "csv-parser": "^2.3.1",
-    "event-stream": "^4.0.1",
     "fast-csv": "^3.4.0",
     "flat": "^4.1.0",
     "javascript-stringify": "^1.6.0",
     "lodash.throttle": "^4.1.1",
     "mongodb-extjson": "^4.0.0-rc1",
+    "progress-stream": "^2.0.0",
     "react-ios-switch": "^0.1.19",
     "redux-thunk": "^2.3.0"
   }
