@@ -19,10 +19,10 @@ import 'less/index.less';
 /**
  * Customize data service for your sandbox.
  */
-// const NS = process.env.NS || 'test.people_imported';
+const NS = 'test.people_imported';
 // test.people
 // test.people_missing_fields
-const NS = 'crimedb.incidents';
+// const NS = 'crimedb.incidents';
 
 import Connection from 'mongodb-connection-model';
 const connection = new Connection({
