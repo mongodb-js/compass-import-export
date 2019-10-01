@@ -112,6 +112,10 @@ class ImportModal extends PureComponent {
     }
   };
 
+  renderCSVOptions() {
+    return null;
+  }
+
   /**
    * Render the component.
    *
@@ -170,6 +174,7 @@ class ImportModal extends PureComponent {
                 />
               </InputGroup>
             </FormGroup>
+            {this.renderCSVOptions()}
           </form>
           {this.renderProgressBar()}
         </Modal.Body>
