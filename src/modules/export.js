@@ -8,7 +8,7 @@ import { appRegistryEmit } from 'modules/compass/app-registry';
 
 import { createReadableCollectionStream } from 'utils/collection-stream';
 
-// const createProgressStream = require('progress-stream');
+const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
 import {
@@ -261,35 +261,26 @@ export const startExport = () => {
       exportData,
       dataService: { dataService }
     } = getState();
+
     const query = exportData.isFullCollection
       ? { filter: {} }
       : exportData.query;
 
+    // TODO: lucas: Run a real count() so we can do progress.
+    const numDocsToExport = 1000;
+
     const source = createReadableCollectionStream(dataService, ns, query);
 
-    // TODO: Lucas: stats.rawTotalDocumentSize should instead be a doc counter.
-    const throttle = require('lodash.throttle');
-    var f = throttle(function() {
-      debug('progress', (source.bytesRead / stats.rawTotalDocumentSize) * 100);
-      dispatch(onProgress((source.bytesRead / stats.rawTotalDocumentSize) * 100));
-    }, 500);
-    const progress = new stream.Transform({
+    const progress = createProgressStream({
       objectMode: false,
-      transform(chunk, encoding, callback) {
-        f();
-        callback(null, chunk);
-      }
+      length: numDocsToExport,
+      time: 250 /* ms */
     });
 
-    // const progress = createProgressStream({
-    //   length: stats.rawTotalDocumentSize,
-    //   time: 250 /* ms */
-    // });
-
-    // progress.on('progress', function(info) {
-    //   debug('progress', info);
-    //   dispatch(onProgress(info.percentage));
-    // });
+    progress.on('progress', function(info) {
+      debug('progress', info);
+      dispatch(onProgress(info.percentage));
+    });
 
     let formatter;
     if (exportData.fileType === 'csv') {
