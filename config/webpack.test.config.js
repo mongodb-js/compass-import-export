@@ -11,6 +11,9 @@ const config = {
   stats: {
     warnings: false
   },
+  node: {
+    __dirname: false
+  },
   module: {
     rules: [
       {
