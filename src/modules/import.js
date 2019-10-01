@@ -216,7 +216,6 @@ export const startImport = () => {
       parser = createJSONParser({selector: fileIsMultilineJSON ? null : '*'});
     }
 
-    
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
