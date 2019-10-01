@@ -7,6 +7,7 @@ import createProgressStream from 'progress-stream';
 import stripBomStream from 'strip-bom-stream';
 
 import detectImportFile from 'utils/detect-import-file';
+import mime from 'mime-types';
 
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/collection-stream';
@@ -37,7 +38,7 @@ const INITIAL_STATE = {
   progress: 0,
   error: null,
   fileName: '',
-  fileType: 'json',
+  fileType: undefined,
   fileIsMultilineJSON: false,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
@@ -99,8 +100,14 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       fileName: action.fileName,
+      fileType: action.fileType,
       fileStats: action.fileStats,
-      fileIsMultilineJSON: action.fileIsMultilineJSON
+      fileIsMultilineJSON: action.fileIsMultilineJSON,
+      status: PROCESS_STATUS.UNSPECIFIED,
+      progress: 0,
+      docsWritten: 0,
+      source: undefined,
+      dest: undefined
     };
   }
 
@@ -136,6 +143,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       status: (isComplete) ? PROCESS_STATUS.COMPLETED : state.status,
+      docsWritten: action.docsWritten,
       source: undefined,
       dest: undefined
     };
@@ -212,7 +220,7 @@ export const startImport = () => {
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
-    stream.pipeline(source, stripBomStream(), parser, deserializer, progress, dest, function(err, res) {
+    stream.pipeline(source, stripBomStream(), progress, parser, deserializer, dest, function(err, res) {
       if (err) {
         return dispatch(onError(err));
       }
@@ -257,6 +265,8 @@ export const selectImportFileName = (fileName) => {
         if (err) {
           return dispatch(onError(err));
         }
+
+        stats.type = mime.lookup(fileName);
 
         detectImportFile(fileName, function(detectionError, res) {
           if (detectionError) {

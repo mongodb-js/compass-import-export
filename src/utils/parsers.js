@@ -20,9 +20,7 @@ const csv = require('csv-parser');
  * @returns {Stream.Transform}
  */
 export const createCSVParser = function() {
-  return csv.parse({
-    headers: true
-  });
+  return csv();
 };
 
 /**
