@@ -18,7 +18,7 @@ const debug = createLogger('export');
 const PREFIX = 'import-export/export';
 
 const STARTED = `${PREFIX}/STARTED`;
-const CANCELLED = `${PREFIX}/CANCELLED`;
+const CANCELED = `${PREFIX}/CANCELED`;
 
 const PROGRESS = `${PREFIX}/PROGRESS`;
 const FINISHED = `${PREFIX}/FINISHED`;
@@ -160,7 +160,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === CANCELLED) {
+  if (action.type === CANCELED) {
     return {
       ...state,
       status: PROCESS_STATUS.CANCELED,
@@ -331,8 +331,8 @@ export const cancelExport = () => {
     debug('cancelling');
     source.unpipe();
     dest.end();
-    debug('cancelled by user');
-    dispatch({ type: CANCELLED });
+    debug('canceled by user');
+    dispatch({ type: CANCELED });
   };
 };
 

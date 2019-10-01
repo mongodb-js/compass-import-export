@@ -20,7 +20,7 @@ const debug = createLogger('import');
  */
 const PREFIX = 'import-export/import';
 const STARTED = `${PREFIX}/STARTED`;
-const CANCELLED = `${PREFIX}/CANCELLED`;
+const CANCELED = `${PREFIX}/CANCELED`;
 const PROGRESS = `${PREFIX}/PROGRESS`;
 const FINISHED = `${PREFIX}/FINISHED`;
 const FAILED = `${PREFIX}/FAILED`;
@@ -108,7 +108,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       error: action.error,
-      progress: 100,
       status: PROCESS_STATUS.FAILED
     };
   }
@@ -136,18 +135,15 @@ const reducer = (state = INITIAL_STATE, action) => {
     const isComplete = !(state.error || state.status === PROCESS_STATUS.CANCELED);
     return {
       ...state,
-      progress: 100,
-      // isOpen: !isComplete,
       status: (isComplete) ? PROCESS_STATUS.COMPLETED : state.status,
       source: undefined,
       dest: undefined
     };
   }
 
-  if (action.type === CANCELLED) {
+  if (action.type === CANCELED) {
     return {
       ...state,
-      progress: 100,
       status: PROCESS_STATUS.CANCELED,
       source: undefined,
       dest: undefined
@@ -242,8 +238,8 @@ export const cancelImport = () => {
     debug('cancelling');
     source.unpipe();
     dest.end();
-    debug('import cancelled by user');
-    dispatch({type: CANCELLED});
+    debug('import canceled by user');
+    dispatch({type: CANCELED});
   };
 };
 
