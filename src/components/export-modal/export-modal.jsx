@@ -53,7 +53,8 @@ class ExportModal extends PureComponent {
     selectExportFileType: PropTypes.func.isRequired,
     selectExportFileName: PropTypes.func.isRequired,
     fileType: PropTypes.string,
-    fileName: PropTypes.string
+    fileName: PropTypes.string,
+    exportedDocsCount: PropTypes.number
   };
 
   /**
@@ -105,11 +106,14 @@ class ExportModal extends PureComponent {
   renderProgressBar = () => {
     if (this.props.status !== PROCESS_STATUS.UNSPECIFIED) {
       return (
-        <ProgressBar
+        <div>
+          <ProgressBar
           progress={this.props.progress}
           status={this.props.status}
           message={this.getStatusMessage()}
           cancel={this.props.cancelExport} />
+          <p>{this.props.exportedDocsCount} documents exported</p>
+        </div>
       );
     }
   }
@@ -212,7 +216,8 @@ const mapStateToProps = (state) => ({
   error: state.exportData.error,
   fileType: state.exportData.fileType,
   fileName: state.exportData.fileName,
-  status: state.exportData.status
+  status: state.exportData.status,
+  exportedDocsCount: state.exportData.exportedDocsCount
 });
 
 /**
