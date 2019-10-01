@@ -11,10 +11,7 @@ import { createReadableCollectionStream } from 'utils/collection-stream';
 const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
-import {
-  createCSVFormatter,
-  createJSONFormatter
-} from 'utils/formatters';
+import { createCSVFormatter, createJSONFormatter } from 'utils/formatters';
 
 const debug = createLogger('export');
 
@@ -54,7 +51,8 @@ const INITIAL_STATE = {
   error: null,
   fileName: '',
   fileType: FILE_TYPES.JSON,
-  status: PROCESS_STATUS.UNSPECIFIED
+  status: PROCESS_STATUS.UNSPECIFIED,
+  exportedDocsCount: 0
 };
 
 /**
@@ -80,8 +78,9 @@ export const onProgress = progress => ({
 /**
  * @api private
  */
-export const onFinished = () => ({
-  type: FINISHED
+export const onFinished = (exportedDocsCount) => ({
+  type: FINISHED,
+  exportedDocsCount: exportedDocsCount
 });
 
 /**
@@ -154,6 +153,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       progress: 100,
       // isOpen: !isComplete,
       status: isComplete ? PROCESS_STATUS.COMPLETED : state.status,
+      exportedDocsCount: action.exportedDocsCount,
       source: undefined,
       dest: undefined
     };
@@ -256,57 +256,62 @@ export const closeExport = () => ({
 export const startExport = () => {
   return (dispatch, getState) => {
     const {
-      stats,
       ns,
       exportData,
       dataService: { dataService }
     } = getState();
 
-    const query = exportData.isFullCollection
+    const spec = exportData.isFullCollection
       ? { filter: {} }
       : exportData.query;
 
-    // TODO: lucas: Run a real count() so we can do progress.
-    const numDocsToExport = 1000;
-
-    const source = createReadableCollectionStream(dataService, ns, query);
-
-    const progress = createProgressStream({
-      objectMode: false,
-      length: numDocsToExport,
-      time: 250 /* ms */
-    });
-
-    progress.on('progress', function(info) {
-      debug('progress', info);
-      dispatch(onProgress(info.percentage));
-    });
-
-    let formatter;
-    if (exportData.fileType === 'csv') {
-      formatter = createCSVFormatter();
-    } else {
-      formatter = createJSONFormatter();
-    }
-
-    const dest = fs.createWriteStream(exportData.fileName);
-
-    debug('executing pipeline');
-
-    dispatch(onStarted(source, dest));
-    stream.pipeline(source, formatter, progress, dest, function(err, res) {
-      if (err) {
-        return dispatch(onError(err));
+    dataService.count(ns, spec.filter, {}, function(countErr, numDocsToExport) {
+      if (countErr) {
+        return onError(countErr);
       }
-      debug('done', err, res);
-      dispatch(onFinished());
-      dispatch(
-        appRegistryEmit(
-          'export-finished',
-          stats.rawTotalDocumentSize,
-          exportData.fileType
-        )
-      );
+
+      debug('count says to expect %d docs in export', numDocsToExport);
+
+      const source = createReadableCollectionStream(dataService, ns, spec);
+
+      const progress = createProgressStream({
+        objectMode: true,
+        length: numDocsToExport,
+        time: 250 /* ms */
+      });
+
+      progress.on('progress', function(info) {
+        debug('progress', info);
+        dispatch(onProgress(info.percentage));
+      });
+
+      let formatter;
+      if (exportData.fileType === 'csv') {
+        formatter = createCSVFormatter();
+      } else {
+        formatter = createJSONFormatter();
+      }
+
+      const dest = fs.createWriteStream(exportData.fileName);
+
+      debug('executing pipeline');
+
+      dispatch(onStarted(source, dest));
+      stream.pipeline(source, progress, formatter, dest, function(err, res) {
+        if (err) {
+          debug('error running export pipeline', err);
+          return dispatch(onError(err));
+        }
+        debug('done. %d docs exported to %s', numDocsToExport, exportData.fileName);
+        dispatch(onFinished(numDocsToExport));
+        dispatch(
+          appRegistryEmit(
+            'export-finished',
+            numDocsToExport,
+            exportData.fileType
+          )
+        );
+      });
     });
   };
 };
