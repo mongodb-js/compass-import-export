@@ -63,7 +63,7 @@ class ImportModal extends PureComponent {
    * Handle choosing a file from the file dialog.
    */
   handleChooseFile = () => {
-    const file = fileOpenDialog(this.props.fileType);
+    const file = fileOpenDialog();
     if (file) {
       this.props.selectImportFileName(file[0]);
     }
