@@ -3,8 +3,8 @@ import PROCESS_STATUS from 'constants/process-status';
 import { appRegistryEmit } from 'modules/compass';
 import stream from 'stream';
 
-// const throttle = require('lodash.throttle');
-const createProgressStream = require('progress-stream');
+import createProgressStream from 'progress-stream';
+import peek from 'peek-stream';
 
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/collection-stream';
@@ -36,6 +36,7 @@ const INITIAL_STATE = {
   error: null,
   fileName: '',
   fileType: 'json',
+  fileIsMultilineJSON: false,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0
@@ -108,7 +109,8 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       fileName: action.fileName,
-      fileStats: action.fileStats
+      fileStats: action.fileStats,
+      fileIsMultilineJSON: action.fileIsMultilineJSON
     };
   }
 
@@ -193,7 +195,7 @@ export const startImport = () => {
   return (dispatch, getState) => {
     const state = getState();
     const { ns, dataService: { dataService }, importData } = state;
-    const { fileName, fileType, fileStats: { size } } = importData;
+    const { fileName, fileType, fileIsMultilineJSON, fileStats: { size } } = importData;
 
     const source = fs.createReadStream(fileName, 'utf8');
     const dest = createCollectionWriteStream(dataService, ns);
@@ -215,7 +217,7 @@ export const startImport = () => {
     if (fileType === 'csv') {
       parser = createCSVParser();
     } else {
-      parser = createJSONParser();
+      parser = createJSONParser({selector: fileIsMultilineJSON ? null : '*'});
     }
 
     
@@ -250,7 +252,6 @@ export const cancelImport = () => {
   };
 };
 
-
 export const selectImportFileName = (fileName) => {
   return (dispatch) => {
     fs.exists(fileName, function(exists) {
@@ -262,11 +263,33 @@ export const selectImportFileName = (fileName) => {
           return dispatch(importFailed(err));
         }
 
-        // TODO: Use peek-stream to detect import file type.
-        dispatch({
-          type: IMPORT_FILE_SELECTED,
-          fileName: fileName,
-          fileStats: stats
+        let fileType = '';
+        let fileIsMultilineJSON = false;
+
+        const source = fs.createReadStream(fileName, 'utf-8');
+        const peeker = peek({ maxBuffer: 1024 }, function(data) {
+          source.unpipe();
+          source.close();
+          
+          const contents = data.toString('utf-8');
+          if (contents[0] === '[' || contents[0] === '{') {
+            fileType = 'json';
+            if (contents[contents.length - 1] === '}') {
+              fileIsMultilineJSON = true;
+            }
+          }
+          // TODO: Include more heuristics. Ideally the user just picks the file
+          // and we auto-detect the various formats/options.
+        });
+
+        stream.pipeline(source, peeker, function() {
+          dispatch({
+            type: IMPORT_FILE_SELECTED,
+            fileName: fileName,
+            fileStats: stats,
+            fileIsMultilineJSON: fileIsMultilineJSON,
+            fileType: fileType
+          });
         });
       });
     });
