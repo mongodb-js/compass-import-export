@@ -1,7 +1,7 @@
 /**
  * Action for the dataService connection.
  */
-const DATA_SERVICE_CONNECTED = 'import-export/ns/DATA_SERVICE_CONNECTED';
+export const DATA_SERVICE_CONNECTED = 'import-export/ns/DATA_SERVICE_CONNECTED';
 
 /**
  * The initial dataService state.
@@ -17,11 +17,11 @@ const INITIAL_STATE = null;
  *
  * @returns {Object} The action.
  */
-const dataServiceConnected = (error, dataService) => {
+export const dataServiceConnected = (error, dataService) => {
   return {
     type: DATA_SERVICE_CONNECTED,
-    error,
-    dataService
+    error: error,
+    dataService: dataService
   };
 };
 
@@ -44,7 +44,3 @@ const reducer = (state = INITIAL_STATE, action) => {
 };
 
 export default reducer;
-export {
-  dataServiceConnected,
-  DATA_SERVICE_CONNECTED
-};

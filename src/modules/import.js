@@ -17,15 +17,15 @@ const debug = createLogger('import');
  * ## Action names
  */
 const PREFIX = 'import-export/import';
-const IMPORT_STARTED = `${PREFIX}/STARTED`;
-const IMPORT_CANCELLED = `${PREFIX}/CANCELLED`;
-const IMPORT_PROGRESS = `${PREFIX}/PROGRESS`;
-const IMPORT_FINISHED = `${PREFIX}/FINISHED`;
-const IMPORT_FAILED = `${PREFIX}/FAILED`;
-const IMPORT_FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
-const IMPORT_FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
-const OPEN_IMPORT = `${PREFIX}/OPEN`;
-const CLOSE_IMPORT = `${PREFIX}/CLOSE`;
+const STARTED = `${PREFIX}/STARTED`;
+const CANCELLED = `${PREFIX}/CANCELLED`;
+const PROGRESS = `${PREFIX}/PROGRESS`;
+const FINISHED = `${PREFIX}/FINISHED`;
+const FAILED = `${PREFIX}/FAILED`;
+const FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
+const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
+const OPEN = `${PREFIX}/OPEN`;
+const CLOSE = `${PREFIX}/CLOSE`;
 
 /**
  * Initial state.
@@ -43,55 +43,43 @@ const INITIAL_STATE = {
 };
 
 /**
- * Select the file type of the import.
- *
- * @param {String} fileType - The file type.
- *
- * @returns {Object} The action.
+ * @param {Object} progress
+ * @param {Number} docsWritten
+ * @api private
  */
-export const selectImportFileType = (fileType) => ({
-  type: IMPORT_FILE_TYPE_SELECTED,
-  fileType: fileType
-});
-
-/**
- * Open the import modal.
- *
- * @returns {Object} The action.
- */
-export const openImport = () => ({
-  type: OPEN_IMPORT
-});
-
-/**
- * Close the import modal.
- *
- * @returns {Object} The action.
- */
-export const closeImport = () => ({
-  type: CLOSE_IMPORT
-});
-
-const updateProgress = (progress, docsWritten) => ({
-  type: IMPORT_PROGRESS,
+export const onProgress = (progress, docsWritten) => ({
+  type: PROGRESS,
   progress: progress,
   error: null,
   docsWritten: docsWritten
 });
 
-const importStarted = (source, dest) => ({
-  type: IMPORT_STARTED,
+/**
+ * @param {stream.Readable} source
+ * @param {stream.Readable} dest
+ * @api private
+ */
+export const onStarted = (source, dest) => ({
+  type: STARTED,
   source: source,
   dest: dest
 });
 
-const importFinished = (docsWritten) => ({
-  type: IMPORT_FINISHED,
+/**
+ * @param {Number} docsWritten
+ * @api private
+ */
+export const onFinished = (docsWritten) => ({
+  type: FINISHED,
   docsWritten: docsWritten
 });
 
-const importFailed = (error) => ({
-  type: IMPORT_FAILED,
+/**
+ * @param {Error} error
+ * @api private
+ */
+export const onError = (error) => ({
+  type: FAILED,
   error: error
 });
 
@@ -105,7 +93,7 @@ const importFailed = (error) => ({
  */
 // eslint-disable-next-line complexity
 const reducer = (state = INITIAL_STATE, action) => {
-  if (action.type === IMPORT_FILE_SELECTED) {
+  if (action.type === FILE_SELECTED) {
     return {
       ...state,
       fileName: action.fileName,
@@ -114,7 +102,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === IMPORT_FAILED) {
+  if (action.type === FAILED) {
     return {
       ...state,
       error: action.error,
@@ -123,7 +111,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === IMPORT_STARTED) {
+  if (action.type === STARTED) {
     return {
       ...state,
       error: null,
@@ -134,7 +122,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === IMPORT_PROGRESS) {
+  if (action.type === PROGRESS) {
     return {
       ...state,
       progress: action.progress,
@@ -142,7 +130,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === IMPORT_FINISHED) {
+  if (action.type === FINISHED) {
     const isComplete = !(state.error || state.status === PROCESS_STATUS.CANCELED);
     return {
       ...state,
@@ -154,7 +142,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === IMPORT_CANCELLED) {
+  if (action.type === CANCELLED) {
     return {
       ...state,
       progress: 100,
@@ -168,21 +156,21 @@ const reducer = (state = INITIAL_STATE, action) => {
   /**
    * Open the `<ImportModal />`
    */
-  if (action.type === OPEN_IMPORT) {
+  if (action.type === OPEN) {
     return {
       ...INITIAL_STATE,
       isOpen: true
     };
   }
 
-  if (action.type === CLOSE_IMPORT) {
+  if (action.type === CLOSE) {
     return {
       ...state,
       isOpen: false
     };
   }
 
-  if (action.type === IMPORT_FILE_TYPE_SELECTED) {
+  if (action.type === FILE_TYPE_SELECTED) {
     return {
       ...state,
       fileType: action.fileType
@@ -191,6 +179,9 @@ const reducer = (state = INITIAL_STATE, action) => {
   return state;
 };
 
+/**
+ * @api public
+ */
 export const startImport = () => {
   return (dispatch, getState) => {
     const state = getState();
@@ -208,7 +199,7 @@ export const startImport = () => {
 
     progress.on('progress', function(info) {
       debug('progress', info);
-      dispatch(updateProgress(info.percentage, dest.docsWritten));
+      dispatch(onProgress(info.percentage, dest.docsWritten));
     });
 
     const deserializer = createEJSONDeserializer();
@@ -223,18 +214,21 @@ export const startImport = () => {
     
     debug('executing pipeline');
 
-    dispatch(importStarted(source, dest));
+    dispatch(onStarted(source, dest));
     stream.pipeline(source, parser, deserializer, progress, dest, function(err, res) {
       if (err) {
-        return dispatch(importFailed(err));
+        return dispatch(onError(err));
       }
       debug('done', err, res);
-      dispatch(importFinished(dest.docsWritten));
+      dispatch(onFinished(dest.docsWritten));
       dispatch(appRegistryEmit('import-finished', size, fileType));
     });
   };
 };
 
+/**
+ * @api public
+ */
 export const cancelImport = () => {
   return (dispatch, getState) => {
     const { importData } = getState();
@@ -248,19 +242,23 @@ export const cancelImport = () => {
     source.unpipe();
     dest.end();
     debug('import cancelled by user');
-    dispatch({type: IMPORT_CANCELLED});
+    dispatch({type: CANCELLED});
   };
 };
 
+/**
+ * @param {String} fileName
+ * @api public
+ */
 export const selectImportFileName = (fileName) => {
   return (dispatch) => {
     fs.exists(fileName, function(exists) {
       if (!exists) {
-        return dispatch(importFailed(new Error(`File ${fileName} not found`)));
+        return dispatch(onError(new Error(`File ${fileName} not found`)));
       }
       fs.stat(fileName, function(err, stats) {
         if (err) {
-          return dispatch(importFailed(err));
+          return dispatch(onError(err));
         }
 
         let fileType = '';
@@ -284,7 +282,7 @@ export const selectImportFileName = (fileName) => {
 
         stream.pipeline(source, peeker, function() {
           dispatch({
-            type: IMPORT_FILE_SELECTED,
+            type: FILE_SELECTED,
             fileName: fileName,
             fileStats: stats,
             fileIsMultilineJSON: fileIsMultilineJSON,
@@ -295,5 +293,32 @@ export const selectImportFileName = (fileName) => {
     });
   };
 };
+
+/**
+ * Select the file type of the import.
+ *
+ * @param {String} fileType
+ * @api public
+ */
+export const selectImportFileType = (fileType) => ({
+  type: FILE_TYPE_SELECTED,
+  fileType: fileType
+});
+
+/**
+ * Open the import modal.
+ * @api public
+ */
+export const openImport = () => ({
+  type: OPEN
+});
+
+/**
+ * Close the import modal.
+ * @api public
+ */
+export const closeImport = () => ({
+  type: CLOSE
+});
 
 export default reducer;

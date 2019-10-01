@@ -57,22 +57,39 @@ const INITIAL_STATE = {
   status: PROCESS_STATUS.UNSPECIFIED
 };
 
-const onStarted = (source, dest) => ({
+/**
+ * @param {stream.Readable} source
+ * @param {stream.Writable} dest
+ * @api private
+ */
+export const onStarted = (source, dest) => ({
   type: STARTED,
   source: source,
   dest: dest
 });
 
-const onProgress = progress => ({
+/**
+ * @param {Object} progress
+ * @api private
+ */
+export const onProgress = progress => ({
   type: PROGRESS,
   progress: progress
 });
 
-const onFinished = () => ({
+/**
+ * @api private
+ */
+export const onFinished = () => ({
   type: FINISHED
 });
 
-const onError = error => ({
+/**
+ * The error callback.
+ * @param {Error} error
+ * @api private
+ */
+export const onError = error => ({
   type: ERROR,
   error: error
 });
@@ -146,7 +163,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       progress: 100,
-      // isOpen: !isComplete,
       status: PROCESS_STATUS.CANCELED,
       source: undefined,
       dest: undefined

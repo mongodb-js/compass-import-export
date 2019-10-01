@@ -6,7 +6,7 @@ describe('data-service [module]', () => {
       const action = actions.dataServiceConnected('error', 'data-service');
 
       it('returns the new state', () => {
-        expect(reducer('', action)).to.equal('data-service');
+        expect(reducer('', action).dataService).to.equal('data-service');
       });
     });
 
