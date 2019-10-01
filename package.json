@@ -21,7 +21,7 @@
     "start": "webpack-dev-server --config ./config/webpack.dev.config.js",
     "test": "cross-env NODE_ENV=test mocha-webpack \"./src/**/*.spec.js\"",
     "cover": "nyc npm run test",
-    "ci": "npm run cover && npm run test:karma && npm run compile && npm run check",
+    "ci": "npm run cover && npm run check",
     "check": "mongodb-js-precommit './src/**/*{.js,.jsx}' './test/**/*.js'",
     "prepublishOnly": "npm run compile"
   },
