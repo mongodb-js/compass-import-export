@@ -59,6 +59,7 @@ export const createCollectionWriteStream = function(dataService, ns) {
   return new WritableCollectionStream(dataService, ns);
 };
 
-export const createReadableCollectionStream = function(dataService, ns, spec) {
-  return dataService.fetch(ns, spec.filter || {}).stream();
+export const createReadableCollectionStream = function(dataService, ns, spec = {filter: {}}) {
+  const { project, limit, skip } = spec;
+  return dataService.fetch(ns, spec.filter || {}, { project, limit, skip }).stream();
 };
