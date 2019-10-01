@@ -70,9 +70,10 @@ export const onStarted = (source, dest) => ({
  * @param {Object} progress
  * @api private
  */
-export const onProgress = progress => ({
+export const onProgress = (progress, exportedDocsCount) => ({
   type: PROGRESS,
-  progress: progress
+  progress: progress,
+  exportedDocsCount: exportedDocsCount
 });
 
 /**
@@ -140,7 +141,8 @@ const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === PROGRESS) {
     return {
       ...state,
-      progress: action.progress
+      progress: action.progress,
+      exportedDocsCount: action.exportedDocsCount
     };
   }
 
@@ -150,7 +152,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     );
     return {
       ...state,
-      progress: 100,
       // isOpen: !isComplete,
       status: isComplete ? PROCESS_STATUS.COMPLETED : state.status,
       exportedDocsCount: action.exportedDocsCount,
@@ -162,7 +163,6 @@ const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === CANCELLED) {
     return {
       ...state,
-      progress: 100,
       status: PROCESS_STATUS.CANCELED,
       source: undefined,
       dest: undefined
@@ -187,7 +187,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       error: action.error,
-      progress: 100,
       status: PROCESS_STATUS.FAILED
     };
   }
@@ -282,7 +281,7 @@ export const startExport = () => {
 
       progress.on('progress', function(info) {
         debug('progress', info);
-        dispatch(onProgress(info.percentage));
+        dispatch(onProgress(info.percentage, info.transferred));
       });
 
       let formatter;
