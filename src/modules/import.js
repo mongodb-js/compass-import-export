@@ -4,6 +4,7 @@ import { appRegistryEmit } from 'modules/compass';
 import stream from 'stream';
 
 import createProgressStream from 'progress-stream';
+import stripBomStream from 'strip-bom-stream';
 import peek from 'peek-stream';
 
 import { createLogger } from 'utils/logger';
@@ -146,7 +147,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       progress: 100,
-      // isOpen: !isComplete,
       status: PROCESS_STATUS.CANCELED,
       source: undefined,
       dest: undefined
@@ -215,7 +215,7 @@ export const startImport = () => {
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
-    stream.pipeline(source, parser, deserializer, progress, dest, function(err, res) {
+    stream.pipeline(source, stripBomStream(), parser, deserializer, progress, dest, function(err, res) {
       if (err) {
         return dispatch(onError(err));
       }
