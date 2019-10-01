@@ -5,7 +5,8 @@ import stream from 'stream';
 
 import createProgressStream from 'progress-stream';
 import stripBomStream from 'strip-bom-stream';
-import peek from 'peek-stream';
+
+import detectImportFile from 'utils/detect-import-file';
 
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/collection-stream';
@@ -261,32 +262,16 @@ export const selectImportFileName = (fileName) => {
           return dispatch(onError(err));
         }
 
-        let fileType = '';
-        let fileIsMultilineJSON = false;
-
-        const source = fs.createReadStream(fileName, 'utf-8');
-        const peeker = peek({ maxBuffer: 1024 }, function(data) {
-          source.unpipe();
-          source.close();
-          
-          const contents = data.toString('utf-8');
-          if (contents[0] === '[' || contents[0] === '{') {
-            fileType = 'json';
-            if (contents[contents.length - 1] === '}') {
-              fileIsMultilineJSON = true;
-            }
+        detectImportFile(fileName, function(detectionError, res) {
+          if (detectionError) {
+            return dispatch(onError(detectionError));
           }
-          // TODO: Include more heuristics. Ideally the user just picks the file
-          // and we auto-detect the various formats/options.
-        });
-
-        stream.pipeline(source, peeker, function() {
           dispatch({
             type: FILE_SELECTED,
             fileName: fileName,
             fileStats: stats,
-            fileIsMultilineJSON: fileIsMultilineJSON,
-            fileType: fileType
+            fileIsMultilineJSON: res.fileIsMultilineJSON,
+            fileType: res.fileType
           });
         });
       });
