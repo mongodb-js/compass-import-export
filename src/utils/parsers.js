@@ -1,15 +1,16 @@
 import { Transform } from 'stream';
 const JSONParser = require('JSONStream').parse;
 import { EJSON } from 'bson';
-import csv from 'fast-csv';
+const csv = require('csv-parser');
 
 /**
- * TODO: Switch to papaparse for `dynamicTyping` of values
+ * TODO: lucas: Add papaparse `dynamicTyping` of values
  * https://github.com/mholt/PapaParse/blob/5219809f1d83ffa611ebe7ed13e8224bcbcf3bd7/papaparse.js#L1216
- *
- * or implement it on fast-csv etc. could be nice so we
- * could easily support existing `.<bson_type>()` suffix as
- * `mongoimport` does today.
+ */
+
+ /**
+ * TODO: lucas: mapHeaders option to support existing `.<bson_type>()` caster
+ * like `mongoimport` does today.
  */
 
 /**
@@ -20,15 +21,14 @@ import csv from 'fast-csv';
  */
 export const createCSVParser = function() {
   return csv.parse({
-    headers: true,
-    ignoreEmpty: true
+    headers: true
   });
 };
 
 /**
  * A transform stream that converts a string of JSON
  * into an object or an array.
- *
+ * @param {String} selector `null` for multiline or `'*'` for JSON array.
  * @returns {Stream.Transform}
  */
 export const createJSONParser = function({ selector = '*' } = {}) {
