@@ -172,7 +172,11 @@ const reducer = (state = INITIAL_STATE, action) => {
   if (action.type === SELECT_FILE_NAME) {
     return {
       ...state,
-      fileName: action.fileName
+      fileName: action.fileName,
+      status: PROCESS_STATUS.UNSPECIFIED,
+      exportedDocsCount: 0,
+      source: undefined,
+      dest: undefined
     };
   }
 
