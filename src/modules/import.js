@@ -11,10 +11,9 @@ import mime from 'mime-types';
 
 import { createLogger } from 'utils/logger';
 import { createCollectionWriteStream } from 'utils/collection-stream';
-import { createCSVParser, createJSONParser, createEJSONDeserializer } from 'utils/parsers';
+import { createCSVParser, createJSONParser } from 'utils/parsers';
 
 const debug = createLogger('import');
-
 
 /**
  * ## Action names
@@ -40,6 +39,9 @@ const INITIAL_STATE = {
   fileName: '',
   fileType: undefined,
   fileIsMultilineJSON: false,
+  fileDelimiter: undefined,
+  ignoreEmpty: true,
+  useHeaderLines: true,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0
@@ -72,7 +74,7 @@ export const onStarted = (source, dest) => ({
  * @param {Number} docsWritten
  * @api private
  */
-export const onFinished = (docsWritten) => ({
+export const onFinished = docsWritten => ({
   type: FINISHED,
   docsWritten: docsWritten
 });
@@ -81,7 +83,7 @@ export const onFinished = (docsWritten) => ({
  * @param {Error} error
  * @api private
  */
-export const onError = (error) => ({
+export const onError = error => ({
   type: FAILED,
   error: error
 });
@@ -139,10 +141,12 @@ const reducer = (state = INITIAL_STATE, action) => {
   }
 
   if (action.type === FINISHED) {
-    const isComplete = !(state.error || state.status === PROCESS_STATUS.CANCELED);
+    const isComplete = !(
+      state.error || state.status === PROCESS_STATUS.CANCELED
+    );
     return {
       ...state,
-      status: (isComplete) ? PROCESS_STATUS.COMPLETED : state.status,
+      status: isComplete ? PROCESS_STATUS.COMPLETED : state.status,
       docsWritten: action.docsWritten,
       source: undefined,
       dest: undefined
@@ -190,12 +194,22 @@ const reducer = (state = INITIAL_STATE, action) => {
 export const startImport = () => {
   return (dispatch, getState) => {
     const state = getState();
-    const { ns, dataService: { dataService }, importData } = state;
-    const { fileName, fileType, fileIsMultilineJSON, fileStats: { size } } = importData;
+    const {
+      ns,
+      dataService: { dataService },
+      importData
+    } = state;
+    const {
+      fileName,
+      fileType,
+      fileIsMultilineJSON,
+      fileStats: { size }
+    } = importData;
 
     const source = fs.createReadStream(fileName, 'utf8');
     const dest = createCollectionWriteStream(dataService, ns);
 
+    // TODO: lucas: Use bson.calculateObjectSize per doc for better progress?
     const progress = createProgressStream({
       objectMode: true,
       length: size,
@@ -207,19 +221,20 @@ export const startImport = () => {
       dispatch(onProgress(info.percentage, dest.docsWritten));
     });
 
-    const deserializer = createEJSONDeserializer();
-
     let parser;
     if (fileType === 'csv') {
       parser = createCSVParser();
     } else {
-      parser = createJSONParser({selector: fileIsMultilineJSON ? null : '*'});
+      parser = createJSONParser({ selector: fileIsMultilineJSON ? null : '*' });
     }
 
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
-    stream.pipeline(source, stripBomStream(), progress, parser, deserializer, dest, function(err, res) {
+    stream.pipeline(source, stripBomStream(), progress, parser, dest, function(
+      err,
+      res
+    ) {
       if (err) {
         return dispatch(onError(err));
       }
@@ -246,7 +261,7 @@ export const cancelImport = () => {
     source.unpipe();
     dest.end();
     debug('import canceled by user');
-    dispatch({type: CANCELED});
+    dispatch({ type: CANCELED });
   };
 };
 
@@ -254,8 +269,8 @@ export const cancelImport = () => {
  * @param {String} fileName
  * @api public
  */
-export const selectImportFileName = (fileName) => {
-  return (dispatch) => {
+export const selectImportFileName = fileName => {
+  return dispatch => {
     fs.exists(fileName, function(exists) {
       if (!exists) {
         return dispatch(onError(new Error(`File ${fileName} not found`)));
@@ -290,7 +305,7 @@ export const selectImportFileName = (fileName) => {
  * @param {String} fileType
  * @api public
  */
-export const selectImportFileType = (fileType) => ({
+export const selectImportFileType = fileType => ({
   type: FILE_TYPE_SELECTED,
   fileType: fileType
 });

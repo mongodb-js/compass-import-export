@@ -9,11 +9,10 @@ const DEFAULT_FILE_TYPE = 'json';
 
 // TODO: Include more heuristics. Ideally the user just picks the file
 // and we auto-detect the various formats/options.
-
 function detectImportFile(fileName, done) {
   debug('peeking at', fileName);
 
-  let fileType = DEFAULT_FILE_TYPE;
+  let fileType;
   let fileIsMultilineJSON = false;
 
   const source = fs.createReadStream(fileName, 'utf-8');
@@ -25,14 +24,13 @@ function detectImportFile(fileName, done) {
       if (contents[contents.length - 1] === '}') {
         fileIsMultilineJSON = true;
       }
-    }
-
-    if (/\.(csv)$/.test(fileName)) {
+    } else if (/\.(csv)$/.test(fileName)) {
       fileType = 'csv';
+    } else {
+      fileType = DEFAULT_FILE_TYPE;
     }
 
     // TODO: lucas: papaparse guessDelimiter
-
     debug('swapping');
     swap('done');
   });
@@ -42,16 +40,14 @@ function detectImportFile(fileName, done) {
       debug('pipeline error', err);
       return done(err);
     }
-    debug('detected', {
+    const result = {
       fileName: fileName,
       fileIsMultilineJSON: fileIsMultilineJSON,
       fileType: fileType
-    });
-    return done(null, {
-      fileName: fileName,
-      fileIsMultilineJSON: fileIsMultilineJSON,
-      fileType: fileType
-    });
+    };
+
+    debug('detected', result);
+    return done(null, result);
   });
 }
 export default detectImportFile;
