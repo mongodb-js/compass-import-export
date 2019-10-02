@@ -31,8 +31,9 @@ const CLOSE = `${PREFIX}/CLOSE`;
 
 /**
  * Initial state.
+ * @api private
  */
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   isOpen: false,
   progress: 0,
   error: null,

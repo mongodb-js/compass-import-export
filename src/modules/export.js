@@ -42,8 +42,9 @@ const FULL_QUERY = {
 
 /**
  * The initial state.
+ * @api private
  */
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   isOpen: false,
   isFullCollection: false,
   progress: 0,
@@ -79,7 +80,7 @@ export const onProgress = (progress, exportedDocsCount) => ({
 /**
  * @api private
  */
-export const onFinished = (exportedDocsCount) => ({
+export const onFinished = exportedDocsCount => ({
   type: FINISHED,
   exportedDocsCount: exportedDocsCount
 });
@@ -305,7 +306,11 @@ export const startExport = () => {
           debug('error running export pipeline', err);
           return dispatch(onError(err));
         }
-        debug('done. %d docs exported to %s', numDocsToExport, exportData.fileName);
+        debug(
+          'done. %d docs exported to %s',
+          numDocsToExport,
+          exportData.fileName
+        );
         dispatch(onFinished(numDocsToExport));
         dispatch(
           appRegistryEmit(

@@ -1,8 +1,10 @@
 import { Transform } from 'stream';
-const JSONParser = require('JSONStream').parse;
+import { parse as JSONParser } from 'JSONStream';
 import { EJSON } from 'bson';
-const csv = require('csv-parser');
-const debug = require('./logger').createLogger('parsers');
+import csv from 'csv-parser';
+import { createLogger } from './logger';
+
+const debug = createLogger('parsers');
 
 /**
  * TODO: lucas: Add papaparse `dynamicTyping` of values

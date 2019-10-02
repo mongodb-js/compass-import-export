@@ -87,6 +87,15 @@ const configureStore = (options = {}) => {
     });
   }
 
+  if (module.hot) {
+    // Enable Webpack hot module replacement for reducers.
+    // https://github.com/reactjs/react-redux/releases/tag/v2.0.0
+    module.hot.accept('modules', () => {
+      const nextRootReducer = require('../modules');
+      store.replaceReducer(nextRootReducer);
+    });
+  }
+
   return store;
 };
 

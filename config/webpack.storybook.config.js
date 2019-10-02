@@ -8,9 +8,7 @@ const project = require('./project');
 
 const PLUGINS = [
   // Node externals
-  new webpack.ExternalsPlugin('commonjs', [
-    'fs'
-  ]),
+  new webpack.ExternalsPlugin('commonjs', ['fs']),
   // Electron externals
   new webpack.ExternalsPlugin('commonjs', [
     'app',
@@ -55,7 +53,8 @@ PLUGINS.push.apply(PLUGINS, [
 ]);
 
 const config = {
-  target: 'web',
+  // target: 'web',
+  target: 'electron-renderer',
   devtool: 'eval-source-map',
   entry: {
     index: path.resolve(project.path.src, 'index.js')

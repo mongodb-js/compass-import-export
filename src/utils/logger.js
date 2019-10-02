@@ -1,4 +1,4 @@
-const debug = require('debug');
+import debug from 'debug';
 const PREFIX = 'mongodb-compass-import-export';
 
 const _LOGGERS = {};

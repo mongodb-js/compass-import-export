@@ -2,8 +2,9 @@ import fs from 'fs';
 import peek from 'peek-stream';
 import stream from 'stream';
 
-const debug = require('./logger').createLogger('detect-import-file');
+import { createLogger } from './logger';
 
+const debug = createLogger('detect-import-file');
 
 const DEFAULT_FILE_TYPE = 'json';
 

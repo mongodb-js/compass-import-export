@@ -1,10 +1,10 @@
-const stream = require('stream');
-const Writable = stream.Writable;
-const debug = require('./logger').createLogger('collection-stream');
+import { Writable } from 'stream';
+import { createLogger } from './logger';
+const debug = createLogger('collection-stream');
 
 class WritableCollectionStream extends Writable {
   constructor(dataService, ns) {
-    super({ objectMode: true});
+    super({ objectMode: true });
     this.dataService = dataService;
     this.ns = ns;
     this.BATCH_SIZE = 1000;
@@ -59,7 +59,13 @@ export const createCollectionWriteStream = function(dataService, ns) {
   return new WritableCollectionStream(dataService, ns);
 };
 
-export const createReadableCollectionStream = function(dataService, ns, spec = {filter: {}}) {
+export const createReadableCollectionStream = function(
+  dataService,
+  ns,
+  spec = { filter: {} }
+) {
   const { project, limit, skip } = spec;
-  return dataService.fetch(ns, spec.filter || {}, { project, limit, skip }).stream();
+  return dataService
+    .fetch(ns, spec.filter || {}, { project, limit, skip })
+    .stream();
 };
