@@ -30,8 +30,8 @@ Small but not all documents contain all the fields
 
 ## TODO/Ideas
 
+- [ ] Set storybook back up
 - [ ] Refactor src/modules/ so import and export reuse a common base
-- [ ] Webpack 4
 - [ ] Import csv: dynamicTyping of values like papaparse
 - [ ] Import csv: mapHeaders option to support existing .<bson_type>() caster like [mongoimport does today](https://docs.mongodb.com/manual/reference/program/mongoimport)
 - [ ] Import: expose finer-grained bulk op results in progress
