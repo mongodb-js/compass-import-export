@@ -30,6 +30,8 @@ Small but not all documents contain all the fields
 
 ## TODO/Ideas
 
+- [ ] COMPASS-3827: delimiter selection
+- [ ] Format numbers/counters everywhere with numeral.js
 - [ ] Set storybook back up
 - [ ] Refactor src/modules/ so import and export reuse a common base
 - [ ] Import csv: dynamicTyping of values like papaparse
