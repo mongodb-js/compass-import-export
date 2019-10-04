@@ -37,7 +37,6 @@ Small but not all documents contain all the fields
 - [ ] Import: expose finer-grained bulk op results in progress
 - [ ] Import: define import mode: insert, upsert, merge
 - [ ] Import: continue on unique index and doc validation errors by default
-- [ ] Import: Use [this](https://github.com/sindresorhus/parse-json) or [this](https://github.com/zkat/json-parse-better-errors/blob/latest/index.js) for nice JSON parse error messages
 - [ ] Import: option to specify path for \_id
 - [ ] Import from URL
 - [ ] Import supports gzip/zip/bzip2 -> multi file import
@@ -45,6 +44,8 @@ Small but not all documents contain all the fields
 - [ ] Show system notification when operation completes. like dropbox screenshot message.
 - [ ] Import: Option to drop target collection before import
 - [ ] Switch <ProgressBar /> to shared one from hadron-react
+- [ ] Import: Drop file target
+- [ ] Export: use electron add to recent documents API
 - [ ]
 
 ## License
