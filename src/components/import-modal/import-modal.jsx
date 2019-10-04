@@ -128,6 +128,7 @@ class ImportModal extends PureComponent {
   };
 
   renderCSVOptions() {
+    // TODO: lucas: Impl the delimiter selector etc.
     return null;
   }
   renderExtendedError() {
@@ -136,7 +137,12 @@ class ImportModal extends PureComponent {
     }
 
     const prettyError = getPrettyErrorMessage(this.props.error);
-    return <span dangerouslySetInnerHTML={{ __html: prettyError }} />;
+    return (
+      <div
+        className={styles['error-box']}
+        dangerouslySetInnerHTML={{ __html: prettyError }}
+      />
+    );
   }
   /**
    * Render the component.
