@@ -13,8 +13,7 @@ import { activate as activateStats } from '@mongodb-js/compass-collection-stats'
 // Import global less file. Note: these styles WILL NOT be used in compass, as compass provides its own set
 // of global styles. If you are wishing to style a given component, you should be writing a less file per
 // component as per the CSS Modules ICSS spec. @see src/components/toggle-button for an example.
-import 'bootstrap/less/bootstrap.less';
-import 'less/index.less';
+import 'less/global.less';
 
 /**
  * Customize data service for your sandbox.
@@ -52,7 +51,9 @@ var QUERY_BAR = {
 
 console.group('Compass Plugin Sandbox');
 console.log('db.collection', NS);
-console.log('connect', connection.driver_url, {options: connection.driver_options});
+console.log('connect', connection.driver_url, {
+  options: connection.driver_options
+});
 console.groupEnd();
 
 function onDataServiceConnected(_registry) {
@@ -112,35 +113,28 @@ dataService.connect((error, ds) => {
 
 // appRegistry.emit('database-changed', 'database');
 
-// For plugins based on query execution, comment out below:
-// const query = {
-  // filter: { name: 'testing' },
-  // project: { name: 1 },
-  // sort: [[ name, -1 ]],
-  // skip: 0,
-  // limit: 20,
-  // ns: NS
-// };
-// appRegistry.emit('query-applied', query);
+if (module.hot) {
+  /**
+   * Warning from React Router, caused by react-hot-loader.
+   * The warning can be safely ignored, so filter it from the console.
+   * Otherwise you'll see it every time something changes.
+   * See https://github.com/gaearon/react-hot-loader/issues/298
+   */
+  const orgError = console.error; // eslint-disable-line no-console
+  console.error = message => {
+    // eslint-disable-line no-console
+    if (
+      message &&
+      message.indexOf('You cannot change <Router routes>;') === -1
+    ) {
+      // Log the error as normally
+      orgError.apply(console, [message]);
+    }
+  };
 
-// if (module.hot) {
-//   /**
-//    * Warning from React Router, caused by react-hot-loader.
-//    * The warning can be safely ignored, so filter it from the console.
-//    * Otherwise you'll see it every time something changes.
-//    * See https://github.com/gaearon/react-hot-loader/issues/298
-//    */
-//   const orgError = console.error; // eslint-disable-line no-console
-//   console.error = (message) => { // eslint-disable-line no-console
-//     if (message && message.indexOf('You cannot change <Router routes>;') === -1) {
-//       // Log the error as normally
-//       orgError.apply(console, [message]);
-//     }
-//   };
-
-//   module.hot.accept('plugin', () => {
-//     // Because Webpack 2 has built-in support for ES2015 modules,
-//     // you won't need to re-require your app root in module.hot.accept
-//     render(ImportExportPlugin);
-//   });
-// }
+  module.hot.accept('plugin', () => {
+    // Because Webpack 2 has built-in support for ES2015 modules,
+    // you won't need to re-require your app root in module.hot.accept
+    render(ImportExportPlugin);
+  });
+}
