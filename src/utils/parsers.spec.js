@@ -62,9 +62,12 @@ describe('parsers', () => {
     describe('deserialize', () => {
       const DOCS = [];
       before(() => {
-        return runParser(FIXTURES.GOOD_JSON, createJSONParser()).then(docs => {
-          DOCS.push.apply(DOCS, docs);
-        });
+        const src = FIXTURES.GOOD_JSON;
+        return runParser(src, createJSONParser({ fileName: src })).then(
+          docs => {
+            DOCS.push.apply(DOCS, docs);
+          }
+        );
       });
       it('should have bson ObjectId', () => {
         expect(DOCS[0]._id._bsontype).to.equal('ObjectID');
@@ -75,15 +78,19 @@ describe('parsers', () => {
 
       before(done => {
         const src = FIXTURES.JS_I_THINK_IS_JSON;
-        const p = runParser(src, createJSONParser());
+        const p = runParser(src, createJSONParser({ fileName: src }));
         p.catch(err => (parseError = err));
         expect(p).to.be.rejected.and.notify(done);
       });
 
       it('should catch errors by default', () => {
-        expect(parseError).to.be.an('error');
+        expect(parseError.name).to.equal('JSONError');
       });
-      it('should have a human readable error message');
+      it('should have a human readable error message', () => {
+        const DEFAULT_MESSAGE =
+          'Error: Invalid JSON (Unexpected "_" at position 10 in state STOP)';
+        expect(parseError.message).to.not.contain(DEFAULT_MESSAGE);
+      });
     });
   });
   describe('csv', () => {
@@ -94,7 +101,6 @@ describe('parsers', () => {
     });
     describe('errors', () => {
       let parseError;
-
       before(done => {
         const src = FIXTURES.BAD_CSV;
         const p = runParser(src, createCSVParser());
@@ -105,7 +111,11 @@ describe('parsers', () => {
       it('should catch errors by default', () => {
         expect(parseError).to.be.an('error');
       });
-      it('should have a human readable error message');
+      it('should have a human readable error message', () => {
+        expect(parseError.message).to.equal(
+          'Row length does not match headers'
+        );
+      });
     });
   });
 });

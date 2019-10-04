@@ -23,6 +23,21 @@ import {
   closeImport
 } from 'modules/import';
 
+import ANSIConverter from 'ansi-to-html';
+
+// TODO: lucas: Sync hex values against .less
+const ANSI_TO_HTML_OPTIONS = {
+  fg: '#FFF',
+  bg: '#000',
+  newline: true,
+  escapeXML: true,
+  stream: false
+};
+
+const getPrettyErrorMessage = function(err) {
+  return new ANSIConverter(ANSI_TO_HTML_OPTIONS).toHtml(err.message);
+};
+
 import styles from './import-modal.less';
 
 class ImportModal extends PureComponent {
@@ -44,16 +59,16 @@ class ImportModal extends PureComponent {
 
   getStatusMessage = () => {
     if (this.props.error) {
-      return this.props.error.message;
+      return 'Error';
     }
     if (this.props.status === PROCESS_STATUS.STARTED) {
       return 'Importing...';
     }
     if (this.props.status === PROCESS_STATUS.CANCELED) {
-      return 'Import canceled.';
+      return 'Canceled';
     }
     if (this.props.status === PROCESS_STATUS.COMPLETED) {
-      return 'Import completed!';
+      return 'Completed!';
     }
 
     return 'UNKNOWN';
@@ -100,13 +115,13 @@ class ImportModal extends PureComponent {
     if (this.props.status !== PROCESS_STATUS.UNSPECIFIED) {
       return (
         <div>
-        <ProgressBar
-          progress={this.props.progress}
-          status={this.props.status}
-          message={this.getStatusMessage()}
-          cancel={this.props.cancelImport}
-        />
-        <p>{this.props.docsWritten} documents imported</p>
+          <ProgressBar
+            progress={this.props.progress}
+            status={this.props.status}
+            message={this.getStatusMessage()}
+            cancel={this.props.cancelImport}
+          />
+          <p>{this.props.docsWritten} documents imported</p>
         </div>
       );
     }
@@ -115,7 +130,14 @@ class ImportModal extends PureComponent {
   renderCSVOptions() {
     return null;
   }
+  renderExtendedError() {
+    if (!this.props.error) {
+      return null;
+    }
 
+    const prettyError = getPrettyErrorMessage(this.props.error);
+    return <span dangerouslySetInnerHTML={{ __html: prettyError }} />;
+  }
   /**
    * Render the component.
    *
@@ -177,6 +199,7 @@ class ImportModal extends PureComponent {
             {this.renderCSVOptions()}
           </form>
           {this.renderProgressBar()}
+          {this.renderExtendedError()}
         </Modal.Body>
         <Modal.Footer>
           <TextButton

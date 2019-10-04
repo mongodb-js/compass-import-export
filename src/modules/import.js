@@ -226,7 +226,10 @@ export const startImport = () => {
     if (fileType === 'csv') {
       parser = createCSVParser();
     } else {
-      parser = createJSONParser({ selector: fileIsMultilineJSON ? null : '*' });
+      parser = createJSONParser({
+        selector: fileIsMultilineJSON ? null : '*',
+        fileName: fileName
+      });
     }
 
     debug('executing pipeline');

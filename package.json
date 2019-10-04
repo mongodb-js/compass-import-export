@@ -70,6 +70,7 @@
     "babel-preset-react": "^6.24.1",
     "babel-register": "^6.9.0",
     "bootstrap": "https://github.com/twbs/bootstrap/archive/v3.3.5.tar.gz",
+    "browserfs": "^1.4.3",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chai-enzyme": "1.0.0-beta.0",
@@ -148,6 +149,7 @@
   },
   "dependencies": {
     "JSONStream": "^1.3.5",
+    "ansi-to-html": "^0.6.11",
     "bson": "^4.0.2",
     "csv-parser": "^2.3.1",
     "fast-csv": "^3.4.0",
@@ -156,6 +158,7 @@
     "lodash.throttle": "^4.1.1",
     "mime-types": "^2.1.24",
     "mongodb-extjson": "^4.0.0-rc1",
+    "parse-json": "^5.0.0",
     "peek-stream": "^1.1.3",
     "progress-stream": "^2.0.0",
     "react-ios-switch": "^0.1.19",
