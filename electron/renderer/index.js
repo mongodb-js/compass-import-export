@@ -1,5 +1,8 @@
 /* eslint-disable no-console */
 /* eslint-disable no-var */
+
+require('debug').enable('mongo*');
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import app from 'hadron-app';
@@ -19,9 +22,6 @@ import 'less/global.less';
  * Customize data service for your sandbox.
  */
 const NS = 'test.people_imported';
-// test.people
-// test.people_missing_fields
-// const NS = 'crimedb.incidents';
 
 import Connection from 'mongodb-connection-model';
 const connection = new Connection({
