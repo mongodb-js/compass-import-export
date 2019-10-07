@@ -168,7 +168,7 @@ class ExportModal extends PureComponent {
     });
 
     return (
-      <Modal show={this.props.open} onHide={this.handleClose}>
+      <Modal show={this.props.open} onHide={this.handleClose} backdrop="static">
         <Modal.Header closeButton>
           Export Collection {this.props.ns}
         </Modal.Header>

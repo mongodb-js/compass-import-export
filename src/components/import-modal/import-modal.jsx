@@ -151,7 +151,7 @@ class ImportModal extends PureComponent {
    */
   render() {
     return (
-      <Modal show={this.props.open} onHide={this.handleClose}>
+      <Modal show={this.props.open} onHide={this.handleClose} backdrop="static">
         <Modal.Header closeButton>
           Import To Collection {this.props.ns}
         </Modal.Header>
