@@ -28,6 +28,7 @@ const FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
 const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
 const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
+const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
 
 /**
  * Initial state.
@@ -38,14 +39,14 @@ export const INITIAL_STATE = {
   progress: 0,
   error: null,
   fileName: '',
-  fileType: undefined,
   fileIsMultilineJSON: false,
   fileDelimiter: undefined,
   ignoreEmpty: true,
   useHeaderLines: true,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
-  docsWritten: 0
+  docsWritten: 0,
+  delimiter: undefined
 };
 
 /**
@@ -99,6 +100,12 @@ export const onError = error => ({
  */
 // eslint-disable-next-line complexity
 const reducer = (state = INITIAL_STATE, action) => {
+  if (action.type === SET_DELIMITER) {
+    return {
+      ...state,
+      delimiter: action.delimiter
+    };
+  }
   if (action.type === FILE_SELECTED) {
     return {
       ...state,
@@ -328,6 +335,16 @@ export const openImport = () => ({
  */
 export const closeImport = () => ({
   type: CLOSE
+});
+
+/**
+ * Set the tabular delimiter.
+ *
+ * @api public
+ */
+export const setDelimiter = delimiter => ({
+  type: SET_DELIMITER,
+  delimiter: delimiter
 });
 
 export default reducer;

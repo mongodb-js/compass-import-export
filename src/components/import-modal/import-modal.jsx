@@ -20,6 +20,7 @@ import {
   cancelImport,
   selectImportFileType,
   selectImportFileName,
+  setDelimiter,
   closeImport
 } from 'modules/import';
 
@@ -52,6 +53,8 @@ class ImportModal extends PureComponent {
     closeImport: PropTypes.func.isRequired,
     selectImportFileType: PropTypes.func.isRequired,
     selectImportFileName: PropTypes.func.isRequired,
+    setDelimiter: PropTypes.func.isRequired,
+    delimiter: PropTypes.string,
     fileType: PropTypes.string,
     fileName: PropTypes.string,
     docsWritten: PropTypes.number
@@ -114,6 +117,14 @@ class ImportModal extends PureComponent {
     }
   };
 
+  setupDelimiterSelect = ref => {
+    if (!ref) return null;
+
+    ref.onchange = evt => {
+      this.props.setDelimiter(evt.target.value);
+    };
+  };
+
   /**
    * Render the progress bar.
    *
@@ -136,8 +147,26 @@ class ImportModal extends PureComponent {
   };
 
   renderCSVOptions() {
-    // TODO: lucas: Impl the delimiter selector etc.
-    return null;
+    if (this.props.fileType !== 'csv') {
+      return null;
+    }
+
+    return (
+      <FormGroup>
+        <ControlLabel>Delimiter</ControlLabel>
+        <FormControl
+          componentClass="select"
+          placeholder="select"
+          inputRef={this.setupDelimiterSelect}
+          defaultValue={this.props.delimiter}
+        >
+          <option value=",">comma</option>
+          <option value="\t">\tab</option>
+          <option value=";">semicolon</option>
+          <option value="🏁">🏁</option>
+        </FormControl>
+      </FormGroup>
+    );
   }
   renderExtendedError() {
     if (!this.props.error) {
@@ -250,7 +279,8 @@ const mapStateToProps = state => ({
   fileType: state.importData.fileType,
   fileName: state.importData.fileName,
   status: state.importData.status,
-  docsWritten: state.importData.docsWritten
+  docsWritten: state.importData.docsWritten,
+  delimiter: state.importData.delimiter
 });
 
 /**
@@ -263,6 +293,7 @@ export default connect(
     cancelImport,
     selectImportFileType,
     selectImportFileName,
+    setDelimiter,
     closeImport
   }
 )(ImportModal);
