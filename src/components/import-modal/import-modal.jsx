@@ -106,6 +106,14 @@ class ImportModal extends PureComponent {
     this.props.startImport();
   };
 
+  handleOnSubmit = evt => {
+    evt.preventDefault();
+    evt.stopPropagation();
+    if (this.props.fileName) {
+      this.props.startImport();
+    }
+  };
+
   /**
    * Render the progress bar.
    *
@@ -156,38 +164,7 @@ class ImportModal extends PureComponent {
           Import To Collection {this.props.ns}
         </Modal.Header>
         <Modal.Body>
-          <div className={classnames(styles['import-modal-input'])}>
-            Select Input File Type
-          </div>
-          <div
-            className={classnames(styles['import-modal-type-selector'])}
-            type="radio"
-            name="file-type-selector"
-          >
-            <Button
-              className={classnames({
-                [styles.selected]: this.props.fileType === FILE_TYPES.JSON
-              })}
-              onClick={this.props.selectImportFileType.bind(
-                this,
-                FILE_TYPES.JSON
-              )}
-            >
-              JSON
-            </Button>
-            <Button
-              className={classnames({
-                [styles.selected]: this.props.fileType === FILE_TYPES.CSV
-              })}
-              onClick={this.props.selectImportFileType.bind(
-                this,
-                FILE_TYPES.CSV
-              )}
-            >
-              CSV
-            </Button>
-          </div>
-          <form>
+          <form onSubmit={this.handleOnSubmit}>
             <FormGroup controlId="import-file">
               <ControlLabel>Select File</ControlLabel>
               <InputGroup
@@ -201,6 +178,33 @@ class ImportModal extends PureComponent {
                   iconClassName="fa fa-folder-open-o"
                 />
               </InputGroup>
+            </FormGroup>
+            <FormGroup>
+              <ControlLabel>Select Input File Type</ControlLabel>
+              <div className={classnames(styles['import-modal-type-selector'])}>
+                <Button
+                  className={classnames({
+                    [styles.selected]: this.props.fileType === FILE_TYPES.JSON
+                  })}
+                  onClick={this.props.selectImportFileType.bind(
+                    this,
+                    FILE_TYPES.JSON
+                  )}
+                >
+                  JSON
+                </Button>
+                <Button
+                  className={classnames({
+                    [styles.selected]: this.props.fileType === FILE_TYPES.CSV
+                  })}
+                  onClick={this.props.selectImportFileType.bind(
+                    this,
+                    FILE_TYPES.CSV
+                  )}
+                >
+                  CSV
+                </Button>
+              </div>
             </FormGroup>
             {this.renderCSVOptions()}
           </form>
@@ -217,7 +221,11 @@ class ImportModal extends PureComponent {
           />
           <TextButton
             className="btn btn-primary btn-sm"
-            text="Import"
+            text={
+              this.props.status === PROCESS_STATUS.STARTED
+                ? 'Importing...'
+                : 'Import'
+            }
             disabled={this.props.status === PROCESS_STATUS.STARTED}
             clickHandler={this.handleImportBtnClicked}
           />
