@@ -1,17 +1,20 @@
+import { promisify } from 'util';
 import fs from 'fs';
-import PROCESS_STATUS from 'constants/process-status';
-import { appRegistryEmit } from 'modules/compass';
-import stream from 'stream';
+const checkFileExists = promisify(fs.exists);
+const getFileStats = promisify(fs.stat);
 
+import stream from 'stream';
 import createProgressStream from 'progress-stream';
 import stripBomStream from 'strip-bom-stream';
-
-import detectImportFile from 'utils/detect-import-file';
 import mime from 'mime-types';
 
-import { createLogger } from 'utils/logger';
+import PROCESS_STATUS from 'constants/process-status';
+import { appRegistryEmit } from 'modules/compass';
+
+import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
 import { createCSVParser, createJSONParser } from 'utils/parsers';
+import { createLogger } from 'utils/logger';
 
 const debug = createLogger('import');
 
@@ -277,36 +280,37 @@ export const cancelImport = () => {
 };
 
 /**
+ * Gather file metadata quickly when the user specifies `fileName`.
  * @param {String} fileName
  * @api public
  */
 export const selectImportFileName = fileName => {
   return dispatch => {
-    fs.exists(fileName, function(exists) {
-      if (!exists) {
-        return dispatch(onError(new Error(`File ${fileName} not found`)));
-      }
-      fs.stat(fileName, function(err, stats) {
-        if (err) {
-          return dispatch(onError(err));
+    let fileStats = {};
+    checkFileExists(fileName)
+      .then(exists => {
+        if (!exists) {
+          throw new Error(`File ${fileName} not found`);
         }
-
-        stats.type = mime.lookup(fileName);
-
-        detectImportFile(fileName, function(detectionError, res) {
-          if (detectionError) {
-            return dispatch(onError(detectionError));
-          }
-          dispatch({
-            type: FILE_SELECTED,
-            fileName: fileName,
-            fileStats: stats,
-            fileIsMultilineJSON: res.fileIsMultilineJSON,
-            fileType: res.fileType
-          });
+        return getFileStats(fileName);
+      })
+      .then(stats => {
+        fileStats = {
+          ...stats,
+          type: mime.lookup(fileName)
+        };
+        return promisify(detectImportFile)(fileName);
+      })
+      .then(detected => {
+        dispatch({
+          type: FILE_SELECTED,
+          fileName: fileName,
+          fileStats: fileStats,
+          fileIsMultilineJSON: detected.fileIsMultilineJSON,
+          fileType: detected.fileType
         });
-      });
-    });
+      })
+      .catch(err => dispatch(onError(err)));
   };
 };
 
