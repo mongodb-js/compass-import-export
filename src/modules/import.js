@@ -6,6 +6,7 @@ const getFileStats = promisify(fs.stat);
 import stream from 'stream';
 import createProgressStream from 'progress-stream';
 import stripBomStream from 'strip-bom-stream';
+const sizeof = require('object-sizeof');
 import mime from 'mime-types';
 
 import PROCESS_STATUS from 'constants/process-status';
@@ -220,17 +221,58 @@ export const startImport = () => {
     const source = fs.createReadStream(fileName, 'utf8');
     const dest = createCollectionWriteStream(dataService, ns);
 
-    // TODO: lucas: Use bson.calculateObjectSize per doc for better progress?
     const progress = createProgressStream({
       objectMode: true,
-      length: size,
-      time: 250 /* ms */
+      length: size / 800,
+      time: 500 /* ms */
     });
 
-    progress.on('progress', function(info) {
-      debug('progress', info);
-      dispatch(onProgress(info.percentage, dest.docsWritten));
+    // TODO: this kinda works now :) could be way better
+    // with a continuously updated reservoir sample...
+    // BUT good enough for now.
+    const sizer = new stream.Transform({
+      objectMode: true,
+      transform: function(chunk, encoding, cb) {
+        if (!this.sizes) {
+          this.sizes = [];
+          this._done = false;
+          this._keyCount = Object.keys(chunk);
+        }
+
+        if (this._done === true) {
+          return cb(null, chunk);
+        }
+        this.sizes.push(sizeof(chunk) + 1);
+
+        if (this.sizes.length === 100) {
+          this._done = true;
+          const sum = this.sizes.reduce(function(accumulator, currentValue) {
+            return accumulator + currentValue;
+          }, 0);
+
+          const avg = sum / this.sizes.length;
+          const estDocs = Math.floor((size / avg) * 4);
+          progress.setLength(estDocs);
+
+          console.group('Object Size estimator');
+          console.log('avg', avg);
+          console.log('file size', size);
+          console.log('est docs', estDocs);
+          console.log('keyCount', this._keyCount);
+          console.log('sizes', this.sizes);
+
+          console.groupEnd();
+        }
+        return cb(null, chunk);
+      }
     });
+
+    const throttle = require('lodash.throttle');
+    const updateProgress = throttle(function(info) {
+      // debug('progress', info);
+      dispatch(onProgress(info.percentage, dest.docsWritten));
+    }, 500);
+    progress.on('progress', updateProgress);
 
     let parser;
     if (fileType === 'csv') {
@@ -245,10 +287,7 @@ export const startImport = () => {
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
-    stream.pipeline(source, stripBomStream(), progress, parser, dest, function(
-      err,
-      res
-    ) {
+    stream.pipeline(source, parser, sizer, progress, dest, function(err, res) {
       if (err) {
         return dispatch(onError(err));
       }

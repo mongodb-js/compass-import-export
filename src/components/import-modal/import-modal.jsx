@@ -255,7 +255,10 @@ class ImportModal extends PureComponent {
                 ? 'Importing...'
                 : 'Import'
             }
-            disabled={this.props.status === PROCESS_STATUS.STARTED}
+            disabled={
+              !this.props.fileName ||
+              this.props.status === PROCESS_STATUS.STARTED
+            }
             clickHandler={this.handleImportBtnClicked}
           />
         </Modal.Footer>

@@ -1,4 +1,4 @@
-@import (reference) "~less/compass/_theme.less";
+@import (reference) '~less/compass/_theme.less';
 
 .progress-bar {
   position: relative;
@@ -23,21 +23,23 @@
   &-bar {
     padding: 8px;
     display: flex;
-    color: #FFFFFF;
+    color: #ffffff;
+    transition: width 0.2s ease;
 
     &-is-started {
       border-radius: 4px 0px 0px 4px;
       background-color: #03a9f4;
     }
 
-    &-is-canceled, &-is-failed {
+    &-is-canceled,
+    &-is-failed {
       border-radius: 4px;
       background: #ef4c4c;
     }
 
     &-is-completed {
       border-radius: 4px;
-      background-color: #6BA442;
+      background-color: #6ba442;
     }
   }
 }
