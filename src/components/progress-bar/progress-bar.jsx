@@ -14,8 +14,7 @@ class ProgressBar extends PureComponent {
   static propTypes = {
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
-    message: PropTypes.string.isRequired,
-    cancel: PropTypes.func.isRequired
+    message: PropTypes.string.isRequired
   };
 
   /**
@@ -61,31 +60,6 @@ class ProgressBar extends PureComponent {
   }
 
   /**
-   * Handle clicking the cancel button.
-   */
-  handleCancel = () => {
-    this.props.cancel();
-  };
-
-  /**
-   * Render the cancel button if still in progress.
-   *
-   * @return {React.Component} The component.
-   */
-  renderCancelButton() {
-    if (this.props.status === PROCESS_STATUS.STARTED) {
-      return (
-        <div
-          className={classnames(styles['progress-bar-cancel'])}
-          onClick={this.handleCancel}
-        >
-          Cancel
-        </div>
-      );
-    }
-  }
-
-  /**
    * Render the component.
    *
    * @returns {React.Component} The component.
@@ -99,7 +73,6 @@ class ProgressBar extends PureComponent {
         >
           {this.props.message}
         </div>
-        {this.renderCancelButton()}
       </div>
     );
   }
