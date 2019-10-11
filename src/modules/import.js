@@ -268,10 +268,11 @@ export const startImport = () => {
     });
 
     const throttle = require('lodash.throttle');
-    const updateProgress = throttle(function(info) {
+    function update_import_progress_throttled(info) {
       // debug('progress', info);
       dispatch(onProgress(info.percentage, dest.docsWritten));
-    }, 500);
+    }
+    const updateProgress = throttle(update_import_progress_throttled, 500);
     progress.on('progress', updateProgress);
 
     let parser;

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Writable } from 'stream';
 import { createLogger } from './logger';
 const backoff = require('backoff');
@@ -27,10 +28,6 @@ class WritableCollectionStream extends Writable {
 
   _initBatch() {
     this.batch = this._collection().initializeOrderedBulkOp();
-    // this.batch.handleWriteError(function(callback, writeResult) {
-    //   console.log('handleWriteError', callback, writeResult);
-    //   callback(null, writeResult);
-    // });
   }
 
   _collection() {
@@ -40,11 +37,8 @@ class WritableCollectionStream extends Writable {
   _write(chunk, encoding, next) {
     this.batch.insert(chunk);
     if (this.batch.length === this.BATCH_SIZE) {
-      /**
-       * TODO: lucas: expose finer-grained bulk op results:
-       * https://mongodb.github.io/node-mongodb-native/3.3/api/BulkWriteResult.html
-       */
-
+      // TODO: lucas: expose finer-grained bulk op results:
+      // https://mongodb.github.io/node-mongodb-native/3.3/api/BulkWriteResult.html
       const nextBatch = (err, res = {}) => {
         this.docsWritten += this.batch.length;
         if (err) {
@@ -64,15 +58,17 @@ class WritableCollectionStream extends Writable {
             // wtimeout: 0 /* 60 * 1000*/
           },
           (err, res) => {
+            // TODO: lucas: Respect a `stopOnErrors` checkbox option.
             if (err) {
               if (err.errorLabels && Array.isArray(err.errorLabels)) {
+                // TODO: lucas: In the case of a transientTransactionError
+                // with DUPLICATE_KEYS, we need to reset generated the default
+                // `_id: ObjectId()` in the batch before our next retry.
                 err.message =
                   'NOTE: @lucas: this is a transient transaction error and will be retried. - ' +
                   err.message;
               }
               this._errors.push(err);
-              console.error(err);
-              console.log(res);
               return cb(err);
             }
             cb(null, res);
@@ -151,8 +147,11 @@ class WritableCollectionStream extends Writable {
   }
 
   printJobStats() {
+    console.group('Import Info');
     console.table(this._stats);
-    console.log('Errors Seen', this._errors);
+    console.log('Errors Seen');
+    console.log(this._errors);
+    console.groupEnd();
   }
 }
 
