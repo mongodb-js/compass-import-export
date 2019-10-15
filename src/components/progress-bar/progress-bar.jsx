@@ -1,9 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
-import PROCESS_STATUS from 'constants/process-status';
+import {STARTED, CANCELED, COMPLETED, FAILED} from 'constants/process-status';
 
 import styles from './progress-bar.less';
+import createStyler from 'utils/styler.js';
+
+const style = createStyler(styles, 'progress-bar');
 
 /**
  * The progress bar component.
@@ -14,18 +17,11 @@ class ProgressBar extends PureComponent {
   static propTypes = {
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
-    message: PropTypes.string.isRequired
+    message: PropTypes.string.isRequired,
+    docsWritten: PropTypes.number,
+    docsTotal: PropTypes.number, // <==- handle undefined for import
+    cancel: PropTypes.func
   };
-
-  /**
-   * Get the width of the progress bar.
-   *
-   * @returns {String} The width as a percentage.
-   */
-  getWidth() {
-    const width = this.props.progress;
-    return `${width}%`;
-  }
 
   /**
    * Get the class name for the bar.
@@ -33,30 +29,60 @@ class ProgressBar extends PureComponent {
    * @returns {String} The class name.
    */
   getBarClassName() {
+    const { status } = this.props;
     return classnames({
-      [styles['progress-bar-bar']]: true,
-      [styles['progress-bar-bar-is-started']]:
-        this.props.status === PROCESS_STATUS.STARTED,
-      [styles['progress-bar-bar-is-canceled']]:
-        this.props.status === PROCESS_STATUS.CANCELED,
-      [styles['progress-bar-bar-is-completed']]:
-        this.props.status === PROCESS_STATUS.COMPLETED,
-      [styles['progress-bar-bar-is-failed']]:
-        this.props.status === PROCESS_STATUS.FAILED
+      [style('bar')]: true,
+      // [style('bar-is-started')]: status === STARTED,
+      [style('bar-is-canceled')]: status === CANCELED,
+      [style('bar-is-completed')]: status === COMPLETED,
+      [style('bar-is-failed')]: status === FAILED
+    });
+  }
+  getMessageClassName() {
+    return classnames({
+      [style('status-message')]: true,
+      [style('status-message-is-failed')]: this.props.status === FAILED
     });
   }
 
-  /**
-   * Get the class name for the wrapper.
-   *
-   * @returns {String} The class name.
-   */
-  getWrapperClassName() {
-    return classnames({
-      [styles['progress-bar']]: true,
-      [styles['progress-bar-is-started']]:
-        this.props.status === PROCESS_STATUS.STARTED
-    });
+  formatNumber(num) {
+    return new Intl.NumberFormat().format(num);
+  }
+
+  maybeCancelButton() {
+    if (this.props.status !== STARTED) {
+      return null;
+    }
+
+    return (
+      // eslint-disable-next-line no-script-url
+      <a className={style('status-message-cancel')} onClick={(evt)=> {
+        evt.stopPropagation();
+        evt.preventDefault();
+        this.props.cancel();
+      }}>Cancel</a>
+    );
+  }
+
+  renderStats() {
+    const { docsTotal, docsWritten, progress } = this.props;
+    // TODO: lucas: This is explicitly handling import case where
+    // we don't know the exact number of documents to expect.
+    // Could use the estimate set in modules/import progress?
+    if (docsTotal === undefined) {
+      return (
+        <p className={style('status-stats')}>
+          {this.formatNumber(docsWritten)}
+          ({this.formatNumber(progress)}%)
+        </p>
+      );
+    }
+    return (
+      <p className={style('status-stats')}>
+        {this.formatNumber(docsWritten)}/{this.formatNumber(docsTotal)}
+        ({this.formatNumber(progress)}%)
+      </p>
+    );
   }
 
   /**
@@ -65,13 +91,21 @@ class ProgressBar extends PureComponent {
    * @returns {React.Component} The component.
    */
   render() {
+    const {message, docsTotal, docsWritten, progress} = this.props;
+
     return (
-      <div className={this.getWrapperClassName()}>
-        <div
-          className={this.getBarClassName()}
-          style={{ width: this.getWidth() }}
-        >
-          {this.props.message}
+      <div>
+        <div className={style()}>
+          <div
+            className={this.getBarClassName()}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className={styles['progress-bar-status']}>
+          <p className={this.getMessageClassName()}>
+            {message}{this.maybeCancelButton()}
+          </p>
+          {this.renderStats()}
         </div>
       </div>
     );

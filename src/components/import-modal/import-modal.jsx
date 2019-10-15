@@ -80,6 +80,7 @@ class ImportModal extends PureComponent {
   /**
    * Handle choosing a file from the file dialog.
    */
+  // eslint-disable-next-line react/sort-comp
   handleChooseFile = () => {
     const file = fileOpenDialog();
     if (file) {
@@ -133,14 +134,14 @@ class ImportModal extends PureComponent {
   renderProgressBar = () => {
     if (this.props.status !== PROCESS_STATUS.UNSPECIFIED) {
       return (
-        <div>
+        <div className="well" style={{padding: '20px', marginBottom: '0px'}}>
           <ProgressBar
             progress={this.props.progress}
             status={this.props.status}
             message={this.getStatusMessage()}
             cancel={this.props.cancelImport}
+            docsWritten={this.props.docsWritten}
           />
-          <p>{this.props.docsWritten} documents imported</p>
         </div>
       );
     }
@@ -163,8 +164,21 @@ class ImportModal extends PureComponent {
           <option value=",">comma</option>
           <option value="\t">\tab</option>
           <option value=";">semicolon</option>
-          <option value="🏁">🏁</option>
         </FormControl>
+        <div>
+          <input
+            type="checkbox"
+            defaultChecked
+          />
+          <label>Ignore empty values</label>
+        </div>
+        {/* <div>
+          <input
+            type="checkbox"
+            defaultChecked
+          />
+          <label>Stop on Errors</label>
+        </div> */}
       </FormGroup>
     );
   }
