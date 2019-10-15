@@ -5,6 +5,7 @@ import {STARTED, CANCELED, COMPLETED, FAILED} from 'constants/process-status';
 
 import styles from './progress-bar.less';
 import createStyler from 'utils/styler.js';
+import formatNumber from 'utils/format-number.js';
 
 const style = createStyler(styles, 'progress-bar');
 
@@ -32,7 +33,6 @@ class ProgressBar extends PureComponent {
     const { status } = this.props;
     return classnames({
       [style('bar')]: true,
-      // [style('bar-is-started')]: status === STARTED,
       [style('bar-is-canceled')]: status === CANCELED,
       [style('bar-is-completed')]: status === COMPLETED,
       [style('bar-is-failed')]: status === FAILED
@@ -43,10 +43,6 @@ class ProgressBar extends PureComponent {
       [style('status-message')]: true,
       [style('status-message-is-failed')]: this.props.status === FAILED
     });
-  }
-
-  formatNumber(num) {
-    return new Intl.NumberFormat().format(num);
   }
 
   maybeCancelButton() {
@@ -72,15 +68,15 @@ class ProgressBar extends PureComponent {
     if (docsTotal === undefined) {
       return (
         <p className={style('status-stats')}>
-          {this.formatNumber(docsWritten)}
-          ({this.formatNumber(progress)}%)
+          {formatNumber(docsWritten)}
+          &nbsp;({formatNumber(progress)}%)
         </p>
       );
     }
     return (
       <p className={style('status-stats')}>
-        {this.formatNumber(docsWritten)}/{this.formatNumber(docsTotal)}
-        ({this.formatNumber(progress)}%)
+        {formatNumber(docsWritten)}/{formatNumber(docsTotal)}
+        &nbsp;({formatNumber(progress)}%)
       </p>
     );
   }
@@ -91,7 +87,7 @@ class ProgressBar extends PureComponent {
    * @returns {React.Component} The component.
    */
   render() {
-    const {message, docsTotal, docsWritten, progress} = this.props;
+    const {message, progress} = this.props;
 
     return (
       <div>

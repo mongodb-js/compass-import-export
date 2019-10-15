@@ -300,6 +300,7 @@ export const startExport = () => {
 
       debug('executing pipeline');
 
+      // TODO: lucas: figure out how to make onStarted();
       dispatch(onStarted(source, dest));
       stream.pipeline(source, progress, formatter, dest, function(err, res) {
         if (err) {
@@ -339,7 +340,7 @@ export const cancelExport = () => {
     }
     debug('cancelling');
     source.unpipe();
-    dest.end();
+    // dest.end();
     debug('canceled by user');
     dispatch({ type: CANCELED });
   };

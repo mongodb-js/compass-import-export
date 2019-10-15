@@ -12,7 +12,7 @@ import {
 } from 'react-bootstrap';
 import { TextButton, IconTextButton } from 'hadron-react-buttons';
 import fileOpenDialog from 'utils/file-open-dialog';
-import PROCESS_STATUS, { FINISHED_STATUSES } from 'constants/process-status';
+import PROCESS_STATUS, { FINISHED_STATUSES, STARTED, COMPLETED, CANCELED } from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import ProgressBar from 'components/progress-bar';
 import {
@@ -40,6 +40,8 @@ const getPrettyErrorMessage = function(err) {
 };
 
 import styles from './import-modal.less';
+import createStyler from 'utils/styler.js';
+const style = createStyler(styles, 'import-modal');
 
 class ImportModal extends PureComponent {
   static propTypes = {
@@ -60,22 +62,23 @@ class ImportModal extends PureComponent {
     docsWritten: PropTypes.number
   };
 
-  getStatusMessage = () => {
+  getStatusMessage() {
+    const status = this.props.status;
     if (this.props.error) {
-      return 'Error';
+      return 'Error importing';
     }
-    if (this.props.status === PROCESS_STATUS.STARTED) {
-      return 'Importing...';
+    if (status === STARTED) {
+      return 'Importing documents...';
     }
-    if (this.props.status === PROCESS_STATUS.CANCELED) {
-      return 'Canceled';
+    if (status === CANCELED) {
+      return 'Import canceled';
     }
-    if (this.props.status === PROCESS_STATUS.COMPLETED) {
-      return 'Completed!';
+    if (status === COMPLETED) {
+      return 'Import completed';
     }
 
     return 'UNKNOWN';
-  };
+  }
 
   /**
    * Handle choosing a file from the file dialog.
@@ -132,19 +135,20 @@ class ImportModal extends PureComponent {
    * @returns {React.Component} The component.
    */
   renderProgressBar = () => {
-    if (this.props.status !== PROCESS_STATUS.UNSPECIFIED) {
-      return (
-        <div className="well" style={{padding: '20px', marginBottom: '0px'}}>
-          <ProgressBar
-            progress={this.props.progress}
-            status={this.props.status}
-            message={this.getStatusMessage()}
-            cancel={this.props.cancelImport}
-            docsWritten={this.props.docsWritten}
-          />
-        </div>
-      );
+    if (this.props.status === PROCESS_STATUS.UNSPECIFIED) {
+      return null;
     }
+    return (
+      <div className="well" style={{padding: '20px', marginBottom: '0px'}}>
+        <ProgressBar
+          progress={this.props.progress}
+          status={this.props.status}
+          message={this.getStatusMessage()}
+          cancel={this.props.cancelImport}
+          docsWritten={this.props.docsWritten}
+        />
+      </div>
+    );
   };
 
   renderCSVOptions() {
@@ -172,13 +176,6 @@ class ImportModal extends PureComponent {
           />
           <label>Ignore empty values</label>
         </div>
-        {/* <div>
-          <input
-            type="checkbox"
-            defaultChecked
-          />
-          <label>Stop on Errors</label>
-        </div> */}
       </FormGroup>
     );
   }
@@ -211,20 +208,20 @@ class ImportModal extends PureComponent {
             <FormGroup controlId="import-file">
               <ControlLabel>Select File</ControlLabel>
               <InputGroup
-                bsClass={classnames(styles['import-modal-browse-group'])}
+                bsClass={style('browse-group')}
               >
                 <FormControl type="text" value={this.props.fileName} readOnly />
                 <IconTextButton
                   text="Browse"
                   clickHandler={this.handleChooseFile}
-                  className={classnames(styles['import-modal-browse-button'])}
+                  className={style('browse-button')}
                   iconClassName="fa fa-folder-open-o"
                 />
               </InputGroup>
             </FormGroup>
             <FormGroup>
               <ControlLabel>Select Input File Type</ControlLabel>
-              <div className={classnames(styles['import-modal-type-selector'])}>
+              <div className={style('type-selector')}>
                 <Button
                   className={classnames({
                     [styles.selected]: this.props.fileType === FILE_TYPES.JSON
@@ -265,13 +262,13 @@ class ImportModal extends PureComponent {
           <TextButton
             className="btn btn-primary btn-sm"
             text={
-              this.props.status === PROCESS_STATUS.STARTED
+              this.props.status === STARTED
                 ? 'Importing...'
                 : 'Import'
             }
             disabled={
               !this.props.fileName ||
-              this.props.status === PROCESS_STATUS.STARTED
+              this.props.status === STARTED
             }
             clickHandler={this.handleImportBtnClicked}
           />
@@ -297,6 +294,7 @@ const mapStateToProps = state => ({
   fileName: state.importData.fileName,
   status: state.importData.status,
   docsWritten: state.importData.docsWritten,
+  docsTotal: state.importData.docsTotal,
   delimiter: state.importData.delimiter
 });
 

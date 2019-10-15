@@ -28,9 +28,8 @@ export default function styler(styles, prefix) {
   return function get_style_for_component(what='') {
     const k = `${prefix}${what !== '' ? '-' + what : ''}`;
     const def = styles[k];
-    console.log('styler', { def, k, styles});
     if (!def) {
-      throw new TypeError(`Missing style ${k}`);
+      throw new TypeError(`Style does not exist for ${k}`);
     }
     return def;
   };
