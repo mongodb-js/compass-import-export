@@ -27,7 +27,7 @@ class WritableCollectionStream extends Writable {
   }
 
   _initBatch() {
-    this.batch = this._collection().initializeOrderedBulkOp();
+    this.batch = this._collection().initializeOrderedBulkOp({explicitlyIgnoreSession: true});
   }
 
   _collection() {
@@ -166,6 +166,6 @@ export const createReadableCollectionStream = function(
 ) {
   const { project, limit, skip } = spec;
   return dataService
-    .fetch(ns, spec.filter || {}, { project, limit, skip })
+    .fetch(ns, spec.filter || {}, { explicitlyIgnoreSession: true, project, limit, skip })
     .stream();
 };
