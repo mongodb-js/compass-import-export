@@ -159,7 +159,6 @@
     "lodash.throttle": "^4.1.1",
     "mime-types": "^2.1.24",
     "mongodb-extjson": "^4.0.0-rc1",
-    "numeral": "^2.0.6",
     "object-sizeof": "^1.5.1",
     "parse-json": "^5.0.0",
     "peek-stream": "^1.1.3",
