@@ -53,7 +53,8 @@ export const INITIAL_STATE = {
   fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED,
-  exportedDocsCount: 0
+  exportedDocsCount: 0,
+  count: 0
 };
 
 /**
@@ -61,10 +62,12 @@ export const INITIAL_STATE = {
  * @param {stream.Writable} dest
  * @api private
  */
-export const onStarted = (source, dest) => ({
+export const onStarted = (source, dest, count) => ({
   type: STARTED,
   source: source,
   dest: dest
+  dest: dest,
+  count: count
 });
 
 /**
@@ -135,7 +138,8 @@ const reducer = (state = INITIAL_STATE, action) => {
       progress: 0,
       status: PROCESS_STATUS.STARTED,
       source: action.source,
-      dest: action.dest
+      dest: action.dest,
+      count: action.count
     };
   }
 
@@ -269,7 +273,7 @@ export const startExport = () => {
       ? { filter: {} }
       : exportData.query;
 
-    dataService.count(ns, spec.filter, {}, function(countErr, numDocsToExport) {
+    dataService.estimatedCount(ns, {query: spec.filter}, function(countErr, numDocsToExport) {
       if (countErr) {
         return onError(countErr);
       }
@@ -301,7 +305,7 @@ export const startExport = () => {
       debug('executing pipeline');
 
       // TODO: lucas: figure out how to make onStarted();
-      dispatch(onStarted(source, dest));
+      dispatch(onStarted(source, dest, numDocsToExport));
       stream.pipeline(source, progress, formatter, dest, function(err, res) {
         if (err) {
           debug('error running export pipeline', err);

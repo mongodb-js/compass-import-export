@@ -274,7 +274,7 @@ class ExportModal extends PureComponent {
 const mapStateToProps = state => ({
   ns: state.ns,
   progress: state.exportData.progress,
-  count: state.stats.rawDocumentCount,
+  count: state.exportData.count || state.stats.rawDocumentCount,
   query: state.exportData.query,
   isFullCollection: state.exportData.isFullCollection,
   open: state.exportData.isOpen,
