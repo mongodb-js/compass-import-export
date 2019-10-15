@@ -23,9 +23,12 @@ const debug = createLogger('parsers');
  *
  * @returns {Stream.Transform}
  */
-export const createCSVParser = function() {
+export const createCSVParser = function({
+  delimiter = ','
+} = {} ) {
   return csv({
-    strict: true
+    strict: true,
+    separator: delimiter
   });
 };
 

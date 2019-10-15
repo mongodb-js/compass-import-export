@@ -5,12 +5,14 @@ const backoff = require('backoff');
 const debug = createLogger('collection-stream');
 
 class WritableCollectionStream extends Writable {
-  constructor(dataService, ns) {
+  constructor(dataService, ns, stopOnErrors) {
     super({ objectMode: true });
     this.dataService = dataService;
     this.ns = ns;
     this.BATCH_SIZE = 1000;
-    this.docsWritten = 0;
+    this.docsWritten = 0; 
+    this.stopOnErrors = stopOnErrors;
+
     this._initBatch();
     this._batchCounter = 0;
     this._stats = {
@@ -27,7 +29,15 @@ class WritableCollectionStream extends Writable {
   }
 
   _initBatch() {
-    this.batch = this._collection().initializeOrderedBulkOp({explicitlyIgnoreSession: true});
+    this.batch = this._collection().initializeUnorderedBulkOp({
+      explicitlyIgnoreSession: true,
+      retryWrites: false,
+      writeConcern: {
+        w: 0
+      },
+      // TODO: lucas: option in mongoimport w slightly different name?
+      checkKeys: false
+    });
   }
 
   _collection() {
@@ -40,9 +50,12 @@ class WritableCollectionStream extends Writable {
       // TODO: lucas: expose finer-grained bulk op results:
       // https://mongodb.github.io/node-mongodb-native/3.3/api/BulkWriteResult.html
       const nextBatch = (err, res = {}) => {
+        if (err && this.stopOnErrors) {
+          return next(err);
+        }
         this.docsWritten += this.batch.length;
         if (err) {
-          debug('batch %s result', this._batchCounter, err, res);
+          debug(`batch ${this._batchCounter} result`, {err, res});
         }
         this.captureStatsForBulkResult(err, res);
 
@@ -52,22 +65,27 @@ class WritableCollectionStream extends Writable {
       };
 
       const execBatch = cb => {
+        const batchSize = this.batch.length;
         this.batch.execute(
-          {
-            w: 1
-            // wtimeout: 0 /* 60 * 1000*/
-          },
           (err, res) => {
-            // TODO: lucas: Respect a `stopOnErrors` checkbox option.
+            
+            // TODO: lucas: appears turning off retyableWrites 
+            // gives a slightly different error but probably same problem?
+            if (err && Array.isArray(err.errorLabels) && err.errorLabels.indexOf('TransientTransactionError')) {
+              debug('NOTE: @lucas: this is a transient transaction error and is a bug in retryable writes.', err);
+              err = null;
+              res = {nInserted: batchSize};
+              // return cb(err);
+            }
+
+            if (err && !this.stopOnErrors) {
+              console.log('stopOnErrors false. skipping', err);
+              err = null;
+              // TODO: lucas: figure out how to extract finer-grained bulk op results
+              // from err in these cases.
+              res = {};
+            }
             if (err) {
-              if (err.errorLabels && Array.isArray(err.errorLabels)) {
-                // TODO: lucas: In the case of a transientTransactionError
-                // with DUPLICATE_KEYS, we need to reset generated the default
-                // `_id: ObjectId()` in the batch before our next retry.
-                err.message =
-                  'NOTE: @lucas: this is a transient transaction error and will be retried. - ' +
-                  err.message;
-              }
               this._errors.push(err);
               return cb(err);
             }
@@ -75,25 +93,26 @@ class WritableCollectionStream extends Writable {
           }
         );
       };
+      execBatch(nextBatch);
 
-      const call = backoff.call(execBatch, nextBatch);
-      call.setStrategy(
-        new backoff.ExponentialStrategy({
-          randomisationFactor: 0,
-          initialDelay: 500,
-          maxDelay: 10000
-        })
-      );
-      call.on('backoff', (number, delay) => {
-        debug(
-          'Batch %s retry #%s failed.  retrying in %sms...',
-          this._batchCounter,
-          number,
-          delay
-        );
-      });
-      call.failAfter(5);
-      call.start();
+      // const call = backoff.call(execBatch, nextBatch);
+      // call.setStrategy(
+      //   new backoff.ExponentialStrategy({
+      //     randomisationFactor: 0,
+      //     initialDelay: 500,
+      //     maxDelay: 10000
+      //   })
+      // );
+      // call.on('backoff', (number, delay) => {
+      //   debug(
+      //     'Batch %s retry #%s failed.  retrying in %sms...',
+      //     this._batchCounter,
+      //     number,
+      //     delay
+      //   );
+      // });
+      // call.failAfter(5);
+      // call.start();
       return;
     }
     next();
@@ -108,6 +127,8 @@ class WritableCollectionStream extends Writable {
       this.printJobStats();
       return callback();
     }
+
+    // TODO: lucas: Reuse error wrangling from _write above.
     debug('draining buffered docs', this.batch.length);
     this.batch.execute((err, res) => {
       this.captureStatsForBulkResult(err, res);
@@ -121,7 +142,6 @@ class WritableCollectionStream extends Writable {
   }
 
   captureStatsForBulkResult(err, res) {
-    // TODO: lucas: Still have access to this._batch here.
     const keys = [
       'nInserted',
       'nMatched',
@@ -155,8 +175,8 @@ class WritableCollectionStream extends Writable {
   }
 }
 
-export const createCollectionWriteStream = function(dataService, ns) {
-  return new WritableCollectionStream(dataService, ns);
+export const createCollectionWriteStream = function(dataService, ns, stopOnErrors) {
+  return new WritableCollectionStream(dataService, ns, stopOnErrors);
 };
 
 export const createReadableCollectionStream = function(

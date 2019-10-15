@@ -21,6 +21,7 @@ import {
   selectImportFileType,
   selectImportFileName,
   setDelimiter,
+  setStopOnErrors,
   closeImport
 } from 'modules/import';
 
@@ -59,7 +60,8 @@ class ImportModal extends PureComponent {
     delimiter: PropTypes.string,
     fileType: PropTypes.string,
     fileName: PropTypes.string,
-    docsWritten: PropTypes.number
+    docsWritten: PropTypes.number,
+    stopOnErrors: PropTypes.bool
   };
 
   getStatusMessage() {
@@ -295,7 +297,8 @@ const mapStateToProps = state => ({
   status: state.importData.status,
   docsWritten: state.importData.docsWritten,
   docsTotal: state.importData.docsTotal,
-  delimiter: state.importData.delimiter
+  delimiter: state.importData.delimiter,
+  stopOnErrors: state.importData.stopOnErrors
 });
 
 /**
@@ -309,6 +312,7 @@ export default connect(
     selectImportFileType,
     selectImportFileName,
     setDelimiter,
+    setStopOnErrors,
     closeImport
   }
 )(ImportModal);

@@ -33,6 +33,7 @@ const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
 const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
 const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
+const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
 
 /**
  * Initial state.
@@ -50,7 +51,8 @@ export const INITIAL_STATE = {
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0,
-  delimiter: undefined
+  delimiter: undefined,
+  stopOnErrors: false
 };
 
 /**
@@ -110,6 +112,14 @@ const reducer = (state = INITIAL_STATE, action) => {
       delimiter: action.delimiter
     };
   }
+
+  if (action.type === SET_STOP_ON_ERRORS) {
+    return {
+      ...state,
+      stopOnErrors: action.stopOnErrors
+    };
+  }
+
   if (action.type === FILE_SELECTED) {
     return {
       ...state,
@@ -215,10 +225,13 @@ export const startImport = () => {
       fileName,
       fileType,
       fileIsMultilineJSON,
-      fileStats: { size }
+      fileStats: { size },
+      delimiter
     } = importData;
 
     const source = fs.createReadStream(fileName, 'utf8');
+
+    // TODO: lucas: Support ignoreUndefined as an option to pass to driver?
     const dest = createCollectionWriteStream(dataService, ns);
 
     const progress = createProgressStream({
@@ -277,7 +290,9 @@ export const startImport = () => {
 
     let parser;
     if (fileType === 'csv') {
-      parser = createCSVParser();
+      parser = createCSVParser({
+        delimiter: delimiter
+      });
     } else {
       parser = createJSONParser({
         selector: fileIsMultilineJSON ? null : '*',
@@ -389,6 +404,14 @@ export const closeImport = () => ({
 export const setDelimiter = delimiter => ({
   type: SET_DELIMITER,
   delimiter: delimiter
+});
+
+/**
+ * @api public
+ */
+export const setStopOnErrors = stopOnErrors => ({
+  type: SET_STOP_ON_ERRORS,
+  stopOnErrors: stopOnErrors
 });
 
 export default reducer;
