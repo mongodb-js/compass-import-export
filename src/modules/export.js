@@ -65,7 +65,6 @@ export const INITIAL_STATE = {
 export const onStarted = (source, dest, count) => ({
   type: STARTED,
   source: source,
-  dest: dest
   dest: dest,
   count: count
 });
@@ -289,7 +288,7 @@ export const startExport = () => {
       });
 
       progress.on('progress', function(info) {
-        debug('progress', info);
+        // debug('progress', info);
         dispatch(onProgress(info.percentage, info.transferred));
       });
 
