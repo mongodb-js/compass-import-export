@@ -120,46 +120,54 @@ class ImportModal extends PureComponent {
   };
 
   renderOptions() {
-    if (this.props.fileType !== 'csv') {
-      return null;
-    }
-
+    const isCSV = this.props.fileType === FILE_TYPES.CSV;
     return (
       <fieldset>
-        <legend>Options</legend>
-        <div>
-          <select
-            onChange={() => {
-              this.props.setDelimiter(!this.props.delimiter);
-            }}
-            defaultValue={this.props.delimiter}
-          >
-            <option value=",">comma</option>
-            <option value="\t">\tab</option>
-            <option value=";">semicolon</option>
-            <option value=" ">space</option>
-          </select>
-          <label>Delimiter</label>
-        </div>
-        <div>
+        <legend className={style('legend')}>Options</legend>
+        {isCSV && (
+          <div className={style('option')} style={{ marginBottom: '5px' }}>
+            <label className={style('option-select-label')}>
+              Select delimiter
+            </label>
+            <select
+              onChange={() => {
+                this.props.setDelimiter(!this.props.delimiter);
+              }}
+              defaultValue={this.props.delimiter}
+              className={style('option-select')}
+            >
+              <option value=",">comma</option>
+              <option value="\t">tab</option>
+              <option value=";">semicolon</option>
+              <option value=" ">space</option>
+            </select>
+          </div>
+        )}
+        <div className={style('option')}>
           <input
             type="checkbox"
-            defaultValue={this.props.ignoreEmptyFields}
+            checked={this.props.ignoreEmptyFields}
             onChange={() => {
               this.props.setIgnoreEmptyFields(!this.props.ignoreEmptyFields);
             }}
+            className={style('option-checkbox')}
           />
-          <label>Ignore empty values</label>
+          <label className={style('option-checkbox-label')}>
+            Ignore empty strings
+          </label>
         </div>
-        <div>
+        <div className={style('option')}>
           <input
             type="checkbox"
-            defaultValue={this.props.stopOnErrors}
+            checked={this.props.stopOnErrors}
             onChange={() => {
               this.props.setStopOnErrors(!this.props.stopOnErrors);
             }}
+            className={style('option-checkbox')}
           />
-          <label>Stop on errors</label>
+          <label className={style('option-checkbox-label')}>
+            Stop on errors
+          </label>
         </div>
       </fieldset>
     );

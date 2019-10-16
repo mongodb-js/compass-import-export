@@ -18,7 +18,14 @@ import ErrorBox from 'components/error-box';
 
 import fileSaveDialog from 'utils/file-save-dialog';
 import revealFile from 'utils/reveal-file';
-import PROCESS_STATUS, { STARTED, CANCELED, COMPLETED } from 'constants/process-status';
+import formatNumber from 'utils/format-number';
+
+import {
+  STARTED,
+  CANCELED,
+  COMPLETED,
+  UNSPECIFIED
+} from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import {
   startExport,
@@ -39,7 +46,8 @@ const style = createStyler(styles, 'export-modal');
 const MESSAGES = {
   [STARTED]: 'Exporting documents...',
   [CANCELED]: 'Export canceled',
-  [COMPLETED]: 'Export completed'
+  [COMPLETED]: 'Export completed',
+  [UNSPECIFIED]: ''
 };
 
 /**
@@ -161,10 +169,7 @@ class ExportModal extends PureComponent {
             with the query:
           </div>
           <div className={queryViewerClassName}>
-            <QueryViewer
-              query={this.props.query}
-              disabled={isFullCollection}
-            />
+            <QueryViewer query={this.props.query} disabled={isFullCollection} />
           </div>
           <div className={style('toggle-full')}>
             <Switch
@@ -172,13 +177,9 @@ class ExportModal extends PureComponent {
               onChange={this.props.toggleFullCollection}
               className={style('toggle-button')}
             />
-            <div className={style('toggle-text')}>
-              Export Full Collection
-            </div>
+            <div className={style('toggle-text')}>Export Full Collection</div>
           </div>
-          <div className={style('output')}>
-            Select Output File Type
-          </div>
+          <div className={style('output')}>Select Output File Type</div>
           <div
             className={style('type-selector')}
             type="radio"
@@ -210,9 +211,7 @@ class ExportModal extends PureComponent {
           <form>
             <FormGroup controlId="export-file">
               <ControlLabel>Select File</ControlLabel>
-              <InputGroup
-                bsClass={style('browse-group')}
-              >
+              <InputGroup bsClass={style('browse-group')}>
                 <FormControl type="text" value={this.props.fileName} readOnly />
                 <IconTextButton
                   text="Browse"
@@ -229,17 +228,14 @@ class ExportModal extends PureComponent {
             message={MESSAGES[this.props.status]}
             cancel={this.props.cancelExport}
             docsWritten={this.props.exportedDocsCount}
-            docsTotal={this.props.count} />
+            docsTotal={this.props.count}
+          />
           <ErrorBox error={this.props.error} />
         </Modal.Body>
         <Modal.Footer>
           <TextButton
             className="btn btn-default btn-sm"
-            text={
-              this.props.status === PROCESS_STATUS.COMPLETED
-                ? 'Close'
-                : 'Cancel'
-            }
+            text={this.props.status === COMPLETED ? 'Close' : 'Cancel'}
             clickHandler={this.handleClose}
           />
           {this.renderImportButton()}

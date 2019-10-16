@@ -48,13 +48,13 @@ export const INITIAL_STATE = {
   fileName: '',
   fileIsMultilineJSON: false,
   fileDelimiter: undefined,
-  ignoreEmptyFields: true,
   useHeaderLines: true,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0,
   delimiter: undefined,
-  stopOnErrors: false
+  stopOnErrors: false,
+  ignoreEmptyFields: true
 };
 
 /**
@@ -447,7 +447,7 @@ export const setStopOnErrors = stopOnErrors => ({
 /**
  * @api public
  */
-export const setignoreEmptyFields = setignoreEmptyFields => ({
+export const setIgnoreEmptyFields = setignoreEmptyFields => ({
   type: SET_IGNORE_EMPTY_FIELDS,
   setignoreEmptyFields: setignoreEmptyFields
 });
