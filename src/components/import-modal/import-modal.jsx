@@ -12,7 +12,12 @@ import {
 } from 'react-bootstrap';
 import { TextButton, IconTextButton } from 'hadron-react-buttons';
 import fileOpenDialog from 'utils/file-open-dialog';
-import PROCESS_STATUS, { FINISHED_STATUSES, STARTED, COMPLETED, CANCELED } from 'constants/process-status';
+import {
+  FINISHED_STATUSES,
+  STARTED,
+  COMPLETED,
+  CANCELED
+} from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import ProgressBar from 'components/progress-bar';
 import ErrorBox from 'components/error-box';
@@ -24,6 +29,7 @@ import {
   selectImportFileName,
   setDelimiter,
   setStopOnErrors,
+  setIgnoreEmptyFields,
   closeImport
 } from 'modules/import';
 
@@ -49,7 +55,9 @@ class ImportModal extends PureComponent {
     fileName: PropTypes.string,
     docsWritten: PropTypes.number,
     stopOnErrors: PropTypes.bool,
-    setStopOnErrors: PropTypes.func
+    setStopOnErrors: PropTypes.func,
+    ignoreEmptyFields: PropTypes.bool,
+    setIgnoreEmptyFields: PropTypes.func
   };
 
   getStatusMessage() {
@@ -111,60 +119,49 @@ class ImportModal extends PureComponent {
     }
   };
 
-  setupDelimiterSelect = ref => {
-    if (!ref) return null;
-
-    ref.onchange = evt => {
-      this.props.setDelimiter(evt.target.value);
-    };
-  };
-
-  /**
-   * Render the progress bar.
-   *
-   * @returns {React.Component} The component.
-   */
-  renderProgressBar = () => {
-    if (this.props.status === PROCESS_STATUS.UNSPECIFIED) {
-      return null;
-    }
-    return (
-      <ProgressBar
-        progress={this.props.progress}
-        status={this.props.status}
-        message={this.getStatusMessage()}
-        cancel={this.props.cancelImport}
-        docsWritten={this.props.docsWritten}
-      />
-    );
-  };
-
-  renderCSVOptions() {
+  renderOptions() {
     if (this.props.fileType !== 'csv') {
       return null;
     }
 
     return (
-      <FormGroup>
-        <ControlLabel>Delimiter</ControlLabel>
-        <FormControl
-          componentClass="select"
-          placeholder="select"
-          inputRef={this.setupDelimiterSelect}
-          defaultValue={this.props.delimiter}
-        >
-          <option value=",">comma</option>
-          <option value="\t">\tab</option>
-          <option value=";">semicolon</option>
-        </FormControl>
+      <fieldset>
+        <legend>Options</legend>
+        <div>
+          <select
+            onChange={() => {
+              this.props.setDelimiter(!this.props.delimiter);
+            }}
+            defaultValue={this.props.delimiter}
+          >
+            <option value=",">comma</option>
+            <option value="\t">\tab</option>
+            <option value=";">semicolon</option>
+            <option value=" ">space</option>
+          </select>
+          <label>Delimiter</label>
+        </div>
         <div>
           <input
             type="checkbox"
-            defaultChecked
+            defaultValue={this.props.ignoreEmptyFields}
+            onChange={() => {
+              this.props.setIgnoreEmptyFields(!this.props.ignoreEmptyFields);
+            }}
           />
           <label>Ignore empty values</label>
         </div>
-      </FormGroup>
+        <div>
+          <input
+            type="checkbox"
+            defaultValue={this.props.stopOnErrors}
+            onChange={() => {
+              this.props.setStopOnErrors(!this.props.stopOnErrors);
+            }}
+          />
+          <label>Stop on errors</label>
+        </div>
+      </fieldset>
     );
   }
 
@@ -183,9 +180,7 @@ class ImportModal extends PureComponent {
           <form onSubmit={this.handleOnSubmit}>
             <FormGroup controlId="import-file">
               <ControlLabel>Select File</ControlLabel>
-              <InputGroup
-                bsClass={style('browse-group')}
-              >
+              <InputGroup bsClass={style('browse-group')}>
                 <FormControl type="text" value={this.props.fileName} readOnly />
                 <IconTextButton
                   text="Browse"
@@ -222,9 +217,15 @@ class ImportModal extends PureComponent {
                 </Button>
               </div>
             </FormGroup>
-            {this.renderCSVOptions()}
+            {this.renderOptions()}
           </form>
-          {this.renderProgressBar()}
+          <ProgressBar
+            progress={this.props.progress}
+            status={this.props.status}
+            message={this.getStatusMessage()}
+            cancel={this.props.cancelImport}
+            docsWritten={this.props.docsWritten}
+          />
           <ErrorBox error={this.props.error} />
         </Modal.Body>
         <Modal.Footer>
@@ -237,15 +238,8 @@ class ImportModal extends PureComponent {
           />
           <TextButton
             className="btn btn-primary btn-sm"
-            text={
-              this.props.status === STARTED
-                ? 'Importing...'
-                : 'Import'
-            }
-            disabled={
-              !this.props.fileName ||
-              this.props.status === STARTED
-            }
+            text={this.props.status === STARTED ? 'Importing...' : 'Import'}
+            disabled={!this.props.fileName || this.props.status === STARTED}
             clickHandler={this.handleImportBtnClicked}
           />
         </Modal.Footer>
@@ -272,7 +266,8 @@ const mapStateToProps = state => ({
   docsWritten: state.importData.docsWritten,
   docsTotal: state.importData.docsTotal,
   delimiter: state.importData.delimiter,
-  stopOnErrors: state.importData.stopOnErrors
+  stopOnErrors: state.importData.stopOnErrors,
+  ignoreEmptyFields: state.importData.ignoreEmptyFields
 });
 
 /**
@@ -287,6 +282,7 @@ export default connect(
     selectImportFileName,
     setDelimiter,
     setStopOnErrors,
+    setIgnoreEmptyFields,
     closeImport
   }
 )(ImportModal);

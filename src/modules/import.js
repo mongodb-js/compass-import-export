@@ -15,6 +15,7 @@ import { appRegistryEmit } from 'modules/compass';
 import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
 import { createCSVParser, createJSONParser } from 'utils/parsers';
+import removeEmptyFields from 'utils/remove-empty-fields';
 import { createLogger } from 'utils/logger';
 
 const debug = createLogger('import');
@@ -34,6 +35,7 @@ const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
 const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
 const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
+const SET_IGNORE_EMPTY_FIELDS = `${PREFIX}/SET_IGNORE_EMPTY_FIELDS`;
 
 /**
  * Initial state.
@@ -46,7 +48,7 @@ export const INITIAL_STATE = {
   fileName: '',
   fileIsMultilineJSON: false,
   fileDelimiter: undefined,
-  ignoreEmpty: true,
+  ignoreEmptyFields: true,
   useHeaderLines: true,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
@@ -117,6 +119,13 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       stopOnErrors: action.stopOnErrors
+    };
+  }
+
+  if (action.type === SET_IGNORE_EMPTY_FIELDS) {
+    return {
+      ...state,
+      ignoreEmptyFields: action.ignoreEmptyFields
     };
   }
 
@@ -226,13 +235,15 @@ export const startImport = () => {
       fileType,
       fileIsMultilineJSON,
       fileStats: { size },
-      delimiter
+      delimiter,
+      ignoreEmptyFields,
+      stopOnErrors
     } = importData;
 
     const source = fs.createReadStream(fileName, 'utf8');
 
     // TODO: lucas: Support ignoreUndefined as an option to pass to driver?
-    const dest = createCollectionWriteStream(dataService, ns);
+    const dest = createCollectionWriteStream(dataService, ns, stopOnErrors);
 
     const progress = createProgressStream({
       objectMode: true,
@@ -280,6 +291,16 @@ export const startImport = () => {
       }
     });
 
+    const removeEmptyFieldsStream = new stream.Transform({
+      objectMode: true,
+      transform: function(chunk, encoding, cb) {
+        if (!ignoreEmptyFields) {
+          return cb(null, chunk);
+        }
+        cb(null, removeEmptyFields(chunk));
+      }
+    });
+
     const throttle = require('lodash.throttle');
     function update_import_progress_throttled(info) {
       // debug('progress', info);
@@ -303,14 +324,23 @@ export const startImport = () => {
     debug('executing pipeline');
 
     dispatch(onStarted(source, dest));
-    stream.pipeline(source, parser, sizer, progress, dest, function(err, res) {
-      if (err) {
-        return dispatch(onError(err));
+    stream.pipeline(
+      source,
+      stripBomStream(),
+      parser,
+      sizer,
+      progress,
+      removeEmptyFieldsStream,
+      dest,
+      function(err, res) {
+        if (err) {
+          return dispatch(onError(err));
+        }
+        debug('done', err, res);
+        dispatch(onFinished(dest.docsWritten));
+        dispatch(appRegistryEmit('import-finished', size, fileType));
       }
-      debug('done', err, res);
-      dispatch(onFinished(dest.docsWritten));
-      dispatch(appRegistryEmit('import-finished', size, fileType));
-    });
+    );
   };
 };
 
@@ -412,6 +442,14 @@ export const setDelimiter = delimiter => ({
 export const setStopOnErrors = stopOnErrors => ({
   type: SET_STOP_ON_ERRORS,
   stopOnErrors: stopOnErrors
+});
+
+/**
+ * @api public
+ */
+export const setignoreEmptyFields = setignoreEmptyFields => ({
+  type: SET_IGNORE_EMPTY_FIELDS,
+  setignoreEmptyFields: setignoreEmptyFields
 });
 
 export default reducer;
