@@ -14,6 +14,8 @@ import {
 import { TextButton, IconTextButton } from 'hadron-react-buttons';
 import QueryViewer from 'components/query-viewer';
 import ProgressBar from 'components/progress-bar';
+import ErrorBox from 'components/error-box';
+
 import fileSaveDialog from 'utils/file-save-dialog';
 import revealFile from 'utils/reveal-file';
 import PROCESS_STATUS, { STARTED, CANCELED, COMPLETED } from 'constants/process-status';
@@ -110,30 +112,6 @@ class ExportModal extends PureComponent {
 
   handleRevealClick = () => {
     revealFile(this.props.fileName);
-  };
-
-  /**
-   * Render the progress bar.
-   *
-   * @returns {React.Component} The component.
-   */
-  renderProgressBar = () => {
-    if (this.props.status === PROCESS_STATUS.UNSPECIFIED) {
-      return null;
-    }
-
-    return (
-      <div>
-        <ProgressBar
-          progress={this.props.progress}
-          status={this.props.status}
-          message={this.getStatusMessage()}
-          cancel={this.props.cancelExport}
-          docsWritten={this.props.exportedDocsCount}
-          docsTotal={this.props.count}
-        />
-      </div>
-    );
   };
 
   renderImportButton() {
@@ -245,7 +223,14 @@ class ExportModal extends PureComponent {
               </InputGroup>
             </FormGroup>
           </form>
-          {this.renderProgressBar()}
+          <ProgressBar
+            progress={this.props.progress}
+            status={this.props.status}
+            message={MESSAGES[this.props.status]}
+            cancel={this.props.cancelExport}
+            docsWritten={this.props.exportedDocsCount}
+            docsTotal={this.props.count} />
+          <ErrorBox error={this.props.error} />
         </Modal.Body>
         <Modal.Footer>
           <TextButton

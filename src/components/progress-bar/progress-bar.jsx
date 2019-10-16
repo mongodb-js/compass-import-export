@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
-import {STARTED, CANCELED, COMPLETED, FAILED} from 'constants/process-status';
+import {STARTED, CANCELED, COMPLETED, FAILED, UNSPECIFIED} from 'constants/process-status';
 
 import styles from './progress-bar.less';
 import createStyler from 'utils/styler.js';
@@ -87,10 +87,13 @@ class ProgressBar extends PureComponent {
    * @returns {React.Component} The component.
    */
   render() {
-    const {message, progress} = this.props;
+    const {message, progress, status} = this.props;
+    if (status === UNSPECIFIED) {
+      return null;
+    }
 
     return (
-      <div>
+      <div className="well" style={{padding: '20px', marginBottom: '0px'}}>
         <div className={style()}>
           <div
             className={this.getBarClassName()}

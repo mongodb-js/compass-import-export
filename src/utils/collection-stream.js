@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import { Writable } from 'stream';
 import { createLogger } from './logger';
-const backoff = require('backoff');
 const debug = createLogger('collection-stream');
 
 class WritableCollectionStream extends Writable {
@@ -68,14 +67,12 @@ class WritableCollectionStream extends Writable {
         const batchSize = this.batch.length;
         this.batch.execute(
           (err, res) => {
-            
-            // TODO: lucas: appears turning off retyableWrites 
+            // TODO: lucas: appears turning off retyableWrites
             // gives a slightly different error but probably same problem?
             if (err && Array.isArray(err.errorLabels) && err.errorLabels.indexOf('TransientTransactionError')) {
               debug('NOTE: @lucas: this is a transient transaction error and is a bug in retryable writes.', err);
               err = null;
               res = {nInserted: batchSize};
-              // return cb(err);
             }
 
             if (err && !this.stopOnErrors) {
@@ -94,25 +91,6 @@ class WritableCollectionStream extends Writable {
         );
       };
       execBatch(nextBatch);
-
-      // const call = backoff.call(execBatch, nextBatch);
-      // call.setStrategy(
-      //   new backoff.ExponentialStrategy({
-      //     randomisationFactor: 0,
-      //     initialDelay: 500,
-      //     maxDelay: 10000
-      //   })
-      // );
-      // call.on('backoff', (number, delay) => {
-      //   debug(
-      //     'Batch %s retry #%s failed.  retrying in %sms...',
-      //     this._batchCounter,
-      //     number,
-      //     delay
-      //   );
-      // });
-      // call.failAfter(5);
-      // call.start();
       return;
     }
     next();

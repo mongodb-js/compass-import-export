@@ -2,6 +2,7 @@ export const STARTED = 'STARTED';
 export const CANCELED = 'CANCELED';
 export const COMPLETED = 'COMPLETED';
 export const FAILED = 'FAILED';
+export const UNSPECIFIED = 'UNSPECIFIED';
 
 /**
  * Process status constants.
@@ -11,8 +12,7 @@ export const PROCESS_STATUS = {
   CANCELED,
   COMPLETED,
   FAILED,
-  UNSPECIFIED: 'UNSPECIFIED',
-  INTERRUPTED: 'INTERRUPTED'
+  UNSPECIFIED
 };
 
 /**

@@ -15,6 +15,8 @@ import fileOpenDialog from 'utils/file-open-dialog';
 import PROCESS_STATUS, { FINISHED_STATUSES, STARTED, COMPLETED, CANCELED } from 'constants/process-status';
 import FILE_TYPES from 'constants/file-types';
 import ProgressBar from 'components/progress-bar';
+import ErrorBox from 'components/error-box';
+
 import {
   startImport,
   cancelImport,
@@ -24,21 +26,6 @@ import {
   setStopOnErrors,
   closeImport
 } from 'modules/import';
-
-import ANSIConverter from 'ansi-to-html';
-
-// TODO: lucas: Sync hex values against .less
-const ANSI_TO_HTML_OPTIONS = {
-  fg: '#FFF',
-  bg: '#000',
-  newline: true,
-  escapeXML: true,
-  stream: false
-};
-
-const getPrettyErrorMessage = function(err) {
-  return new ANSIConverter(ANSI_TO_HTML_OPTIONS).toHtml(err.message);
-};
 
 import styles from './import-modal.less';
 import createStyler from 'utils/styler.js';
@@ -61,7 +48,8 @@ class ImportModal extends PureComponent {
     fileType: PropTypes.string,
     fileName: PropTypes.string,
     docsWritten: PropTypes.number,
-    stopOnErrors: PropTypes.bool
+    stopOnErrors: PropTypes.bool,
+    setStopOnErrors: PropTypes.func
   };
 
   getStatusMessage() {
@@ -141,15 +129,13 @@ class ImportModal extends PureComponent {
       return null;
     }
     return (
-      <div className="well" style={{padding: '20px', marginBottom: '0px'}}>
-        <ProgressBar
-          progress={this.props.progress}
-          status={this.props.status}
-          message={this.getStatusMessage()}
-          cancel={this.props.cancelImport}
-          docsWritten={this.props.docsWritten}
-        />
-      </div>
+      <ProgressBar
+        progress={this.props.progress}
+        status={this.props.status}
+        message={this.getStatusMessage()}
+        cancel={this.props.cancelImport}
+        docsWritten={this.props.docsWritten}
+      />
     );
   };
 
@@ -181,19 +167,7 @@ class ImportModal extends PureComponent {
       </FormGroup>
     );
   }
-  renderExtendedError() {
-    if (!this.props.error) {
-      return null;
-    }
 
-    const prettyError = getPrettyErrorMessage(this.props.error);
-    return (
-      <div
-        className={styles['error-box']}
-        dangerouslySetInnerHTML={{ __html: prettyError }}
-      />
-    );
-  }
   /**
    * Render the component.
    *
@@ -251,7 +225,7 @@ class ImportModal extends PureComponent {
             {this.renderCSVOptions()}
           </form>
           {this.renderProgressBar()}
-          {this.renderExtendedError()}
+          <ErrorBox error={this.props.error} />
         </Modal.Body>
         <Modal.Footer>
           <TextButton
