@@ -58,7 +58,10 @@ export const createJSONParser = function({
   });
 
   parser.on('data', d => {
-    const doc = EJSON.deserialize(d);
+    const doc = EJSON.deserialize(d, {
+      promoteValues: true,
+      bsonRegExp: true
+    });
     stream.push(doc);
   });
 
