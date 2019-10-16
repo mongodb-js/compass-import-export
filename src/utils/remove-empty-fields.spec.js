@@ -1,12 +1,12 @@
-import stripEmptyFields from './ignore-blank-fields';
+import removeEmptyFields from './remove-empty-fields';
 
-describe('strip-empty-fields', () => {
+describe('remove-empty-fields', () => {
   it('should remove empty strings', () => {
     const source = {
       _id: 1,
       empty: ''
     };
-    const result = stripEmptyFields(source);
+    const result = removeEmptyFields(source);
     expect(result).to.deep.equal({ _id: 1 });
   });
 
@@ -18,7 +18,7 @@ describe('strip-empty-fields', () => {
       falsed: false,
       undef: undefined
     };
-    const result = stripEmptyFields(source);
+    const result = removeEmptyFields(source);
     expect(result).to.deep.equal({
       _id: 1,
       nulled: null,
