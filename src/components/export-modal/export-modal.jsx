@@ -185,6 +185,7 @@ class ExportModal extends PureComponent {
               <QueryViewer
                 query={this.props.query}
                 disabled={isFullCollection}
+                ns={this.props.ns}
               />
             </div>
             <div className={style('toggle-full')}>
