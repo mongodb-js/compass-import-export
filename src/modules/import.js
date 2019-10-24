@@ -1,10 +1,10 @@
+/* eslint-disable valid-jsdoc */
 import { promisify } from 'util';
 import fs from 'fs';
 const checkFileExists = promisify(fs.exists);
 const getFileStats = promisify(fs.stat);
 
 import stream from 'stream';
-import createProgressStream from 'progress-stream';
 import stripBomStream from 'strip-bom-stream';
 const sizeof = require('object-sizeof');
 import mime from 'mime-types';
@@ -14,7 +14,11 @@ import { appRegistryEmit } from 'modules/compass';
 
 import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
-import { createCSVParser, createJSONParser } from 'utils/parsers';
+import {
+  createCSVParser,
+  createJSONParser,
+  createProgressStream
+} from 'utils/parsers';
 import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
 import { createLogger } from 'utils/logger';
 
@@ -245,10 +249,8 @@ export const startImport = () => {
     // TODO: lucas: Support ignoreUndefined as an option to pass to driver?
     const dest = createCollectionWriteStream(dataService, ns, stopOnErrors);
 
-    const progress = createProgressStream({
-      objectMode: true,
-      length: size / 800,
-      time: 500 /* ms */
+    const progress = createProgressStream(size, function(info) {
+      dispatch(onProgress(info.percentage, dest.docsWritten));
     });
 
     // TODO: this kinda works now :) could be way better
@@ -293,13 +295,6 @@ export const startImport = () => {
 
     const stripBOM = stripBomStream();
 
-    const throttle = require('lodash.throttle');
-    function update_import_progress_throttled(info) {
-      // debug('progress', info);
-      dispatch(onProgress(info.percentage, dest.docsWritten));
-    }
-    const updateProgress = throttle(update_import_progress_throttled, 500);
-    progress.on('progress', updateProgress);
     const removeEmptyFields = removeEmptyFieldsStream(ignoreEmptyFields);
 
     let parser;
