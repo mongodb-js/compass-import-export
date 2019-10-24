@@ -15,7 +15,7 @@ import { appRegistryEmit } from 'modules/compass';
 import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
 import { createCSVParser, createJSONParser } from 'utils/parsers';
-import removeEmptyFields from 'utils/remove-empty-fields';
+import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
 import { createLogger } from 'utils/logger';
 
 const debug = createLogger('import');
@@ -291,15 +291,6 @@ export const startImport = () => {
       }
     });
 
-    const removeEmptyFieldsStream = new stream.Transform({
-      objectMode: true,
-      transform: function(chunk, encoding, cb) {
-        if (!ignoreEmptyFields) {
-          return cb(null, chunk);
-        }
-        cb(null, removeEmptyFields(chunk));
-      }
-    });
 
     const throttle = require('lodash.throttle');
     function update_import_progress_throttled(info) {
@@ -308,6 +299,7 @@ export const startImport = () => {
     }
     const updateProgress = throttle(update_import_progress_throttled, 500);
     progress.on('progress', updateProgress);
+    const removeEmptyFields = removeEmptyFieldsStream(ignoreEmptyFields);
 
     let parser;
     if (fileType === 'csv') {
@@ -330,7 +322,7 @@ export const startImport = () => {
       parser,
       sizer,
       progress,
-      removeEmptyFieldsStream,
+      removeEmptyFields,
       dest,
       function(err, res) {
         if (err) {
