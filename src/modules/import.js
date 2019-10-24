@@ -291,6 +291,7 @@ export const startImport = () => {
       }
     });
 
+    const stripBOM = stripBomStream();
 
     const throttle = require('lodash.throttle');
     function update_import_progress_throttled(info) {
@@ -318,7 +319,7 @@ export const startImport = () => {
     dispatch(onStarted(source, dest));
     stream.pipeline(
       source,
-      stripBomStream(),
+      stripBOM,
       parser,
       sizer,
       progress,
