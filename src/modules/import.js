@@ -6,7 +6,6 @@ const getFileStats = promisify(fs.stat);
 
 import stream from 'stream';
 import stripBomStream from 'strip-bom-stream';
-const sizeof = require('object-sizeof');
 import mime from 'mime-types';
 
 import PROCESS_STATUS from 'constants/process-status';
@@ -19,6 +18,8 @@ import {
   createJSONParser,
   createProgressStream
 } from 'utils/parsers';
+
+import createImportSizeGuesstimator from 'utils/import-size-guesstimator';
 import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
 import { createLogger } from 'utils/logger';
 
@@ -38,6 +39,7 @@ const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
 const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
 const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
+const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
 const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
 const SET_IGNORE_EMPTY_FIELDS = `${PREFIX}/SET_IGNORE_EMPTY_FIELDS`;
 
@@ -56,19 +58,20 @@ export const INITIAL_STATE = {
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0,
+  guesstimatedDocsTotal: 0,
   delimiter: undefined,
   stopOnErrors: false,
   ignoreEmptyFields: true
 };
 
 /**
- * @param {Object} progress
+ * @param {Number} progress
  * @param {Number} docsWritten
  * @api private
  */
 export const onProgress = (progress, docsWritten) => ({
   type: PROGRESS,
-  progress: progress,
+  progress: Math.min(progress, 100),
   error: null,
   docsWritten: docsWritten
 });
@@ -103,6 +106,15 @@ export const onError = error => ({
 });
 
 /**
+ *
+ * @param {Number} guesstimatedDocsTotal
+ * @api private
+ */
+export const onGuesstimatedDocsTotal = guesstimatedDocsTotal => ({
+  type: SET_GUESSTIMATED_TOTAL,
+  guesstimatedDocsTotal: guesstimatedDocsTotal
+});
+/**
  * The import module reducer.
  *
  * @param {Object} state - The state.
@@ -112,6 +124,13 @@ export const onError = error => ({
  */
 // eslint-disable-next-line complexity
 const reducer = (state = INITIAL_STATE, action) => {
+  if (action.type === SET_GUESSTIMATED_TOTAL) {
+    return {
+      ...state,
+      guesstimatedDocsTotal: action.guesstimatedDocsTotal
+    };
+  }
+
   if (action.type === SET_DELIMITER) {
     return {
       ...state,
@@ -249,49 +268,21 @@ export const startImport = () => {
     // TODO: lucas: Support ignoreUndefined as an option to pass to driver?
     const dest = createCollectionWriteStream(dataService, ns, stopOnErrors);
 
-    const progress = createProgressStream(size, function(info) {
+    const progress = createProgressStream(size, function(err, info) {
+      if (err) return;
       dispatch(onProgress(info.percentage, dest.docsWritten));
     });
 
-    // TODO: this kinda works now :) could be way better
-    // with a continuously updated reservoir sample...
-    // BUT good enough for now.
-    const sizer = new stream.Transform({
-      objectMode: true,
-      transform: function(chunk, encoding, cb) {
-        if (!this.sizes) {
-          this.sizes = [];
-          this._done = false;
-          this._keyCount = Object.keys(chunk);
-        }
+    const importSizeGuesstimator = createImportSizeGuesstimator(
+      source,
+      size,
+      function(err, guesstimatedTotalDocs) {
+        if (err) return;
 
-        if (this._done === true) {
-          return cb(null, chunk);
-        }
-        this.sizes.push(sizeof(chunk) + 1);
-
-        if (this.sizes.length === 100) {
-          this._done = true;
-          const sum = this.sizes.reduce(function(accumulator, currentValue) {
-            return accumulator + currentValue;
-          }, 0);
-
-          const avg = sum / this.sizes.length;
-          const estDocs = Math.floor((size / avg) * 4);
-          progress.setLength(estDocs);
-
-          console.group('Object Size estimator');
-          console.log('avg', avg);
-          console.log('file size', size);
-          console.log('est docs', estDocs);
-          console.log('keyCount', this._keyCount);
-          console.log('sizes', this.sizes);
-
-          console.groupEnd();
-        }
-        return cb(null, chunk);
+        progress.setLength(guesstimatedTotalDocs);
+        dispatch(onGuesstimatedDocsTotal(guesstimatedTotalDocs));
       }
-    });
+    );
 
     const stripBOM = stripBomStream();
 
@@ -316,9 +307,9 @@ export const startImport = () => {
       source,
       stripBOM,
       parser,
-      sizer,
-      progress,
       removeEmptyFields,
+      importSizeGuesstimator,
+      progress,
       dest,
       function(err, res) {
         /**
