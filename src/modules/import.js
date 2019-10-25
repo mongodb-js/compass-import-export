@@ -321,6 +321,10 @@ export const startImport = () => {
       removeEmptyFields,
       dest,
       function(err, res) {
+        /**
+         * TODO: lucas: Decorate with a codeframe if not already
+         * json parsing errors already are.
+         */
         if (err) {
           return dispatch(onError(err));
         }
@@ -350,7 +354,7 @@ export const cancelImport = () => {
     }
     debug('cancelling');
     source.unpipe();
-    dest.end();
+    // dest.end();
     debug('import canceled by user');
     dispatch({ type: CANCELED });
   };
