@@ -26,7 +26,7 @@ export default function createImportSizeGuesstimator(
        * fs reads files in 64 kb blocks (default highwatermark for createReadStream()
        * So the first time our stream gets data on or after 64 kb,
        * we can say the number of docs our stream has seen so far
-       * is the number of docs in the file.
+       * might be pretty close to the number of docs in the file.
        */
       if (
         source.bytesRead >= 65536 &&
