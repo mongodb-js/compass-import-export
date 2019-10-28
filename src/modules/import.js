@@ -13,11 +13,7 @@ import { appRegistryEmit } from 'modules/compass';
 
 import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
-import {
-  createCSVParser,
-  createJSONParser,
-  createProgressStream
-} from 'utils/parsers';
+import createParser, { createProgressStream } from 'utils/parsers';
 
 import createImportSizeGuesstimator from 'utils/import-size-guesstimator';
 import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
@@ -287,18 +283,12 @@ export const startImport = () => {
     const stripBOM = stripBomStream();
 
     const removeEmptyFields = removeEmptyFieldsStream(ignoreEmptyFields);
-
-    let parser;
-    if (fileType === 'csv') {
-      parser = createCSVParser({
-        delimiter: delimiter
-      });
-    } else {
-      parser = createJSONParser({
-        selector: fileIsMultilineJSON ? null : '*',
-        fileName: fileName
-      });
-    }
+    const parser = createParser(
+      fileName,
+      fileType,
+      delimiter,
+      fileIsMultilineJSON
+    );
 
     debug('executing pipeline');
 

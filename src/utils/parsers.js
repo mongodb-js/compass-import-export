@@ -15,7 +15,7 @@ const debug = createLogger('parsers');
  */
 
 /**
- * TODO: lucas: mapHeaders option to support existing `.<bson_type>()` caster
+ * TODO: lucas: csv mapHeaders option to support existing `.<bson_type>()` caster
  * like `mongoimport` does today.
  */
 
@@ -84,6 +84,8 @@ export const createJSONParser = function({
   return stream;
 };
 
+// TODO: lucas: move progress to its own module?
+
 export const createProgressStream = function(fileSize, onProgress) {
   const progress = progressStream({
     objectMode: true,
@@ -101,3 +103,31 @@ export const createProgressStream = function(fileSize, onProgress) {
   progress.on('progress', updateProgress);
   return progress;
 };
+
+/**
+ * Convenience for creating the right parser transform stream in a single call.
+ *
+ * @param {String} fileName
+ * @param {String} fileType `csv` or `json`
+ * @param {String} delimiter See `createCSVParser()`
+ * @param {Boolean} fileIsMultilineJSON
+ * @returns {stream.Transform}
+ */
+function createParser({
+  fileName = 'myfile',
+  fileType = 'json',
+  delimiter = '\n',
+  fileIsMultilineJSON = false
+} = {}) {
+  if (fileType === 'csv') {
+    return createCSVParser({
+      delimiter: delimiter
+    });
+  }
+  return createJSONParser({
+    selector: fileIsMultilineJSON ? null : '*',
+    fileName: fileName
+  });
+}
+
+export default createParser;
