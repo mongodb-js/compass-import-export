@@ -14,6 +14,7 @@ import { appRegistryEmit } from 'modules/compass';
 import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
 import createParser, { createProgressStream } from 'utils/parsers';
+import createPreviewWritable, { createPeekStream } from 'utils/preview';
 
 import createImportSizeGuesstimator from 'utils/import-size-guesstimator';
 import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
@@ -34,6 +35,7 @@ const FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
 const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
 const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
+const SET_PREVIEW_DOCS = `${PREFIX}/SET_PREVIEW_DOCS`;
 const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
 const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
 const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
@@ -132,6 +134,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       ...state,
       delimiter: action.delimiter
     };
+  }
+
+  if (action.type === SET_PREVIEW_DOCS) {
+    return { ...state, previewDocs: action.previewDocs };
   }
 
   if (action.type === SET_STOP_ON_ERRORS) {
@@ -347,6 +353,31 @@ export const cancelImport = () => {
 };
 
 /**
+ *
+ * @api private
+ */
+const loadPreviewDocs = () => {
+  return (dispatch, getState) => {
+    const { fileName, fileStats, fileIsMultilineJSON, fileType } = getState();
+    /**
+     * TODO: lucas: add dispatches for preview loading, error, etc.
+     */
+
+    const source = fs.createReadStream(fileName, 'utf8');
+    const dest = createPreviewWritable();
+    stream.pipeline(source, createPeekStream(fileType), dest, function(err) {
+      if (err) {
+        throw err;
+      }
+      dispatch({
+        type: fileType,
+        previewDocs: dest.docs
+      });
+    });
+  };
+};
+
+/**
  * Gather file metadata quickly when the user specifies `fileName`.
  * @param {String} fileName
  * @api public
@@ -376,6 +407,7 @@ export const selectImportFileName = fileName => {
           fileIsMultilineJSON: detected.fileIsMultilineJSON,
           fileType: detected.fileType
         });
+        dispatch(loadPreviewDocs());
       })
       .catch(err => dispatch(onError(err)));
   };
