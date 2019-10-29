@@ -1,0 +1,44 @@
+@import (reference) '~less/compass/_theme.less';
+
+.import-preview {
+  display: block;
+  padding: 10px;
+  &-headers {
+    font-weight: normal;
+  }
+
+  &-type-and-key-header {
+    :global .header-path {
+      display: block;
+      font-weight: normal;
+      font-size: 13px;
+    }
+    select {
+      display: block;
+      font-size: 13px;
+    }
+  }
+
+  tbody {
+    // display: block;
+    overflow: auto;
+    height: 100%;
+    width: 100%;
+  }
+  thead tr {
+    th {
+      div {
+        // display: flex;
+        width: 100%;
+        input {
+          display: block;
+          width: 20px;
+          max-width: 20px;
+          float: left;
+          height: 30px;
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+}

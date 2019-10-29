@@ -20,6 +20,7 @@ import FILE_TYPES from 'constants/file-types';
 import ProgressBar from 'components/progress-bar';
 import ErrorBox from 'components/error-box';
 import SelectFileType from 'components/select-file-type';
+import ImportPreview from 'components/import-preview';
 
 import {
   startImport,
@@ -57,7 +58,8 @@ class ImportModal extends PureComponent {
     setStopOnErrors: PropTypes.func,
     ignoreEmptyFields: PropTypes.bool,
     setIgnoreEmptyFields: PropTypes.func,
-    guesstimatedDocsTotal: PropTypes.number
+    guesstimatedDocsTotal: PropTypes.number,
+    previewDocs: PropTypes.arrayOf(PropTypes.object)
   };
 
   getStatusMessage() {
@@ -253,6 +255,7 @@ class ImportModal extends PureComponent {
             guesstimatedDocsTotal={this.props.guesstimatedDocsTotal}
           />
           <ErrorBox error={this.props.error} />
+          <ImportPreview docs={this.props.previewDocs} />
         </Modal.Body>
         <Modal.Footer>
           {this.renderCancelButton()}
@@ -283,7 +286,8 @@ const mapStateToProps = state => ({
   guesstimatedDocsTotal: state.importData.guesstimatedDocsTotal,
   delimiter: state.importData.delimiter,
   stopOnErrors: state.importData.stopOnErrors,
-  ignoreEmptyFields: state.importData.ignoreEmptyFields
+  ignoreEmptyFields: state.importData.ignoreEmptyFields,
+  previewDocs: state.importData.previewDocs
 });
 
 /**
