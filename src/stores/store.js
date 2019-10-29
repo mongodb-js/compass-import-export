@@ -86,6 +86,7 @@ const configureStore = (options = {}) => {
       store.dispatch(openImport());
     });
   }
+  debugger;
 
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers.
