@@ -32,6 +32,10 @@ const EXPORT_ROLE = {
 function activate(appRegistry) {
   appRegistry.registerRole('Global.Modal', IMPORT_ROLE);
   appRegistry.registerRole('Global.Modal', EXPORT_ROLE);
+  appRegistry.registerStore(
+    'Export.Store',
+    configureStore({ localAppRegistry: appRegistry })
+  );
 }
 
 /**
