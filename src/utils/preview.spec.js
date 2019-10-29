@@ -53,13 +53,12 @@ describe('preview', () => {
     });
   });
   describe('func', () => {
-    it('should csv', done => {
+    it('should return 2 docs for a csv containing 3 docs', done => {
       const src = fs.createReadStream(FIXTURES.GOOD_CSV);
-      const dest = createPreviewWritable({ MAX_SIZE: 1 });
+      const dest = createPreviewWritable({ MAX_SIZE: 2 });
 
       pipeline(src, createPeekStream('csv'), dest, function(peeker) {
-        expect(dest.docs.length).to.equal(1);
-        console.log(dest.docs);
+        expect(dest.docs.length).to.equal(2);
         done();
       });
     });

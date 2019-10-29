@@ -5,6 +5,22 @@ import createParser from './parsers';
 import { createLogger } from './logger';
 const debug = createLogger('collection-stream');
 
+/**
+ * Peek transform that returns parser transform.
+ *
+ * @param {String} fileType csv|json
+ * @returns {stream.Transform}
+ */
+export const createPeekStream = function(fileType) {
+  return peek({ newline: false, maxBuffer: 64 * 1024 }, function(data, swap) {
+    return swap(null, createParser({ fileType: fileType }));
+  });
+};
+
+/**
+ * Collects 10 parsed documents from createPeekStream().
+ * @returns {stream.Writable}
+ */
 export default function({ MAX_SIZE = 10 } = {}) {
   return new Writable({
     objectMode: true,
@@ -28,9 +44,3 @@ export default function({ MAX_SIZE = 10 } = {}) {
     }
   });
 }
-
-export const createPeekStream = function(fileType) {
-  return peek({ newline: false, maxBuffer: 64 * 1024 }, function(data, swap) {
-    swap(createParser({ fileType: fileType }));
-  });
-};
