@@ -30,8 +30,8 @@ const EXPORT_ROLE = {
  * @param {Object} appRegistry - The Hadron appRegisrty to activate this plugin with.
  **/
 function activate(appRegistry) {
-  appRegistry.registerRole('Collection.ScopedModal', IMPORT_ROLE);
-  appRegistry.registerRole('Collection.ScopedModal', EXPORT_ROLE);
+  appRegistry.registerRole('Global.Modal', IMPORT_ROLE);
+  appRegistry.registerRole('Global.Modal', EXPORT_ROLE);
 }
 
 /**
@@ -39,8 +39,8 @@ function activate(appRegistry) {
  * @param {Object} appRegistry - The Hadron appRegisrty to deactivate this plugin with.
  **/
 function deactivate(appRegistry) {
-  appRegistry.deregisterRole('Collection.ScopedModal', IMPORT_ROLE);
-  appRegistry.deregisterRole('Collection.ScopedModal', EXPORT_ROLE);
+  appRegistry.deregisterRole('Global.Modal', IMPORT_ROLE);
+  appRegistry.deregisterRole('Global.Modal', EXPORT_ROLE);
 }
 
 export default Plugin;
