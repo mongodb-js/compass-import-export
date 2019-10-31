@@ -2,7 +2,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-import { flatten, unflatten } from 'flat';
+import { flatten } from 'flat';
 
 import styles from './import-preview.less';
 
@@ -11,6 +11,10 @@ const style = createStyler(styles, 'import-preview');
 
 import { createLogger } from 'utils/logger';
 const debug = createLogger('import-preview');
+
+/**
+ * TODO: lucas: For COMPASS-3947, use <SelectFieldType />
+ */
 
 const HeaderShape = PropTypes.shape({
   path: PropTypes.string,
@@ -39,32 +43,16 @@ class PreviewDocuments extends PureComponent {
   }
 }
 
-class TypeDropdown extends PureComponent {
-  static propTypes = {
-    selected: PropTypes.string,
-    onChange: PropTypes.func.isRequired
-  };
-  render() {
-    return (
-      <select defaultValue={this.props.selected} onChange={this.props.onChange}>
-        <option value="string">String</option>
-        <option value="number">Number</option>
-        <option value="boolean">Boolean</option>
-      </select>
-    );
-  }
-}
-
 class PreviewHeaders extends PureComponent {
   static propTypes = {
     headers: PropTypes.arrayOf(HeaderShape)
   };
 
   onTypeChange(evt) {
-    debug('Header Type Changed');
+    debug('Header Type Changed', evt);
   }
   onCheckedChanged(evt) {
-    debug('Header Checked Changed');
+    debug('Header Checked Changed', evt);
   }
 
   render() {
@@ -79,10 +67,6 @@ class PreviewHeaders extends PureComponent {
             />
             <div className={style('type-and-key-header')}>
               <span className="header-path">{header.path}</span>
-              <TypeDropdown
-                selected={header.type}
-                onChange={this.onTypeChange.bind(this)}
-              />
             </div>
           </div>
         </th>
