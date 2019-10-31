@@ -28,7 +28,6 @@ script:
 cache: npm
 after_success:
   - npm run storybook:ghpages
-  - rm .npmrc
 deploy:
   # Push to GitHub Pages
   - provider: pages
@@ -36,6 +35,5 @@ deploy:
     github-token: $GITHUB_TOKEN
     keep-history: true
     local_dir: .ghpages
-    # TODO: lucas: just for testing until PR ready
-    # on:
-    #   branch: master
+    on:
+      branch: master
