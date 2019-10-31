@@ -8,7 +8,7 @@
   }
 
   &-type-and-key-header {
-    :global .header-path {
+    :global span.header-path {
       display: block;
       font-weight: normal;
       font-size: 13px;
@@ -16,24 +16,20 @@
   }
 
   tbody {
-    // display: block;
     overflow: auto;
     height: 100%;
     width: 100%;
+    tr {
+      :global td.unchecked {
+        opacity: 0.4;
+      }
+    }
   }
   thead tr {
     th {
-      div {
-        // display: flex;
-        width: 100%;
-        input {
-          display: block;
-          width: 20px;
-          max-width: 20px;
-          float: left;
-          height: 30px;
-          margin-right: 5px;
-        }
+      font-weight: normal;
+      input[type='checkbox'] {
+        margin: 5px 5px 0;
       }
     }
   }

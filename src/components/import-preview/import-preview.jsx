@@ -16,65 +16,83 @@ const debug = createLogger('import-preview');
  * TODO: lucas: For COMPASS-3947, use <SelectFieldType />
  */
 
-const HeaderShape = PropTypes.shape({
+class PreviewRow extends PureComponent {
+  static propTypes = {
+    values: PropTypes.array,
+    fields: PropTypes.array
+  };
+  // TODO: lucas: switch to for ... in
+  render() {
+    const { values } = this.props;
+    const cells = values.map((v, i) => {
+      const header = this.props.fields[i];
+      if (!header.checked) {
+        return (
+          <td
+            className="unchecked"
+            title={`${header.path} of type ${header.type} is unchecked`}
+          >
+            {v}
+          </td>
+        );
+      }
+      return <td>{v}</td>;
+    });
+    return <tr>{cells}</tr>;
+  }
+}
+
+class PreviewValues extends PureComponent {
+  static propTypes = {
+    values: PropTypes.array,
+    fields: PropTypes.array
+  };
+
+  render() {
+    const { values } = this.props;
+    return (
+      <tbody>
+        {values.map(val => (
+          <PreviewRow fields={this.props.fields} values={val} />
+        ))}
+      </tbody>
+    );
+  }
+}
+
+const FieldShape = PropTypes.shape({
   path: PropTypes.string,
   checked: PropTypes.bool,
   type: PropTypes.string
 });
 
-/**
- * Plain object with arbitrary properties enriched with any BSON types.
- */
-const DocumentShape = PropTypes.object;
-
-class PreviewDocuments extends PureComponent {
+class PreviewFields extends PureComponent {
   static propTypes = {
-    docs: PropTypes.arrayOf(DocumentShape)
-  };
-  render() {
-    const rows = this.props.docs.map((doc, i) => {
-      const data = flatten(doc);
-      const cells = Object.keys(data).map(k => {
-        return <td key={k}>{data[k]}</td>;
-      });
-      return <tr key={i}>{cells}</tr>;
-    });
-    return <tbody>{rows}</tbody>;
-  }
-}
-
-class PreviewHeaders extends PureComponent {
-  static propTypes = {
-    headers: PropTypes.arrayOf(HeaderShape)
+    fields: PropTypes.arrayOf(FieldShape),
+    onCheckedChanged: PropTypes.func.isRequired
   };
 
-  onTypeChange(evt) {
-    debug('Header Type Changed', evt);
-  }
-  onCheckedChanged(evt) {
+  onCheckedChanged(path, evt) {
     debug('Header Checked Changed', evt);
+    this.props.onCheckedChanged(path, evt.currentTarget.checked);
   }
 
   render() {
-    const headers = this.props.headers.map(header => {
+    const fields = this.props.fields.map(field => {
       return (
-        <th key={header.path} className={header.path}>
-          <div className="header-item">
-            <input
-              type="checkbox"
-              checked={header.checked}
-              onChange={this.onCheckedChanged}
-            />
-            <div className={style('type-and-key-header')}>
-              <span className="header-path">{header.path}</span>
-            </div>
-          </div>
+        <th key={field.path}>
+          <input
+            type="checkbox"
+            checked={field.checked}
+            onChange={this.onCheckedChanged.bind(this, field.path)}
+          />
+          <span className="field-path">{field.path}</span>
         </th>
       );
     });
     return (
       <thead>
-        <tr>{headers}</tr>
+        <tr>{fields}</tr>
       </thead>
     );
   }
@@ -82,15 +100,22 @@ class PreviewHeaders extends PureComponent {
 
 class ImportPreview extends PureComponent {
   static propTypes = {
-    headers: PropTypes.arrayOf(HeaderShape),
-    docs: PropTypes.array
+    fields: PropTypes.arrayOf(FieldShape),
+    values: PropTypes.array,
+    onFieldCheckedChanged: PropTypes.func.isRequired
   };
   render() {
     return (
       <div className={style()}>
         <table className="table table-condensed">
-          <PreviewHeaders headers={this.props.headers} />
-          <PreviewDocuments docs={this.props.docs} />
+          <PreviewFields
+            fields={this.props.fields}
+            onCheckedChanged={this.props.onFieldCheckedChanged}
+          />
+          <PreviewValues
+            fields={this.props.fields}
+            values={this.props.values}
+          />
         </table>
       </div>
     );

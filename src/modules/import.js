@@ -59,7 +59,10 @@ export const INITIAL_STATE = {
   guesstimatedDocsTotal: 0,
   delimiter: undefined,
   stopOnErrors: false,
-  ignoreEmptyFields: true
+  ignoreEmptyFields: true,
+  previewDocs: [],
+  previewFields: [],
+  previewValues: []
 };
 
 /**
@@ -137,7 +140,12 @@ const reducer = (state = INITIAL_STATE, action) => {
   }
 
   if (action.type === SET_PREVIEW_DOCS) {
-    return { ...state, previewDocs: action.previewDocs };
+    return {
+      ...state,
+      previewDocs: action.previewDocs,
+      previewValues: action.previewValues,
+      previewFields: action.previewValues
+    };
   }
 
   if (action.type === SET_STOP_ON_ERRORS) {
@@ -309,9 +317,9 @@ export const startImport = () => {
       dest,
       function(err, res) {
         /**
-        * refresh data (docs, aggregations) regardless of whether we have a
-        * partial import or full import
-        */
+         * refresh data (docs, aggregations) regardless of whether we have a
+         * partial import or full import
+         */
         dispatch(appRegistryEmit('refresh-data'));
         /**
          * TODO: lucas: Decorate with a codeframe if not already
@@ -356,9 +364,9 @@ export const cancelImport = () => {
  *
  * @api private
  */
-const loadPreviewDocs = () => {
+const loadPreviewDocs = (fileName, fileType) => {
   return (dispatch, getState) => {
-    const { fileName, fileStats, fileIsMultilineJSON, fileType } = getState();
+    // const { fileName, fileStats, fileIsMultilineJSON, fileType } = getState();
     /**
      * TODO: lucas: add dispatches for preview loading, error, etc.
      */
@@ -370,8 +378,10 @@ const loadPreviewDocs = () => {
         throw err;
       }
       dispatch({
-        type: fileType,
-        previewDocs: dest.docs
+        type: SET_PREVIEW_DOCS,
+        previewDocs: dest.docs,
+        previewFields: dest.fields,
+        previewValues: dest.values
       });
     });
   };
@@ -407,7 +417,7 @@ export const selectImportFileName = fileName => {
           fileIsMultilineJSON: detected.fileIsMultilineJSON,
           fileType: detected.fileType
         });
-        dispatch(loadPreviewDocs());
+        dispatch(loadPreviewDocs(fileName, detected.fileType));
       })
       .catch(err => dispatch(onError(err)));
   };

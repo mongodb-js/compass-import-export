@@ -3,10 +3,40 @@ import React from 'react';
 import { storiesOf } from '@storybook/react';
 import ImportPreview from 'components/import-preview';
 
+// const docs = [
+//   {
+//     _id: 'arlo',
+//     name: 'Arlo',
+//     stats: {
+//       age: 5,
+//       fluffiness: ''
+//     }
+//   },
+//   {
+//     _id: 'basilbazel',
+//     name: 'Basil',
+//     stats: {
+//       age: 8,
+//       fluffiness: '100'
+//     }
+//   },
+//   {
+//     _id: 'hellbeast',
+//     name: 'Kochka',
+//     stats: {
+//       age: '14',
+//       fluffiness: 50
+//     }
+//   }
+// ];
+
 storiesOf('Examples/ImportPreview', module).add('simple', () => {
   return (
     <ImportPreview
-      headers={[
+      onFieldCheckedChanged={(path, checked) => {
+        console.log('onFieldCheckedChanged: %s is n', path, checked);
+      }}
+      fields={[
         {
           path: '_id',
           type: 'string',
@@ -25,34 +55,13 @@ storiesOf('Examples/ImportPreview', module).add('simple', () => {
         {
           path: 'stats.fluffiness',
           type: 'string',
-          checked: true
+          checked: false
         }
       ]}
-      docs={[
-        {
-          _id: 'arlo',
-          name: 'Arlo',
-          stats: {
-            age: 5,
-            fluffiness: ''
-          }
-        },
-        {
-          _id: 'basilbazel',
-          name: 'Basil',
-          stats: {
-            age: 8,
-            fluffiness: '100'
-          }
-        },
-        {
-          _id: 'hellbeast',
-          name: 'Kochka',
-          stats: {
-            age: '14',
-            fluffiness: 50
-          }
-        }
+      values={[
+        ['arlo', 'Arlo', '5', ''],
+        ['basilbazel', 'Basil', '8', '100'],
+        ['hellbeast', 'Kochka', '14', '50']
       ]}
     />
   );

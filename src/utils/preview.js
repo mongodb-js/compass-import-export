@@ -1,7 +1,7 @@
 import { Writable } from 'stream';
 import peek from 'peek-stream';
 import createParser from './parsers';
-
+import { flatten } from 'flat';
 import { createLogger } from './logger';
 const debug = createLogger('collection-stream');
 
@@ -29,18 +29,42 @@ export default function({ MAX_SIZE = 10 } = {}) {
     write: function(doc, encoding, next) {
       if (!this.docs) {
         this.docs = [];
+        this.fields = [];
+        this.values = [];
       }
-      if (this.docs.length < MAX_SIZE) {
-        debug('only have %d docs. Asking for more', this.docs.length);
-        this.docs.push(doc);
-        return next(null);
-      }
-      if (this.docs.length === MAX_SIZE) {
-        debug('reached %d. done!', this.docs.length);
+
+      if (this.docs.length >= MAX_SIZE) {
+        // debug('reached %d. done!', this.docs.length);
         return next();
       }
-      debug('already have max docs.');
-      return next();
+      this.docs.push(doc);
+
+      // TODO: lucas: Don't unflatten bson internal props.
+      const flat = flatten(doc);
+
+      // TODO: lucas: Handle sparse/polymorphic json
+      if (this.fields.length === 0) {
+        debug('Setting fields');
+        debug('flat doc', flat);
+        debug('source doc', doc);
+        Object.keys(flat).map(k => {
+          this.fields.push({
+            path: k,
+            checked: true,
+            type: typeof flat[k]
+          });
+        });
+        debug('fields', this.fields);
+      }
+
+      const v = [];
+      Object.keys(flat).map(k => {
+        v.push(flat[k]);
+      });
+      debug('add values', v);
+      this.values.push(v);
+
+      return next(null);
     }
   });
 }

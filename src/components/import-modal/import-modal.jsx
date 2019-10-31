@@ -59,7 +59,9 @@ class ImportModal extends PureComponent {
     ignoreEmptyFields: PropTypes.bool,
     setIgnoreEmptyFields: PropTypes.func,
     guesstimatedDocsTotal: PropTypes.number,
-    previewDocs: PropTypes.arrayOf(PropTypes.object)
+    previewDocs: PropTypes.arrayOf(PropTypes.object),
+    previewFields: PropTypes.array,
+    previewValues: PropTypes.array
   };
 
   getStatusMessage() {
@@ -255,7 +257,13 @@ class ImportModal extends PureComponent {
             guesstimatedDocsTotal={this.props.guesstimatedDocsTotal}
           />
           <ErrorBox error={this.props.error} />
-          <ImportPreview docs={this.props.previewDocs} />
+          <ImportPreview
+            onFieldCheckedChanged={(path, checked) => {
+              window.alert('todo');
+            }}
+            values={this.props.previewValues}
+            fields={this.props.previewFields}
+          />
         </Modal.Body>
         <Modal.Footer>
           {this.renderCancelButton()}
@@ -287,7 +295,9 @@ const mapStateToProps = state => ({
   delimiter: state.importData.delimiter,
   stopOnErrors: state.importData.stopOnErrors,
   ignoreEmptyFields: state.importData.ignoreEmptyFields,
-  previewDocs: state.importData.previewDocs
+  previewDocs: state.importData.previewDocs,
+  previewFields: state.importData.previewFields,
+  previewValues: state.importData.previewValues
 });
 
 /**
