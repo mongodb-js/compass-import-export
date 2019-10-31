@@ -5,10 +5,6 @@ import PropTypes from 'prop-types';
 import { flatten, unflatten } from 'flat';
 
 import styles from './import-preview.less';
-console.group('import preview styles');
-console.log(styles);
-console.table(styles);
-console.groupEnd();
 
 import createStyler from 'utils/styler.js';
 const style = createStyler(styles, 'import-preview');
