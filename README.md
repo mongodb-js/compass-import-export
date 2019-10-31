@@ -22,19 +22,9 @@ npm run storybook;
 npm test
 ```
 
-### Test Cases
+### Import Test Cases
 
-#### `compass-data-sets:crimedb.incidents`
-
-We should be able to export this and import it back without losing anything. If I export it with the current Compass it only exports ~115k docs.
-
-#### `compass-data-sets:test.people`
-
-Small but contains arrays and \_id is a UUID
-
-#### `compass-data-sets:test.people_missing_fields`
-
-Small but not all documents contain all the fields
+See files in the `./test` directory.
 
 ## TODO/Ideas
 
