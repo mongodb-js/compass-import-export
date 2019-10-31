@@ -16,6 +16,8 @@ addons:
       - libsecret-1-dev
       - gnome-keyring
       - python-gnomekeyring
+before_install:
+  - npm i -g npm@latest
 install:
   - npm ci
 before_script:
