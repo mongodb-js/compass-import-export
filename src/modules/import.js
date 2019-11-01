@@ -144,7 +144,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       ...state,
       previewDocs: action.previewDocs,
       previewValues: action.previewValues,
-      previewFields: action.previewValues
+      previewFields: action.previewFields
     };
   }
 
