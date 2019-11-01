@@ -60,15 +60,15 @@ class PreviewValues extends PureComponent {
   }
 }
 
-const FieldShape = PropTypes.shape({
-  path: PropTypes.string,
-  checked: PropTypes.bool,
-  type: PropTypes.string
-});
+// const FieldShape = PropTypes.shape({
+//   path: PropTypes.string,
+//   checked: PropTypes.bool,
+//   type: PropTypes.string
+// });
 
 class PreviewFields extends PureComponent {
   static propTypes = {
-    fields: PropTypes.arrayOf(FieldShape),
+    fields: PropTypes.array,
     onCheckedChanged: PropTypes.func.isRequired
   };
 
@@ -100,7 +100,7 @@ class PreviewFields extends PureComponent {
 
 class ImportPreview extends PureComponent {
   static propTypes = {
-    fields: PropTypes.arrayOf(FieldShape),
+    fields: PropTypes.array,
     values: PropTypes.array,
     onFieldCheckedChanged: PropTypes.func.isRequired
   };
