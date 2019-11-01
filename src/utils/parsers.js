@@ -116,7 +116,7 @@ export const createProgressStream = function(fileSize, onProgress) {
 function createParser({
   fileName = 'myfile',
   fileType = 'json',
-  delimiter = '\n',
+  delimiter = ',',
   fileIsMultilineJSON = false
 } = {}) {
   if (fileType === 'csv') {
