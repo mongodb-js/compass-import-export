@@ -3,16 +3,20 @@ import peek from 'peek-stream';
 import createParser from './parsers';
 import { flatten } from 'flat';
 import { createLogger } from './logger';
-const debug = createLogger('collection-stream');
+const debug = createLogger('preview');
+
+const warn = (msg, ...args) => {
+  console.warn('compass-import-export:preview: ' + msg, args);
+};
 
 /**
- * Peek transform that returns parser transform.
+ * Peek the first 20k of a file and parse it.
  *
  * @param {String} fileType csv|json
  * @returns {stream.Transform}
  */
 export const createPeekStream = function(fileType) {
-  return peek({ newline: false, maxBuffer: 64 * 1024 }, function(data, swap) {
+  return peek({ maxBuffer: 20 * 1024 }, function(data, swap) {
     return swap(null, createParser({ fileType: fileType }));
   });
 };
@@ -24,8 +28,6 @@ export const createPeekStream = function(fileType) {
 export default function({ MAX_SIZE = 10 } = {}) {
   return new Writable({
     objectMode: true,
-    highWaterMark: MAX_SIZE,
-    allowHalfOpen: false,
     write: function(doc, encoding, next) {
       if (!this.docs) {
         this.docs = [];
@@ -42,11 +44,7 @@ export default function({ MAX_SIZE = 10 } = {}) {
       // TODO: lucas: Don't unflatten bson internal props.
       const flat = flatten(doc);
 
-      // TODO: lucas: Handle sparse/polymorphic json
       if (this.fields.length === 0) {
-        debug('Setting fields');
-        debug('flat doc', flat);
-        debug('source doc', doc);
         Object.keys(flat).map(k => {
           this.fields.push({
             path: k,
@@ -54,14 +52,24 @@ export default function({ MAX_SIZE = 10 } = {}) {
             type: typeof flat[k]
           });
         });
-        debug('fields', this.fields);
+        debug('set fields', this.fields);
+      }
+
+      const flattenedKeys = Object.keys(flat);
+
+      // TODO: lucas: For JSON, use schema parser or something later to
+      // handle sparse/polymorphic. For now, the world is pretty tabular.
+      if (flattenedKeys.length !== this.fields.length) {
+        warn('invariant detected!', {
+          expected: this.fields.map(f => f.path),
+          got: flattenedKeys
+        });
       }
 
       const v = [];
-      Object.keys(flat).map(k => {
+      flattenedKeys.map(k => {
         v.push(flat[k]);
       });
-      debug('add values', v);
       this.values.push(v);
 
       return next(null);
