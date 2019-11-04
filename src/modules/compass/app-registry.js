@@ -21,7 +21,8 @@ const reducer = (state = INITIAL_STATE, action) => {
   }
 
   if (action.type === EMIT) {
-    const { appRegistry, globalAppRegistry } = state;
+    const appRegistry = state._emitter;
+    // TODO: Irina, figure out under what `globalAppRegistry` is stored
     if (appRegistry) {
       appRegistry.emit(action.name, ...action.args);
     }
