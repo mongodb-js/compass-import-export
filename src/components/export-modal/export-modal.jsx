@@ -1,22 +1,16 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Switch from 'react-ios-switch';
 import classnames from 'classnames';
 import {
   Modal,
   FormGroup,
-  InputGroup,
-  FormControl,
-  ControlLabel
 } from 'react-bootstrap';
-import { TextButton, IconTextButton } from 'hadron-react-buttons';
+import { TextButton } from 'hadron-react-buttons';
+import ExportSelectOutput from 'components/export-select-output';
+import ExportSelectFields from 'components/export-select-fields';
 import QueryViewer from 'components/query-viewer';
-import ProgressBar from 'components/progress-bar';
-import ErrorBox from 'components/error-box';
-import SelectFileType from 'components/select-file-type';
 
-import fileSaveDialog from 'utils/file-save-dialog';
 import revealFile from 'utils/reveal-file';
 import formatNumber from 'utils/format-number';
 
@@ -26,10 +20,18 @@ import {
   COMPLETED,
   UNSPECIFIED
 } from 'constants/process-status';
+
+import {
+  QUERY,
+  FIELDS,
+  FILETYPE
+} from 'constants/modal-progress-status';
+
 import {
   startExport,
   cancelExport,
   toggleFullCollection,
+  changeModalProgressStatus,
   selectExportFileType,
   selectExportFileName,
   closeExport
@@ -75,6 +77,8 @@ class ExportModal extends PureComponent {
     toggleFullCollection: PropTypes.func.isRequired,
     selectExportFileType: PropTypes.func.isRequired,
     selectExportFileName: PropTypes.func.isRequired,
+    changeModalProgressStatus: PropTypes.func.isRequired,
+    exportProgressStatus: PropTypes.string.isRequired,
     fileType: PropTypes.string,
     fileName: PropTypes.string,
     exportedDocsCount: PropTypes.number
@@ -90,16 +94,6 @@ class ExportModal extends PureComponent {
       MESSAGES[this.props.status] ||
       (this.props.error ? this.props.error.message : '')
     );
-  };
-
-  /**
-   * Handle choosing a file from the file dialog.
-   */
-  handleChooseFile = () => {
-    const file = fileSaveDialog(this.props.fileType);
-    if (file) {
-      this.props.selectExportFileName(file);
-    }
   };
 
   /**
@@ -123,6 +117,20 @@ class ExportModal extends PureComponent {
   handleExport = () => {
     this.props.startExport();
   };
+
+  /**
+   * Start the next step of exporting: selecting fields
+   */
+  handleSelectFields = () => {
+    this.props.changeModalProgressStatus(FIELDS);
+  }
+
+  /**
+   * Start the next step of exporting: selecting fields
+   */
+  handleSelectOutput = () => {
+    this.props.changeModalProgressStatus(FILETYPE);
+  }
 
   handleRevealClick = () => {
     revealFile(this.props.fileName);
@@ -148,32 +156,7 @@ class ExportModal extends PureComponent {
     }
   };
 
-  renderExportButton() {
-    if (this.props.status === COMPLETED) {
-      return (
-        <TextButton
-          className="btn btn-primary btn-sm"
-          text="Show File"
-          clickHandler={this.handleRevealClick}
-        />
-      );
-    }
-    return (
-      <TextButton
-        className="btn btn-primary btn-sm"
-        text="Export"
-        disabled={this.props.status === STARTED}
-        clickHandler={this.handleExport}
-      />
-    );
-  }
-
-  /**
-   * Render the component.
-   *
-   * @returns {React.Component} The component.
-   */
-  render() {
+  renderExportOptions() {
     const { isFullCollection } = this.props;
 
     const queryClassName = classnames({
@@ -186,69 +169,118 @@ class ExportModal extends PureComponent {
       [style('query-viewer-is-disabled')]: isFullCollection
     });
 
+    if (this.props.exportProgressStatus === QUERY) {
+      return (
+        <FormGroup controlId="export-collection-option">
+          <div className={style('radio')}>
+            <label className={queryClassName}>
+              <input type="radio"
+                aria-label="Export collection with filters radio button"
+                value="filter"
+                onChange={this.handleExportOptionSelect}
+                checked={!isFullCollection}/>
+              Export query with filters &mdash; {formatNumber(this.props.count)} results (Recommended)
+            </label>
+          </div>
+          <div className={queryViewerClassName}>
+            <QueryViewer
+              query={this.props.query}
+              disabled={isFullCollection}
+              ns={this.props.ns}
+            />
+          </div>
+          <div className={style('radio')}>
+            <label>
+              <input type="radio"
+                aria-label="Export full collection radio button"
+                value="full"
+                onChange={this.handleExportOptionSelect}
+                checked={isFullCollection}/>
+              Export Full Collection
+            </label>
+          </div>
+        </FormGroup>
+      );
+    }
+  }
+
+  renderSelectFields() {
+    if (this.props.exportProgressStatus === FIELDS ) {
+      return (
+        <ExportSelectFields/>
+      );
+    }
+  }
+
+  renderSelectOutput() {
+    if (this.props.exportProgressStatus === FILETYPE) {
+      return (
+        <ExportSelectOutput
+          count={this.props.count}
+          progress={this.props.progress}
+          status={this.props.status}
+          error={this.props.error}
+          startExport={this.props.startExport}
+          selectExportFileType={this.props.selectExportFileType}
+          selectExportFileName={this.props.selectExportFileName}
+          fileType={this.props.fileType}
+          fileName={this.props.fileName}
+          cancelExport={this.props.cancelExport}
+          exportedDocsCount={this.props.exportedDocsCount}/>
+      );
+    }
+  }
+
+  renderNextButton() {
+    if (this.props.status === COMPLETED) {
+      return (
+        <TextButton
+          className="btn btn-primary btn-sm"
+          text="Show File"
+          clickHandler={this.handleRevealClick}
+        />
+      );
+    }
+    if (this.props.exportProgressStatus === QUERY) {
+      return (
+        <TextButton
+          className="btn btn-primary btn-sm"
+          text="Select Fields"
+          clickHandler={this.handleSelectFields}/>
+      );
+    }
+    if (this.props.exportProgressStatus === FIELDS) {
+      return (
+        <TextButton
+          className="btn btn-primary btn-sm"
+          text="Select Output"
+          clickHandler={this.handleSelectOutput}/>
+      );
+    }
+    return (
+      <TextButton
+        className="btn btn-primary btn-sm"
+        text="Export"
+        disabled={this.props.status === STARTED}
+        clickHandler={this.handleExport}/>
+    );
+  }
+
+  /**
+   * Render the component.
+   *
+   * @returns {React.Component} The component.
+   */
+  render() {
     return (
       <Modal show={this.props.open} onHide={this.handleClose} backdrop="static">
         <Modal.Header closeButton>
           Export Collection {this.props.ns}
         </Modal.Header>
         <Modal.Body>
-          <FormGroup controlId="export-collection-option">
-            <div className={style('radio')}>
-              <label className={queryClassName}>
-                <input type="radio"
-                  aria-label="Export collection with filters radio button"
-                  value="filter"
-                  onChange={this.handleExportOptionSelect}
-                  checked={!isFullCollection}/>
-                Export query with filters &mdash; {formatNumber(this.props.count)} results (Recommended) 
-              </label>
-            </div>
-            <div className={queryViewerClassName}>
-              <QueryViewer
-                query={this.props.query}
-                disabled={isFullCollection}
-                ns={this.props.ns}
-              />
-            </div>
-            <div className={style('radio')}>
-              <label>
-                <input type="radio"
-                  aria-label="Export full collection radio button"
-                  value="full"
-                  onChange={this.handleExportOptionSelect}
-                  checked={isFullCollection}/>
-                Export Full Collection
-              </label>
-            </div>
-          </FormGroup>
-          <form onSubmit={this.handleOnSubmit} className={style('form')}>
-            <SelectFileType
-              fileType={this.props.fileType}
-              onSelected={this.props.selectExportFileType}
-              label="Select Output File Type"
-            />
-            <FormGroup controlId="export-file">
-              <ControlLabel>Select File</ControlLabel>
-              <InputGroup bsClass={style('browse-group')}>
-                <FormControl type="text" value={this.props.fileName} readOnly />
-                <IconTextButton
-                  text="Browse"
-                  clickHandler={this.handleChooseFile}
-                  className={style('browse-button')}
-                  iconClassName="fa fa-folder-open-o"
-                />
-              </InputGroup>
-            </FormGroup>
-          </form>
-          <ProgressBar
-            progress={this.props.progress}
-            status={this.props.status}
-            message={MESSAGES[this.props.status]}
-            cancel={this.props.cancelExport}
-            docsWritten={this.props.exportedDocsCount}
-            docsTotal={this.props.count}
-          />
-          <ErrorBox error={this.props.error} />
+          {this.renderExportOptions()}
+          {this.renderSelectFields()}
+          {this.renderSelectOutput()}
         </Modal.Body>
         <Modal.Footer>
           <TextButton
@@ -256,7 +288,7 @@ class ExportModal extends PureComponent {
             text={this.props.status === COMPLETED ? 'Close' : 'Cancel'}
             clickHandler={this.handleClose}
           />
-          {this.renderExportButton()}
+          {this.renderNextButton()}
         </Modal.Footer>
       </Modal>
     );
@@ -281,7 +313,8 @@ const mapStateToProps = state => ({
   fileType: state.exportData.fileType,
   fileName: state.exportData.fileName,
   status: state.exportData.status,
-  exportedDocsCount: state.exportData.exportedDocsCount
+  exportedDocsCount: state.exportData.exportedDocsCount,
+  exportProgressStatus: state.exportData.exportProgressStatus
 });
 
 /**
@@ -293,6 +326,7 @@ export default connect(
     startExport,
     cancelExport,
     toggleFullCollection,
+    changeModalProgressStatus,
     selectExportFileType,
     selectExportFileName,
     closeExport

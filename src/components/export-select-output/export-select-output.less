@@ -1,0 +1,46 @@
+@import (reference) '~less/compass/_theme.less';
+
+.export-select-output {
+  &-form {
+    box-shadow: initial;
+  }
+
+  &-browse {
+    &-group {
+      display: flex;
+      height: 40px;
+
+      input {
+        border-radius: 2px 0px 0px 2px !important;
+        background-color: #ffffff !important;
+        box-shadow: 0px;
+        height: 40px;
+      }
+
+      button {
+        white-space: nowrap;
+        width: 110px;
+        background-color: #ffffff;
+        border-width: 1px;
+        border-style: solid;
+      }
+    }
+
+    &-button {
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: 12px;
+      color: #0d47a1;
+
+      i {
+        padding-right: 3px;
+      }
+    }
+  }
+
+  &-output {
+    padding: 5px 0px 5px 0px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+}
