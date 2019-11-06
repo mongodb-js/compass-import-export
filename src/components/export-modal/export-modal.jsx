@@ -129,6 +129,13 @@ class ExportModal extends PureComponent {
   };
 
   /**
+   * Handle switching between filtered and full export.
+   */
+  handleExportOptionSelect = () => {
+    this.props.toggleFullCollection();
+  }
+
+  /**
    * Stop form default submission to a whitescreen
    * and start the export if ready.
    * @param {Object} evt - DOM event
@@ -173,7 +180,9 @@ class ExportModal extends PureComponent {
       [style('query')]: true,
       [style('query-is-disabled')]: isFullCollection
     });
+
     const queryViewerClassName = classnames({
+      [style('query-viewer')]: true,
       [style('query-viewer-is-disabled')]: isFullCollection
     });
 
@@ -183,10 +192,16 @@ class ExportModal extends PureComponent {
           Export Collection {this.props.ns}
         </Modal.Header>
         <Modal.Body>
-          <div>
-            <div className={queryClassName}>
-              There are {formatNumber(this.props.count)} documents in the
-              collection. Exporting with the query:
+          <FormGroup controlId="export-collection-option">
+            <div className={style('radio')}>
+              <label className={queryClassName}>
+                <input type="radio"
+                  aria-label="Export collection with filters radio button"
+                  value="filter"
+                  onChange={this.handleExportOptionSelect}
+                  checked={!isFullCollection}/>
+                Export query with filters &mdash; {formatNumber(this.props.count)} results (Recommended) 
+              </label>
             </div>
             <div className={queryViewerClassName}>
               <QueryViewer
@@ -195,15 +210,17 @@ class ExportModal extends PureComponent {
                 ns={this.props.ns}
               />
             </div>
-            <div className={style('toggle-full')}>
-              <Switch
-                checked={isFullCollection}
-                onChange={this.props.toggleFullCollection}
-                className={style('toggle-button')}
-              />
-              <div className={style('toggle-text')}>Export Full Collection</div>
+            <div className={style('radio')}>
+              <label>
+                <input type="radio"
+                  aria-label="Export full collection radio button"
+                  value="full"
+                  onChange={this.handleExportOptionSelect}
+                  checked={isFullCollection}/>
+                Export Full Collection
+              </label>
             </div>
-          </div>
+          </FormGroup>
           <form onSubmit={this.handleOnSubmit} className={style('form')}>
             <SelectFileType
               fileType={this.props.fileType}
