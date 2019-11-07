@@ -6,7 +6,7 @@ import {
   Modal,
   FormGroup,
 } from 'react-bootstrap';
-import { TextButton } from 'hadron-react-buttons';
+import { TextButton, IconTextButton } from 'hadron-react-buttons';
 import ExportSelectOutput from 'components/export-select-output';
 import ExportSelectFields from 'components/export-select-fields';
 import QueryViewer from 'components/query-viewer';
@@ -121,15 +121,8 @@ class ExportModal extends PureComponent {
   /**
    * Start the next step of exporting: selecting fields
    */
-  handleSelectFields = () => {
-    this.props.changeModalProgressStatus(FIELDS);
-  }
-
-  /**
-   * Start the next step of exporting: selecting fields
-   */
-  handleSelectOutput = () => {
-    this.props.changeModalProgressStatus(FILETYPE);
+  handleChangeModalStatus = (status) => {
+    this.props.changeModalProgressStatus(status);
   }
 
   handleRevealClick = () => {
@@ -141,6 +134,14 @@ class ExportModal extends PureComponent {
    */
   handleExportOptionSelect = () => {
     this.props.toggleFullCollection();
+  }
+
+  /**
+   * Return back in export flow.
+   */
+  handleBackButton = () => {
+    const previousState = this.props.exportProgressStatus === FILETYPE ? FIELDS : QUERY;
+    this.handleChangeModalStatus(previousState);
   }
 
   /**
@@ -231,6 +232,19 @@ class ExportModal extends PureComponent {
     }
   }
 
+  renderBackButton() {
+    if (this.props.exportProgressStatus !== QUERY) {
+      return (
+        <IconTextButton
+          text="Back"
+          clickHandler={this.handleBackButton}
+          className="btn btn-default btn-sm"
+          className={style('back-button')}
+          iconClassName="fa fa-chevron-left"/>
+      );
+    }
+  }
+
   renderNextButton() {
     if (this.props.status === COMPLETED) {
       return (
@@ -246,7 +260,7 @@ class ExportModal extends PureComponent {
         <TextButton
           className="btn btn-primary btn-sm"
           text="Select Fields"
-          clickHandler={this.handleSelectFields}/>
+          clickHandler={this.handleChangeModalStatus.bind(this, FIELDS)}/>
       );
     }
     if (this.props.exportProgressStatus === FIELDS) {
@@ -254,7 +268,7 @@ class ExportModal extends PureComponent {
         <TextButton
           className="btn btn-primary btn-sm"
           text="Select Output"
-          clickHandler={this.handleSelectOutput}/>
+          clickHandler={this.handleChangeModalStatus.bind(this, FILETYPE)}/>
       );
     }
     return (
@@ -283,6 +297,7 @@ class ExportModal extends PureComponent {
           {this.renderSelectOutput()}
         </Modal.Body>
         <Modal.Footer>
+          {this.renderBackButton()}
           <TextButton
             className="btn btn-default btn-sm"
             text={this.props.status === COMPLETED ? 'Close' : 'Cancel'}
