@@ -6,7 +6,7 @@ import {
   Modal,
   FormGroup,
 } from 'react-bootstrap';
-import { TextButton, IconTextButton } from 'hadron-react-buttons';
+import { TextButton } from 'hadron-react-buttons';
 import ExportSelectOutput from 'components/export-select-output';
 import ExportSelectFields from 'components/export-select-fields';
 import QueryViewer from 'components/query-viewer';
@@ -233,14 +233,13 @@ class ExportModal extends PureComponent {
   }
 
   renderBackButton() {
+    const backButtonClassname = classnames('btn', 'btn-default', 'btn-sm', style('back-button'));
     if (this.props.exportProgressStatus !== QUERY) {
       return (
-        <IconTextButton
-          text="Back"
+        <TextButton
+          text="< BACK"
           clickHandler={this.handleBackButton}
-          className="btn btn-default btn-sm"
-          className={style('back-button')}
-          iconClassName="fa fa-chevron-left"/>
+          className={backButtonClassname}/>
       );
     }
   }
