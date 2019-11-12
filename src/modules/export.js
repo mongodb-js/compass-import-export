@@ -33,6 +33,8 @@ const CLOSE = `${PREFIX}/CLOSE`;
 
 const CHANGE_MODAL_PROGRESS_STATUS = `${PREFIX}/CHANGE_MODAL_PROGRESS_STATUS`;
 
+const UPDATE_FIELDS = `${PREFIX}/UPDATE_FIELDS`;
+
 const QUERY_CHANGED = `${PREFIX}/QUERY_CHANGED`;
 const TOGGLE_FULL_COLLECTION = `${PREFIX}/TOGGLE_FULL_COLLECTION`;
 
@@ -54,6 +56,7 @@ export const INITIAL_STATE = {
   progress: 0,
   query: FULL_QUERY,
   error: null,
+  fields: [],
   fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED,
@@ -177,6 +180,13 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
+  if (action.type === UPDATE_FIELDS) {
+    return {
+      ...state,
+      fields: action.fields
+    }
+  }
+
   if (action.type === SELECT_FILE_NAME) {
     return {
       ...state,
@@ -268,6 +278,15 @@ export const closeExport = () => ({
 });
 
 /**
+ * Update export fields
+ * @api public
+ */
+export const updateFields = (fields) => ({
+  type: UPDATE_FIELDS,
+  fields: fields
+});
+
+/**
  * Select fields to be exported 
  * @api public
  */
@@ -275,6 +294,29 @@ export const changeModalProgressStatus = (status) => ({
   type: CHANGE_MODAL_PROGRESS_STATUS,
   status: status
 });
+
+export const sampleFields = () => {
+  return (dispatch, getState) => {
+    const {
+      ns,
+      exportData,
+      dataService: { dataService }
+    } = getState();
+
+    const spec = exportData.isFullCollection
+      ? { filter: {} }
+      : exportData.query;
+
+    dataService.find(ns, spec.filter, {limit: 1}, function(findErr, docs) {
+      if (findErr) {
+        return onError(findErr);
+      }
+
+      // sort alphabetically for aesthetic purposes
+      dispatch(updateFields(Object.keys(docs[0]).sort()));
+    })
+  }
+}
 
 /**
  * Run the actual export to file.

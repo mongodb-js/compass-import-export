@@ -29,8 +29,10 @@ import {
 
 import {
   startExport,
+  sampleFields,
   cancelExport,
   toggleFullCollection,
+  updateFields,
   changeModalProgressStatus,
   selectExportFileType,
   selectExportFileName,
@@ -70,6 +72,8 @@ class ExportModal extends PureComponent {
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
     error: PropTypes.object,
+    sampleFields: PropTypes.func.isRequired,
+    updateFields: PropTypes.func.isRequired,
     startExport: PropTypes.func.isRequired,
     cancelExport: PropTypes.func.isRequired,
     closeExport: PropTypes.func.isRequired,
@@ -123,6 +127,9 @@ class ExportModal extends PureComponent {
    */
   handleChangeModalStatus = (status) => {
     this.props.changeModalProgressStatus(status);
+    if (status === FIELDS) {
+      this.props.sampleFields();
+    }
   }
 
   handleRevealClick = () => {
@@ -208,7 +215,9 @@ class ExportModal extends PureComponent {
   renderSelectFields() {
     if (this.props.exportProgressStatus === FIELDS ) {
       return (
-        <ExportSelectFields/>
+        <ExportSelectFields
+          fields={this.props.fields}
+          updateFields={this.props.updateFields}/>
       );
     }
   }
@@ -324,6 +333,7 @@ const mapStateToProps = state => ({
   isFullCollection: state.exportData.isFullCollection,
   open: state.exportData.isOpen,
   error: state.exportData.error,
+  fields: state.exportData.fields,
   fileType: state.exportData.fileType,
   fileName: state.exportData.fileName,
   status: state.exportData.status,
@@ -338,8 +348,10 @@ export default connect(
   mapStateToProps,
   {
     startExport,
+    sampleFields,
     cancelExport,
     toggleFullCollection,
+    updateFields,
     changeModalProgressStatus,
     selectExportFileType,
     selectExportFileName,
