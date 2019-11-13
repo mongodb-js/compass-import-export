@@ -74,6 +74,7 @@ class ExportModal extends PureComponent {
     error: PropTypes.object,
     sampleFields: PropTypes.func.isRequired,
     updateFields: PropTypes.func.isRequired,
+    fields: PropTypes.object.isRequired,
     startExport: PropTypes.func.isRequired,
     cancelExport: PropTypes.func.isRequired,
     closeExport: PropTypes.func.isRequired,

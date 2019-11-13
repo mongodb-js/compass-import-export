@@ -6,27 +6,45 @@ import styles from './export-select-fields.less';
 import createStyler from 'utils/styler.js';
 const style = createStyler(styles, 'export-fields');
 
-const fieldInfoSprinkle = 'The fields displayed are from a sample of documents in the collection.To ensure all fields are exported, add missing field names.'
+const fieldInfoSprinkle = 'The fields displayed are from a sample of documents in the collection.To ensure all fields are exported, add missing field names.';
 
 class ExportSelectFields extends PureComponent {
   static propTypes = {
-    fields: PropTypes.array.isRequired,
-    updateFields: PropTypes.func.isRequired
+    fields: PropTypes.object.isRequired,
+    updateFields: PropTypes.func.isRequired,
   };
 
+  handleFieldCheckboxChange = (evt) => {
+    const fields = this.props.fields;
+    fields[`${evt.target.name}`] ^= fields[evt.target.id]; // flip 1/0 to its opposite
+    this.props.updateFields(fields);
+  }
+
   renderFieldRows() {
-    return this.props.fields.map((field, index) => (
+    const fields = this.props.fields;
+
+    console.log('FIELDS UPDATED', fields);
+
+    return Object.keys(fields).map((field, index) => (
       <tr key={field}>
-        <td><input type="checkbox" id={field} name={field} checked/></td>
+        <td>
+          <input type="checkbox"
+            aria-label={`Include ${field} in exported collection`}
+            id={field}
+            data-id={index}
+            name={field}
+            onChange={this.handleFieldCheckboxChange}
+            checked={fields[field]}/>
+        </td>
         <td className={style('field-number')}>{index + 1}</td>
         <td>{field}</td>
       </tr>
-    ))
+    ));
   }
 
   render() {
     return (
-      <div className={style('field-wrapper')}>
+      <div>
         <div className={style('caption')}>
           <p>Select Fields</p>
           <div
@@ -37,18 +55,20 @@ class ExportSelectFields extends PureComponent {
             <Tooltip id="field-tooltip" />
           </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th><input type="checkbox" name="Select All"/></th>
-              <th>&nbsp;</th>
-              <th colSpan="2" className={style('field-name')}>Field Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.renderFieldRows()}
-          </tbody>
-        </table>
+        <div className={style('field-wrapper')}>
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" name="Select All"/></th>
+                <th>&nbsp;</th>
+                <th colSpan="2" className={style('field-name')}>Field Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {this.renderFieldRows()}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }

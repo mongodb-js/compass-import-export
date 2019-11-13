@@ -56,7 +56,7 @@ export const INITIAL_STATE = {
   progress: 0,
   query: FULL_QUERY,
   error: null,
-  fields: [],
+  fields: {},
   fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED,
@@ -184,7 +184,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       fields: action.fields
-    }
+    };
   }
 
   if (action.type === SELECT_FILE_NAME) {
@@ -312,11 +312,16 @@ export const sampleFields = () => {
         return onError(findErr);
       }
 
-      // sort alphabetically for aesthetic purposes
-      dispatch(updateFields(Object.keys(docs[0]).sort()));
-    })
-  }
-}
+      const fields = Object.keys(docs[0]).sort().reduce((obj, field) => {
+        obj[field] = 1;
+
+        return obj;
+      }, {});
+
+      dispatch(updateFields(fields));
+    });
+  };
+};
 
 /**
  * Run the actual export to file.
