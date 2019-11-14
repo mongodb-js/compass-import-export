@@ -40,6 +40,7 @@ const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
 const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
 const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
 const SET_IGNORE_EMPTY_FIELDS = `${PREFIX}/SET_IGNORE_EMPTY_FIELDS`;
+const TOGGLE_INCLUDE_FIELD = `${PREFIX}/TOGGLE_INCLUDE_FIELD`;
 
 /**
  * Initial state.
@@ -92,7 +93,7 @@ export const onStarted = (source, dest) => ({
  * @param {Number} docsWritten
  * @api private
  */
-export const onFinished = docsWritten => ({
+export const onFinished = (docsWritten) => ({
   type: FINISHED,
   docsWritten: docsWritten
 });
@@ -101,7 +102,7 @@ export const onFinished = docsWritten => ({
  * @param {Error} error
  * @api private
  */
-export const onError = error => ({
+export const onError = (error) => ({
   type: FAILED,
   error: error
 });
@@ -111,7 +112,7 @@ export const onError = error => ({
  * @param {Number} guesstimatedDocsTotal
  * @api private
  */
-export const onGuesstimatedDocsTotal = guesstimatedDocsTotal => ({
+export const onGuesstimatedDocsTotal = (guesstimatedDocsTotal) => ({
   type: SET_GUESSTIMATED_TOTAL,
   guesstimatedDocsTotal: guesstimatedDocsTotal
 });
@@ -137,6 +138,18 @@ const reducer = (state = INITIAL_STATE, action) => {
       ...state,
       delimiter: action.delimiter
     };
+  }
+
+  if (action.type === TOGGLE_INCLUDE_FIELD) {
+    const newState = {
+      ...state
+    };
+    newState.previewFields = newState.previewFields.map((field) => {
+      if (field.path === action.path) {
+        field.checked = !field.checked;
+      }
+    });
+    return newState;
   }
 
   if (action.type === SET_PREVIEW_DOCS) {
@@ -388,28 +401,37 @@ const loadPreviewDocs = (fileName, fileType) => {
 };
 
 /**
+ * Mark a field to be included or excluded from the import.
+ * @api public
+ */
+export const toggleIncludeField = (path) => ({
+  type: TOGGLE_INCLUDE_FIELD,
+  path: path
+});
+
+/**
  * Gather file metadata quickly when the user specifies `fileName`.
  * @param {String} fileName
  * @api public
  */
-export const selectImportFileName = fileName => {
-  return dispatch => {
+export const selectImportFileName = (fileName) => {
+  return (dispatch) => {
     let fileStats = {};
     checkFileExists(fileName)
-      .then(exists => {
+      .then((exists) => {
         if (!exists) {
           throw new Error(`File ${fileName} not found`);
         }
         return getFileStats(fileName);
       })
-      .then(stats => {
+      .then((stats) => {
         fileStats = {
           ...stats,
           type: mime.lookup(fileName)
         };
         return promisify(detectImportFile)(fileName);
       })
-      .then(detected => {
+      .then((detected) => {
         dispatch({
           type: FILE_SELECTED,
           fileName: fileName,
@@ -419,7 +441,7 @@ export const selectImportFileName = fileName => {
         });
         dispatch(loadPreviewDocs(fileName, detected.fileType));
       })
-      .catch(err => dispatch(onError(err)));
+      .catch((err) => dispatch(onError(err)));
   };
 };
 
@@ -429,7 +451,7 @@ export const selectImportFileName = fileName => {
  * @param {String} fileType
  * @api public
  */
-export const selectImportFileType = fileType => ({
+export const selectImportFileType = (fileType) => ({
   type: FILE_TYPE_SELECTED,
   fileType: fileType
 });
@@ -455,7 +477,7 @@ export const closeImport = () => ({
  *
  * @api public
  */
-export const setDelimiter = delimiter => ({
+export const setDelimiter = (delimiter) => ({
   type: SET_DELIMITER,
   delimiter: delimiter
 });
@@ -463,7 +485,7 @@ export const setDelimiter = delimiter => ({
 /**
  * @api public
  */
-export const setStopOnErrors = stopOnErrors => ({
+export const setStopOnErrors = (stopOnErrors) => ({
   type: SET_STOP_ON_ERRORS,
   stopOnErrors: stopOnErrors
 });
@@ -471,7 +493,7 @@ export const setStopOnErrors = stopOnErrors => ({
 /**
  * @api public
  */
-export const setIgnoreEmptyFields = setignoreEmptyFields => ({
+export const setIgnoreEmptyFields = (setignoreEmptyFields) => ({
   type: SET_IGNORE_EMPTY_FIELDS,
   setignoreEmptyFields: setignoreEmptyFields
 });

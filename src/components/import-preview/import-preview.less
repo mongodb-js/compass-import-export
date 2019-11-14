@@ -1,35 +1,70 @@
 @import (reference) '~less/compass/_theme.less';
 
 .import-preview {
-  display: block;
-  padding: 10px;
-  &-headers {
-    font-weight: normal;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+
+  table,
+  th,
+  td {
+    padding: 3px 5px;
+    border: 1px solid @gray6;
   }
 
-  &-type-and-key-header {
-    :global span.header-path {
-      display: block;
-      font-weight: normal;
-      font-size: 13px;
-    }
-  }
-
-  tbody {
-    overflow: auto;
+  table {
+    border-collapse: collapse;
+    border-spacing: 0px;
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+    font-size: 11px;
     height: 100%;
     width: 100%;
-    tr {
-      :global td.unchecked {
-        opacity: 0.4;
+
+    thead {
+      background: @gray8;
+      tr {
+        th {
+          min-width: 25px;
+          font-weight: normal;
+
+          div {
+            display: flex;
+            align-items: center;
+            input[type='checkbox'] {
+              margin: 0px 5px 0px 0px;
+            }
+            ul {
+              list-style: none;
+              margin: 0;
+              padding: 0;
+
+              li:first-child {
+                font-weight: bold;
+              }
+            }
+          }
+        }
+        th:first-child {
+          width: 25px;
+          max-width: 25px;
+        }
       }
     }
-  }
-  thead tr {
-    th {
-      font-weight: normal;
-      input[type='checkbox'] {
-        margin: 5px 5px 0;
+
+    tbody {
+      height: 100%;
+      width: 100%;
+      tr {
+        height: 25px;
+        td:first-child {
+          text-align: center;
+        }
+        td {
+          white-space: nowrap;
+        }
+        td.unchecked {
+          opacity: 0.4;
+        }
       }
     }
   }

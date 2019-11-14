@@ -1,9 +1,6 @@
 /* eslint-disable react/no-multi-comp */
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-
-import { flatten } from 'flat';
-
 import styles from './import-preview.less';
 
 import createStyler from 'utils/styler.js';
@@ -19,26 +16,30 @@ const debug = createLogger('import-preview');
 class PreviewRow extends PureComponent {
   static propTypes = {
     values: PropTypes.array,
-    fields: PropTypes.array
+    fields: PropTypes.array,
+    index: PropTypes.number
   };
-  // TODO: lucas: switch to for ... in
+
   render() {
-    const { values } = this.props;
+    const { values, index } = this.props;
     const cells = values.map((v, i) => {
       const header = this.props.fields[i];
+      if (v === '') {
+        v = <i>empty string</i>;
+      }
       if (!header.checked) {
         return (
           <td
             className="unchecked"
-            title={`${header.path} of type ${header.type} is unchecked`}
-          >
+            title={`${header.path} of type ${header.type} is unchecked`}>
             {v}
           </td>
         );
       }
       return <td>{v}</td>;
     });
-    return <tr>{cells}</tr>;
+
+    return <tr>{[].concat(<td>{index + 1}</td>, cells)}</tr>;
   }
 }
 
@@ -52,8 +53,8 @@ class PreviewValues extends PureComponent {
     const { values } = this.props;
     return (
       <tbody>
-        {values.map(val => (
-          <PreviewRow fields={this.props.fields} values={val} />
+        {values.map((val, i) => (
+          <PreviewRow fields={this.props.fields} values={val} index={i} />
         ))}
       </tbody>
     );
@@ -78,21 +79,30 @@ class PreviewFields extends PureComponent {
   }
 
   render() {
-    const fields = this.props.fields.map(field => {
+    const fields = this.props.fields.map((field) => {
       return (
         <th key={field.path}>
-          <input
-            type="checkbox"
-            checked={field.checked}
-            onChange={this.onCheckedChanged.bind(this, field.path)}
-          />
-          <span className="field-path">{field.path}</span>
+          <div>
+            <input
+              type="checkbox"
+              checked={field.checked}
+              title={
+                field.checked
+                  ? `${field.path} values will be imported`
+                  : `Values for ${field.path} will be ignored`
+              }
+              onChange={this.onCheckedChanged.bind(this, field.path)}
+            />
+            <ul>
+              <li>{field.path}</li>
+            </ul>
+          </div>
         </th>
       );
     });
     return (
       <thead>
-        <tr>{fields}</tr>
+        <tr>{[].concat(<th />, fields)}</tr>
       </thead>
     );
   }
@@ -107,7 +117,7 @@ class ImportPreview extends PureComponent {
   render() {
     return (
       <div className={style()}>
-        <table className="table table-condensed">
+        <table>
           <PreviewFields
             fields={this.props.fields}
             onCheckedChanged={this.props.onFieldCheckedChanged}

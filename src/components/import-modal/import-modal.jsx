@@ -30,7 +30,8 @@ import {
   setDelimiter,
   setStopOnErrors,
   setIgnoreEmptyFields,
-  closeImport
+  closeImport,
+  toggleIncludeField
 } from 'modules/import';
 
 import styles from './import-modal.less';
@@ -61,7 +62,8 @@ class ImportModal extends PureComponent {
     guesstimatedDocsTotal: PropTypes.number,
     previewDocs: PropTypes.arrayOf(PropTypes.object),
     previewFields: PropTypes.array,
-    previewValues: PropTypes.array
+    previewValues: PropTypes.array,
+    toggleIncludeField: PropTypes.func.isRequired
   };
 
   getStatusMessage() {
@@ -115,7 +117,7 @@ class ImportModal extends PureComponent {
     this.props.startImport();
   };
 
-  handleOnSubmit = evt => {
+  handleOnSubmit = (evt) => {
     evt.preventDefault();
     evt.stopPropagation();
     if (this.props.fileName) {
@@ -177,8 +179,7 @@ class ImportModal extends PureComponent {
                 this.props.setDelimiter(!this.props.delimiter);
               }}
               defaultValue={this.props.delimiter}
-              className={style('option-select')}
-            >
+              className={style('option-select')}>
               <option value=",">comma</option>
               <option value="\t">tab</option>
               <option value=";">semicolon</option>
@@ -258,9 +259,7 @@ class ImportModal extends PureComponent {
           />
           <ErrorBox error={this.props.error} />
           <ImportPreview
-            onFieldCheckedChanged={(path, checked) => {
-              window.alert('todo');
-            }}
+            onFieldCheckedChanged={this.props.toggleIncludeField}
             values={this.props.previewValues}
             fields={this.props.previewFields}
           />
@@ -282,7 +281,7 @@ class ImportModal extends PureComponent {
  *
  * @returns {Object} The mapped properties.
  */
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   ns: state.ns,
   progress: state.importData.progress,
   open: state.importData.isOpen,
@@ -313,6 +312,7 @@ export default connect(
     setDelimiter,
     setStopOnErrors,
     setIgnoreEmptyFields,
-    closeImport
+    closeImport,
+    toggleIncludeField
   }
 )(ImportModal);
