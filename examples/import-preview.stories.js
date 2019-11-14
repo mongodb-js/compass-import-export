@@ -34,7 +34,10 @@ storiesOf('Examples/ImportPreview', module).add('simple', () => {
   return (
     <ImportPreview
       onFieldCheckedChanged={(path, checked) => {
-        console.log('onFieldCheckedChanged: %s is n', path, checked);
+        console.log('onFieldCheckedChanged: %s is now', path, checked);
+      }}
+      setFieldType={(path, bsonType) => {
+        console.log('setFieldType: %s to %s', path, bsonType);
       }}
       fields={[
         {

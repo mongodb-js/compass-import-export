@@ -9,9 +9,7 @@ const style = createStyler(styles, 'import-preview');
 import { createLogger } from 'utils/logger';
 const debug = createLogger('import-preview');
 
-/**
- * TODO: lucas: For COMPASS-3947, use <SelectFieldType />
- */
+import SelectFieldType from 'components/select-field-type';
 
 class PreviewRow extends PureComponent {
   static propTypes = {
@@ -29,17 +27,15 @@ class PreviewRow extends PureComponent {
       }
       if (!header.checked) {
         return (
-          <td
-            className="unchecked"
-            title={`${header.path} of type ${header.type} is unchecked`}>
+          <td key={i} className="unchecked">
             {v}
           </td>
         );
       }
-      return <td>{v}</td>;
+      return <td key={i}>{v}</td>;
     });
 
-    return <tr>{[].concat(<td>{index + 1}</td>, cells)}</tr>;
+    return <tr>{[].concat(<td key="field-index">{index + 1}</td>, cells)}</tr>;
   }
 }
 
@@ -54,7 +50,12 @@ class PreviewValues extends PureComponent {
     return (
       <tbody>
         {values.map((val, i) => (
-          <PreviewRow fields={this.props.fields} values={val} index={i} />
+          <PreviewRow
+            key={i}
+            fields={this.props.fields}
+            values={val}
+            index={i}
+          />
         ))}
       </tbody>
     );
@@ -70,11 +71,12 @@ class PreviewValues extends PureComponent {
 class PreviewFields extends PureComponent {
   static propTypes = {
     fields: PropTypes.array,
-    onCheckedChanged: PropTypes.func.isRequired
+    onCheckedChanged: PropTypes.func.isRequired,
+    setFieldType: PropTypes.func.isRequired
   };
 
   onCheckedChanged(path, evt) {
-    debug('Header Checked Changed', evt);
+    debug('Checked changed', path, evt.currentTarget.checked);
     this.props.onCheckedChanged(path, evt.currentTarget.checked);
   }
 
@@ -95,6 +97,12 @@ class PreviewFields extends PureComponent {
             />
             <ul>
               <li>{field.path}</li>
+              <li>
+                <SelectFieldType
+                  selectedType={field.type}
+                  onChange={this.props.setFieldType.bind(this, field.path)}
+                />
+              </li>
             </ul>
           </div>
         </th>
@@ -102,7 +110,7 @@ class PreviewFields extends PureComponent {
     });
     return (
       <thead>
-        <tr>{[].concat(<th />, fields)}</tr>
+        <tr>{[].concat(<th key="field-index" />, fields)}</tr>
       </thead>
     );
   }
@@ -112,7 +120,8 @@ class ImportPreview extends PureComponent {
   static propTypes = {
     fields: PropTypes.array,
     values: PropTypes.array,
-    onFieldCheckedChanged: PropTypes.func.isRequired
+    onFieldCheckedChanged: PropTypes.func.isRequired,
+    setFieldType: PropTypes.func.isRequired
   };
   render() {
     return (
@@ -121,6 +130,7 @@ class ImportPreview extends PureComponent {
           <PreviewFields
             fields={this.props.fields}
             onCheckedChanged={this.props.onFieldCheckedChanged}
+            setFieldType={this.props.setFieldType}
           />
           <PreviewValues
             fields={this.props.fields}

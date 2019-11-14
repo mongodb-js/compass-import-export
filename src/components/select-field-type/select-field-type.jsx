@@ -12,8 +12,8 @@ class SelectFieldType extends PureComponent {
   };
 
   onChange(evt) {
-    debug('onChange', evt);
-    this.props.onChange(evt);
+    debug('type changed', evt.currentTarget.value);
+    this.props.onChange(evt.currentTarget.value);
   }
   render() {
     const { selectedType } = this.props;

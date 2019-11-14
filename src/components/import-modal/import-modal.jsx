@@ -31,7 +31,8 @@ import {
   setStopOnErrors,
   setIgnoreEmptyFields,
   closeImport,
-  toggleIncludeField
+  toggleIncludeField,
+  setFieldType
 } from 'modules/import';
 
 import styles from './import-modal.less';
@@ -63,7 +64,8 @@ class ImportModal extends PureComponent {
     previewDocs: PropTypes.arrayOf(PropTypes.object),
     previewFields: PropTypes.array,
     previewValues: PropTypes.array,
-    toggleIncludeField: PropTypes.func.isRequired
+    toggleIncludeField: PropTypes.func.isRequired,
+    setFieldType: PropTypes.func.isRequired
   };
 
   getStatusMessage() {
@@ -260,6 +262,7 @@ class ImportModal extends PureComponent {
           <ErrorBox error={this.props.error} />
           <ImportPreview
             onFieldCheckedChanged={this.props.toggleIncludeField}
+            setFieldType={this.props.setFieldType}
             values={this.props.previewValues}
             fields={this.props.previewFields}
           />
@@ -313,6 +316,7 @@ export default connect(
     setStopOnErrors,
     setIgnoreEmptyFields,
     closeImport,
-    toggleIncludeField
+    toggleIncludeField,
+    setFieldType
   }
 )(ImportModal);

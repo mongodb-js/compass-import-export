@@ -41,6 +41,7 @@ const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
 const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
 const SET_IGNORE_EMPTY_FIELDS = `${PREFIX}/SET_IGNORE_EMPTY_FIELDS`;
 const TOGGLE_INCLUDE_FIELD = `${PREFIX}/TOGGLE_INCLUDE_FIELD`;
+const SET_FIELD_TYPE = `${PREFIX}/SET_FIELD_TYPE`;
 
 /**
  * Initial state.
@@ -116,6 +117,7 @@ export const onGuesstimatedDocsTotal = (guesstimatedDocsTotal) => ({
   type: SET_GUESSTIMATED_TOTAL,
   guesstimatedDocsTotal: guesstimatedDocsTotal
 });
+
 /**
  * The import module reducer.
  *
@@ -148,6 +150,21 @@ const reducer = (state = INITIAL_STATE, action) => {
       if (field.path === action.path) {
         field.checked = !field.checked;
       }
+      return field;
+    });
+    return newState;
+  }
+
+  if (action.type === SET_FIELD_TYPE) {
+    const newState = {
+      ...state
+    };
+    newState.previewFields = newState.previewFields.map((field) => {
+      if (field.path === action.path) {
+        field.checked = true;
+        field.type = action.bsonType;
+      }
+      return field;
     });
     return newState;
   }
@@ -407,6 +424,27 @@ const loadPreviewDocs = (fileName, fileType) => {
 export const toggleIncludeField = (path) => ({
   type: TOGGLE_INCLUDE_FIELD,
   path: path
+});
+
+/**
+ * Specify the `type` values at `path` should be cast to.
+ *
+ * @param {String} path Dot notation accessor for value.
+ * @param {String} bsonType A bson type identifier.
+ * @example
+ * ```javascript
+ * //  Cast string _id from a csv to a bson.ObjectId
+ * setFieldType('_id', 'ObjectId');
+ * // Cast `{stats: {flufiness: "100"}}` to
+ * // `{stats: {flufiness: 100}}`
+ * setFieldType('stats.flufiness', 'Int32');
+ * ```
+ * @api public
+ */
+export const setFieldType = (path, bsonType) => ({
+  type: SET_FIELD_TYPE,
+  path: path,
+  bsonType: bsonType
 });
 
 /**
