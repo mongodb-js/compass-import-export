@@ -154,6 +154,7 @@
     "fast-csv": "^3.4.0",
     "flat": "^4.1.0",
     "javascript-stringify": "^1.6.0",
+    "lodash.isequal": "^4.5.0",
     "lodash.throttle": "^4.1.1",
     "marky": "^1.2.1",
     "mime-types": "^2.1.24",

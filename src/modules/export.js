@@ -287,7 +287,7 @@ export const updateFields = (fields) => ({
 });
 
 /**
- * Select fields to be exported 
+ * Select fields to be exported
  * @api public
  */
 export const changeModalProgressStatus = (status) => ({
@@ -339,6 +339,15 @@ export const startExport = () => {
       ? { filter: {} }
       : exportData.query;
 
+    // filter out only the fields we want to include in our export data
+    const projection = Object.keys(exportData.fields)
+      .filter(field => exportData.fields[field] === 1)
+      .reduce((obj, field) => {
+        obj[field] = exportData.fields[field];
+
+        return obj;
+      }, {});
+
     dataService.estimatedCount(ns, {query: spec.filter}, function(countErr, numDocsToExport) {
       if (countErr) {
         return onError(countErr);
@@ -346,7 +355,7 @@ export const startExport = () => {
 
       debug('count says to expect %d docs in export', numDocsToExport);
 
-      const source = createReadableCollectionStream(dataService, ns, spec);
+      const source = createReadableCollectionStream(dataService, ns, spec, projection);
 
       const progress = createProgressStream({
         objectMode: true,
@@ -372,7 +381,7 @@ export const startExport = () => {
 
       // TODO: lucas: figure out how to make onStarted();
       dispatch(onStarted(source, dest, numDocsToExport));
-      stream.pipeline(source, progress, formatter, dest, function(err, res) {
+      stream.pipeline(source, progress, formatter, dest, function(err) {
         if (err) {
           debug('error running export pipeline', err);
           return dispatch(onError(err));

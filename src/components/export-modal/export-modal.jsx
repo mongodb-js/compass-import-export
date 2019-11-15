@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import PropTypes from 'prop-types';
 import {
   Modal,
   FormGroup,
@@ -128,7 +128,8 @@ class ExportModal extends PureComponent {
    */
   handleChangeModalStatus = (status) => {
     this.props.changeModalProgressStatus(status);
-    if (status === FIELDS) {
+
+    if (status === FIELDS && Object.entries(this.props.fields).length === 0) {
       this.props.sampleFields();
     }
   }
@@ -255,7 +256,8 @@ class ExportModal extends PureComponent {
   }
 
   renderNextButton() {
-    if (this.props.status === COMPLETED) {
+    // only show "Show File" Button on the last stage of export modal
+    if (this.props.status === COMPLETED && this.props.exportProgressStatus === FILETYPE) {
       return (
         <TextButton
           className="btn btn-primary btn-sm"
@@ -295,6 +297,13 @@ class ExportModal extends PureComponent {
    * @returns {React.Component} The component.
    */
   render() {
+    // only show 'Close' button on the last stage on export modal when export
+    // was completed.
+    const closeButton =
+      this.props.status === COMPLETED && this.props.exportProgressStatus === FILETYPE
+        ? 'Close'
+        : 'Cancel';
+
     return (
       <Modal show={this.props.open} onHide={this.handleClose} backdrop="static">
         <Modal.Header closeButton>
@@ -309,7 +318,7 @@ class ExportModal extends PureComponent {
           {this.renderBackButton()}
           <TextButton
             className="btn btn-default btn-sm"
-            text={this.props.status === COMPLETED ? 'Close' : 'Cancel'}
+            text={closeButton}
             clickHandler={this.handleClose}
           />
           {this.renderNextButton()}

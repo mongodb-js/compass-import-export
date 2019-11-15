@@ -60,7 +60,7 @@ class ProgressBar extends PureComponent {
     return (
       // eslint-disable-next-line no-script-url
       <a className={style('status-message-cancel')} onClick={this.handleCancel}>
-        Stop 
+        Stop
       </a>
     );
   }

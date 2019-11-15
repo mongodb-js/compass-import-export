@@ -1,44 +1,39 @@
-import { Tooltip, InfoSprinkle } from 'hadron-react-components';
-import React, { PureComponent } from 'react';
+import { Tooltip } from 'hadron-react-components';
+import ExportField from 'components/export-field';
+import React, { Component } from 'react';
+import isEqual from 'lodash.isequal';
 import PropTypes from 'prop-types';
+
 
 import styles from './export-select-fields.less';
 import createStyler from 'utils/styler.js';
-const style = createStyler(styles, 'export-fields');
+const style = createStyler(styles, 'export-select-fields');
 
-const fieldInfoSprinkle = 'The fields displayed are from a sample of documents in the collection.To ensure all fields are exported, add missing field names.';
+const fieldInfoSprinkle = 'The fields displayed are from a sample of documents in the collection. To ensure all fields are exported, add missing field names.';
 
-class ExportSelectFields extends PureComponent {
+class ExportSelectFields extends Component {
   static propTypes = {
     fields: PropTypes.object.isRequired,
     updateFields: PropTypes.func.isRequired,
   };
 
+  shouldComponentUpdate(nextProps) {
+    return !isEqual(this.props.fields, nextProps.fields);
+  }
+
   handleFieldCheckboxChange = (evt) => {
     const fields = this.props.fields;
-    fields[`${evt.target.name}`] ^= fields[evt.target.id]; // flip 1/0 to its opposite
+    fields[`${evt.target.name}`] ^= fields[evt.target.name]; // flip 1/0 to its opposite
     this.props.updateFields(fields);
   }
 
   renderFieldRows() {
-    const fields = this.props.fields;
-
-    console.log('FIELDS UPDATED', fields);
-
-    return Object.keys(fields).map((field, index) => (
-      <tr key={field}>
-        <td>
-          <input type="checkbox"
-            aria-label={`Include ${field} in exported collection`}
-            id={field}
-            data-id={index}
-            name={field}
-            onChange={this.handleFieldCheckboxChange}
-            checked={fields[field]}/>
-        </td>
-        <td className={style('field-number')}>{index + 1}</td>
-        <td>{field}</td>
-      </tr>
+    return Object.keys(this.props.fields).map((field, index) => (
+      <ExportField
+        field={field}
+        index={index}
+        onChange={this.handleFieldCheckboxChange}
+        checked={this.props.fields[field]}/>
     ));
   }
 
