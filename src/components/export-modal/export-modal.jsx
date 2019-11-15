@@ -10,6 +10,7 @@ import { TextButton } from 'hadron-react-buttons';
 import ExportSelectOutput from 'components/export-select-output';
 import ExportSelectFields from 'components/export-select-fields';
 import QueryViewer from 'components/query-viewer';
+import ErrorBox from 'components/error-box';
 
 import revealFile from 'utils/reveal-file';
 import formatNumber from 'utils/format-number';
@@ -231,7 +232,6 @@ class ExportModal extends PureComponent {
           count={this.props.count}
           progress={this.props.progress}
           status={this.props.status}
-          error={this.props.error}
           startExport={this.props.startExport}
           selectExportFileType={this.props.selectExportFileType}
           selectExportFileName={this.props.selectExportFileName}
@@ -313,6 +313,7 @@ class ExportModal extends PureComponent {
           {this.renderExportOptions()}
           {this.renderSelectFields()}
           {this.renderSelectOutput()}
+          <ErrorBox error={this.props.error} />
         </Modal.Body>
         <Modal.Footer>
           {this.renderBackButton()}

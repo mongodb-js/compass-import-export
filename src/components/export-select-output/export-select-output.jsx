@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ProgressBar from 'components/progress-bar';
-import ErrorBox from 'components/error-box';
 import SelectFileType from 'components/select-file-type';
 import { IconTextButton } from 'hadron-react-buttons';
 import fileSaveDialog from 'utils/file-save-dialog';
@@ -45,7 +44,6 @@ class ExportSelectOutput extends PureComponent {
     count: PropTypes.number,
     progress: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
-    error: PropTypes.object,
     startExport: PropTypes.func.isRequired,
     selectExportFileType: PropTypes.func.isRequired,
     selectExportFileName: PropTypes.func.isRequired,
@@ -113,7 +111,6 @@ class ExportSelectOutput extends PureComponent {
           docsWritten={this.props.exportedDocsCount}
           docsTotal={this.props.count}
         />
-        <ErrorBox error={this.props.error} />
       </div>
     );
   }
