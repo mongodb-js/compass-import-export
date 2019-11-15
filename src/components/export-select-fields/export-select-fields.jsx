@@ -32,6 +32,7 @@ class ExportSelectFields extends Component {
       <ExportField
         field={field}
         index={index}
+        key={index}
         onChange={this.handleFieldCheckboxChange}
         checked={this.props.fields[field]}/>
     ));

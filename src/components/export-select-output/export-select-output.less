@@ -7,33 +7,28 @@
 
   &-browse {
     &-group {
-      display: flex;
       height: 40px;
+      display:flex;
+      border-radius: 3px; 
+      border: 1px solid @gray4;
+      height: 45px;
+      background-color: #ffffff !important;
+      flex-direction:row;
 
       input {
-        border-radius: 2px 0px 0px 2px !important;
+        flex-grow: 1;
         background-color: #ffffff !important;
-        box-shadow: 0px;
-        height: 40px;
+        border: none;
+        color: @gray1;
+        padding-top: 15px;
       }
 
       button {
-        white-space: nowrap;
-        width: 110px;
-        background-color: #ffffff;
-        border-width: 1px;
-        border-style: solid;
-      }
-    }
-
-    &-button {
-      text-transform: uppercase;
-      font-weight: bold;
-      font-size: 12px;
-      color: #0d47a1;
-
-      i {
-        padding-right: 3px;
+        width: 20%;
+        margin: 7px;
+        i {
+          padding-right: 3px;
+        }
       }
     }
   }
