@@ -275,9 +275,13 @@ class ExportModal extends PureComponent {
       );
     }
     if (this.props.exportProgressStatus === FIELDS) {
+      // if all fields are disselected diable "Select Output" button
+      const emptyFields = Object.entries(this.props.fields).length === 0;
+
       return (
         <TextButton
           className="btn btn-primary btn-sm"
+          disabled={emptyFields}
           text="Select Output"
           clickHandler={this.handleChangeModalStatus.bind(this, FILETYPE)}/>
       );
