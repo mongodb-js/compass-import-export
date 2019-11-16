@@ -2,8 +2,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
+import bsonCSV from 'utils/bson-csv';
+
 import { createLogger } from 'utils/logger';
 const debug = createLogger('select-field-type');
+
+function getBSONTypeCastings() {
+  return Object.keys(bsonCSV);
+}
 
 class SelectFieldType extends PureComponent {
   static propTypes = {
@@ -20,14 +26,15 @@ class SelectFieldType extends PureComponent {
     const onChange = this.onChange.bind(this);
 
     /**
-     * TODO: lucas: Make list of potential types real.
+     * TODO: lucas: Handle JSON casting.
      */
-
     return (
       <select defaultValue={selectedType} onChange={onChange}>
-        <option value="string">String</option>
-        <option value="number">Number</option>
-        <option value="boolean">Boolean</option>
+        {getBSONTypeCastings().map((name) => (
+          <option key={name} value={name}>
+            {name}
+          </option>
+        ))}
       </select>
     );
   }

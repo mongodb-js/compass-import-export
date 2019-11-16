@@ -300,7 +300,8 @@ export const startImport = () => {
       fileStats: { size },
       delimiter,
       ignoreEmptyFields,
-      stopOnErrors
+      stopOnErrors,
+      previewFields
     } = importData;
 
     const source = fs.createReadStream(fileName, 'utf8');
@@ -327,11 +328,13 @@ export const startImport = () => {
     const stripBOM = stripBomStream();
 
     const removeEmptyFields = removeEmptyFieldsStream(ignoreEmptyFields);
+
     const parser = createParser(
       fileName,
       fileType,
       delimiter,
-      fileIsMultilineJSON
+      fileIsMultilineJSON,
+      previewFields
     );
 
     debug('executing pipeline');
@@ -409,7 +412,10 @@ const loadPreviewDocs = (fileName, fileType) => {
       }
       dispatch({
         type: SET_PREVIEW_DOCS,
+        // TODO: lucas: `previewDocs` can go away from state.
         previewDocs: dest.docs,
+        // TODO: lucas: rename... this defines the typed projection
+        // passed down to the parsers.
         previewFields: dest.fields,
         previewValues: dest.values
       });

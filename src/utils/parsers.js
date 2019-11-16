@@ -6,6 +6,7 @@ import { createLogger } from './logger';
 import parseJSON from 'parse-json';
 import throttle from 'lodash.throttle';
 import progressStream from 'progress-stream';
+import bsonCSV from './bson-csv';
 
 const debug = createLogger('parsers');
 
@@ -33,6 +34,51 @@ export const createCSVParser = function({ delimiter = ',' } = {}) {
 };
 
 /**
+ * TODO: lucas: dot notation.
+ */
+function getProjection(previewFields, key) {
+  return previewFields.filter((f) => {
+    return f.path === key;
+  })[0];
+}
+
+function transformProjectedTypes(previewFields, data) {
+  if (Array.isArray(data)) {
+    return data.map(transformProjectedTypes.bind(null, previewFields));
+  } else if (typeof data !== 'object' || data === null || data === undefined) {
+    return data;
+  }
+
+  const keys = Object.keys(data);
+  if (keys.length === 0) {
+    return data;
+  }
+  return keys.reduce(function(doc, key) {
+    const def = getProjection(previewFields, key);
+
+    // TODO: lucas: Relocate removeEmptyStrings() here?
+    // Avoid yet another recursive traversal of every document.
+    if (def && !def.checked) {
+      debug('dropping unchecked key', key);
+      return;
+    }
+
+    // TODO: lucas: Handle extended JSON case.
+    if (
+      def.type &&
+      bsonCSV[def.type] &&
+      data[key].prototype.constructor.toString().indexOf('Object') === -1 &&
+      !Array.isArray(data[key])
+    ) {
+      doc[key] = bsonCSV[def.type].fromString(data[key]);
+    } else {
+      doc[key] = transformProjectedTypes(previewFields, data[key]);
+    }
+    return doc;
+  }, {});
+}
+
+/**
  * A transform stream that parses JSON strings and deserializes
  * any extended JSON objects into BSON.
  *
@@ -57,7 +103,7 @@ export const createJSONParser = function({
     }
   });
 
-  parser.on('data', d => {
+  parser.on('data', (d) => {
     const doc = EJSON.deserialize(d, {
       promoteValues: true,
       bsonRegExp: true
