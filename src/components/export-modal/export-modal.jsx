@@ -168,6 +168,8 @@ class ExportModal extends PureComponent {
   };
 
   renderExportOptions() {
+    if (this.props.exportStep === QUERY) return null;
+
     const { isFullCollection } = this.props;
 
     const queryClassName = classnames({
@@ -180,71 +182,67 @@ class ExportModal extends PureComponent {
       [style('query-viewer-is-disabled')]: isFullCollection
     });
 
-    if (this.props.exportStep === QUERY) {
-      return (
-        <FormGroup controlId="export-collection-option">
-          <div className={style('radio')}>
-            <label className={queryClassName}>
-              <input type="radio"
-                aria-label="Export collection with filters radio button"
-                value="filter"
-                onChange={this.handleExportOptionSelect}
-                checked={!isFullCollection}/>
-              Export query with filters &mdash; {formatNumber(this.props.count)} results (Recommended)
-            </label>
-          </div>
-          <div className={queryViewerClassName}>
-            <QueryViewer
-              query={this.props.query}
-              disabled={isFullCollection}
-              ns={this.props.ns}
-            />
-          </div>
-          <div className={style('radio')}>
-            <label>
-              <input type="radio"
-                aria-label="Export full collection radio button"
-                value="full"
-                onChange={this.handleExportOptionSelect}
-                checked={isFullCollection}/>
-              Export Full Collection
-            </label>
-          </div>
-        </FormGroup>
-      );
-    }
+    return (
+      <FormGroup controlId="export-collection-option">
+        <div className={style('radio')}>
+          <label className={queryClassName}>
+            <input type="radio"
+              aria-label="Export collection with filters radio button"
+              value="filter"
+              onChange={this.handleExportOptionSelect}
+              checked={!isFullCollection}/>
+            Export query with filters &mdash; {formatNumber(this.props.count)} results (Recommended)
+          </label>
+        </div>
+        <div className={queryViewerClassName}>
+          <QueryViewer
+            query={this.props.query}
+            disabled={isFullCollection}
+            ns={this.props.ns}
+          />
+        </div>
+        <div className={style('radio')}>
+          <label>
+            <input type="radio"
+              aria-label="Export full collection radio button"
+              value="full"
+              onChange={this.handleExportOptionSelect}
+              checked={isFullCollection}/>
+            Export Full Collection
+          </label>
+        </div>
+      </FormGroup>
+    );
   }
 
   renderSelectFields() {
-    if (this.props.exportStep === FIELDS ) {
-      return (
-        <ExportSelectFields
-          fields={this.props.fields}
-          updateFields={this.props.updateFields}/>
-      );
-    }
+    return (
+      <ExportSelectFields
+        fields={this.props.fields}
+        exportStep={this.props.exportStep}
+        updateFields={this.props.updateFields}/>
+    );
   }
 
   renderSelectOutput() {
-    if (this.props.exportStep === FILETYPE) {
-      return (
-        <ExportSelectOutput
-          count={this.props.count}
-          progress={this.props.progress}
-          status={this.props.status}
-          startExport={this.props.startExport}
-          selectExportFileType={this.props.selectExportFileType}
-          selectExportFileName={this.props.selectExportFileName}
-          fileType={this.props.fileType}
-          fileName={this.props.fileName}
-          cancelExport={this.props.cancelExport}
-          exportedDocsCount={this.props.exportedDocsCount}/>
-      );
-    }
+    return (
+      <ExportSelectOutput
+        count={this.props.count}
+        status={this.props.status}
+        fileType={this.props.fileType}
+        fileName={this.props.fileName}
+        exportStep={this.props.exportStep}
+        startExport={this.props.startExport}
+        cancelExport={this.props.cancelExport}
+        exportedDocsCount={this.props.exportedDocsCount}
+        selectExportFileType={this.props.selectExportFileType}
+        selectExportFileName={this.props.selectExportFileName}/>
+    );
   }
 
   renderBackButton() {
     const backButtonClassname = classnames('btn', 'btn-default', 'btn-sm', style('back-button'));
+
     if (this.props.exportStep !== QUERY) {
       return (
         <TextButton
