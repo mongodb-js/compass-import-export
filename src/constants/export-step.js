@@ -6,10 +6,10 @@ export const FILETYPE = 'FILETYPE';
 /**
  * State of export Modal progression.
  */
-export const MODAL_PROGRESS_STATUS = {
+export const EXPORT_STEP = {
   QUERY,
   FIELDS,
   FILETYPE
 };
 
-export default MODAL_PROGRESS_STATUS;
+export default EXPORT_STEP;

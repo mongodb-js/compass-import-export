@@ -3,7 +3,7 @@ import fs from 'fs';
 import stream from 'stream';
 
 import PROCESS_STATUS from 'constants/process-status';
-import MODAL_PROGRESS_STATUS from 'constants/modal-progress-status';
+import EXPORT_STEP from 'constants/export-step';
 import FILE_TYPES from 'constants/file-types';
 import { appRegistryEmit } from 'modules/compass/app-registry';
 
@@ -31,7 +31,7 @@ const SELECT_FILE_NAME = `${PREFIX}/SELECT_FILE_NAME`;
 const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
 
-const CHANGE_MODAL_PROGRESS_STATUS = `${PREFIX}/CHANGE_MODAL_PROGRESS_STATUS`;
+const CHANGE_EXPORT_STEP = `${PREFIX}/CHANGE_EXPORT_STEP`;
 
 const UPDATE_FIELDS = `${PREFIX}/UPDATE_FIELDS`;
 
@@ -51,7 +51,7 @@ const FULL_QUERY = {
  */
 export const INITIAL_STATE = {
   isOpen: false,
-  exportProgressStatus: MODAL_PROGRESS_STATUS.QUERY,
+  exportStep: EXPORT_STEP.QUERY,
   isFullCollection: false,
   progress: 0,
   query: FULL_QUERY,
@@ -205,10 +205,10 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === CHANGE_MODAL_PROGRESS_STATUS) {
+  if (action.type === CHANGE_EXPORT_STEP) {
     return {
       ...state,
-      exportProgressStatus: action.status,
+      exportStep: action.status,
     };
   }
 
@@ -290,8 +290,8 @@ export const updateFields = (fields) => ({
  * Select fields to be exported
  * @api public
  */
-export const changeModalProgressStatus = (status) => ({
-  type: CHANGE_MODAL_PROGRESS_STATUS,
+export const changeExportStep = (status) => ({
+  type: CHANGE_EXPORT_STEP,
   status: status
 });
 

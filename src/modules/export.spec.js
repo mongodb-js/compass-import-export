@@ -1,6 +1,6 @@
 import reducer, * as actions from './export';
 import PROCESS_STATUS from 'constants/process-status';
-import MODAL_PROGRESS_STATUS from 'constants/modal-progress-status';
+import EXPORT_STEP from 'constants/export-step';
 import FILE_TYPES from 'constants/file-types';
 
 describe.skip('export [module]', () => {
@@ -13,7 +13,7 @@ describe.skip('export [module]', () => {
           expect(reducer({ error: true, isOpen: false }, action)).to.deep.equal({
             isOpen: true,
             progress: 100,
-            exportProgressStatus: MODAL_PROGRESS_STATUS.QUERY,
+            exportStep: EXPORT_STEP.QUERY,
             isFullCollection: false,
             query: { filter: {} },
             error: true,
@@ -162,8 +162,8 @@ describe.skip('export [module]', () => {
       });
     });
 
-    context('when the action type is CHANGE_MODAL_PROGRESS_STATUS', () => {
-      const action = actions.changeModalProgressStatus(MODAL_PROGRESS_STATUS.QUERY);
+    context('when the action type is CHANGE_EXPORT_STEP', () => {
+      const action = actions.changeModalProgressStatus(EXPORT_STEP.QUERY);
 
       it('returns the new state', () => {
         expect(reducer(undefined, action)).to.deep.equal({
@@ -171,7 +171,7 @@ describe.skip('export [module]', () => {
           progress: 0,
           count: 0,
           exportedDocsCount: 0,
-          exportProgressStatus: MODAL_PROGRESS_STATUS.QUERY,
+          exportStep: EXPORT_STEP.QUERY,
           isFullCollection: false,
           fields: {},
           query: { filter: {}},
@@ -192,7 +192,7 @@ describe.skip('export [module]', () => {
           isOpen: false,
           count: 0,
           exportedDocsCount: 0,
-          exportProgressStatus: MODAL_PROGRESS_STATUS.QUERY,
+          exportStep: EXPORT_STEP.QUERY,
           isFullCollection: false,
           query: { filter: {}},
           fields: fields,

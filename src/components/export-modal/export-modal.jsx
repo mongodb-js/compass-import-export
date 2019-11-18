@@ -26,7 +26,7 @@ import {
   QUERY,
   FIELDS,
   FILETYPE
-} from 'constants/modal-progress-status';
+} from 'constants/export-step';
 
 import {
   startExport,
@@ -34,7 +34,7 @@ import {
   cancelExport,
   toggleFullCollection,
   updateFields,
-  changeModalProgressStatus,
+  changeExportStep,
   selectExportFileType,
   selectExportFileName,
   closeExport
@@ -83,8 +83,8 @@ class ExportModal extends PureComponent {
     toggleFullCollection: PropTypes.func.isRequired,
     selectExportFileType: PropTypes.func.isRequired,
     selectExportFileName: PropTypes.func.isRequired,
-    changeModalProgressStatus: PropTypes.func.isRequired,
-    exportProgressStatus: PropTypes.string.isRequired,
+    changeExportStep: PropTypes.func.isRequired,
+    exportStep: PropTypes.string.isRequired,
     fileType: PropTypes.string,
     fileName: PropTypes.string,
     exportedDocsCount: PropTypes.number
@@ -128,7 +128,7 @@ class ExportModal extends PureComponent {
    * Start the next step of exporting: selecting fields
    */
   handleChangeModalStatus = (status) => {
-    this.props.changeModalProgressStatus(status);
+    this.props.changeExportStep(status);
 
     if (status === FIELDS && Object.entries(this.props.fields).length === 0) {
       this.props.sampleFields();
@@ -150,7 +150,7 @@ class ExportModal extends PureComponent {
    * Return back in export flow.
    */
   handleBackButton = () => {
-    const previousState = this.props.exportProgressStatus === FILETYPE ? FIELDS : QUERY;
+    const previousState = this.props.exportStep === FILETYPE ? FIELDS : QUERY;
     this.handleChangeModalStatus(previousState);
   }
 
@@ -180,7 +180,7 @@ class ExportModal extends PureComponent {
       [style('query-viewer-is-disabled')]: isFullCollection
     });
 
-    if (this.props.exportProgressStatus === QUERY) {
+    if (this.props.exportStep === QUERY) {
       return (
         <FormGroup controlId="export-collection-option">
           <div className={style('radio')}>
@@ -216,7 +216,7 @@ class ExportModal extends PureComponent {
   }
 
   renderSelectFields() {
-    if (this.props.exportProgressStatus === FIELDS ) {
+    if (this.props.exportStep === FIELDS ) {
       return (
         <ExportSelectFields
           fields={this.props.fields}
@@ -226,7 +226,7 @@ class ExportModal extends PureComponent {
   }
 
   renderSelectOutput() {
-    if (this.props.exportProgressStatus === FILETYPE) {
+    if (this.props.exportStep === FILETYPE) {
       return (
         <ExportSelectOutput
           count={this.props.count}
@@ -245,7 +245,7 @@ class ExportModal extends PureComponent {
 
   renderBackButton() {
     const backButtonClassname = classnames('btn', 'btn-default', 'btn-sm', style('back-button'));
-    if (this.props.exportProgressStatus !== QUERY) {
+    if (this.props.exportStep !== QUERY) {
       return (
         <TextButton
           text="< BACK"
@@ -257,7 +257,7 @@ class ExportModal extends PureComponent {
 
   renderNextButton() {
     // only show "Show File" Button on the last stage of export modal
-    if (this.props.status === COMPLETED && this.props.exportProgressStatus === FILETYPE) {
+    if (this.props.status === COMPLETED && this.props.exportStep === FILETYPE) {
       return (
         <TextButton
           className="btn btn-primary btn-sm"
@@ -266,7 +266,7 @@ class ExportModal extends PureComponent {
         />
       );
     }
-    if (this.props.exportProgressStatus === QUERY) {
+    if (this.props.exportStep === QUERY) {
       return (
         <TextButton
           className="btn btn-primary btn-sm"
@@ -274,7 +274,7 @@ class ExportModal extends PureComponent {
           clickHandler={this.handleChangeModalStatus.bind(this, FIELDS)}/>
       );
     }
-    if (this.props.exportProgressStatus === FIELDS) {
+    if (this.props.exportStep === FIELDS) {
       // if all fields are disselected diable "Select Output" button
       const emptyFields = Object.entries(this.props.fields).length === 0;
 
@@ -304,7 +304,7 @@ class ExportModal extends PureComponent {
     // only show 'Close' button on the last stage on export modal when export
     // was completed.
     const closeButton =
-      this.props.status === COMPLETED && this.props.exportProgressStatus === FILETYPE
+      this.props.status === COMPLETED && this.props.exportStep === FILETYPE
         ? 'Close'
         : 'Cancel';
 
@@ -353,7 +353,7 @@ const mapStateToProps = state => ({
   fileName: state.exportData.fileName,
   status: state.exportData.status,
   exportedDocsCount: state.exportData.exportedDocsCount,
-  exportProgressStatus: state.exportData.exportProgressStatus
+  exportStep: state.exportData.exportStep
 });
 
 /**
@@ -367,7 +367,7 @@ export default connect(
     cancelExport,
     toggleFullCollection,
     updateFields,
-    changeModalProgressStatus,
+    changeExportStep,
     selectExportFileType,
     selectExportFileName,
     closeExport
