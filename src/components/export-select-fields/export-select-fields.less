@@ -28,20 +28,22 @@
   &-field-name {
     width: 100%;
   }
-}
 
-table {
-  border-collapse: collapse;
-  border-spacing: 0px;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 11px;
-}
+  &-table {
+    border-collapse: collapse;
+    border-spacing: 0px;
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-size: 11px;
+    padding: 3px 5px !important;
+    border: 1px solid @gray6;
 
-thead {
-  background: @gray8;
-}
+    thead {
+      background: @gray8;
+    }
 
-table, th, td {
-  padding: 3px 5px !important;
-  border: 1px solid @gray6;
+    th, td {
+      padding: 3px 5px !important;
+      border: 1px solid @gray6;
+    }
+  }
 }

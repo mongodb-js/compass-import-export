@@ -34,25 +34,25 @@ const style = createStyler(styles, 'export-select-output');
  * Progress messages.
  */
 const MESSAGES = {
-  [STARTED]: 'Exporting documents...',
+  [UNSPECIFIED]: '',
   [CANCELED]: 'Export canceled',
   [COMPLETED]: 'Export completed',
-  [UNSPECIFIED]: ''
+  [STARTED]: 'Exporting documents...'
 };
 
 class ExportSelectOutput extends PureComponent {
   static propTypes = {
     count: PropTypes.number,
-    progress: PropTypes.number.isRequired,
-    status: PropTypes.string.isRequired,
-    startExport: PropTypes.func.isRequired,
-    exportStep: PropTypes.string.isRequired,
-    selectExportFileType: PropTypes.func.isRequired,
-    selectExportFileName: PropTypes.func.isRequired,
-    cancelExport: PropTypes.func.isRequired,
     fileType: PropTypes.string,
     fileName: PropTypes.string,
-    exportedDocsCount: PropTypes.number
+    status: PropTypes.string.isRequired,
+    exportedDocsCount: PropTypes.number,
+    progress: PropTypes.number.isRequired,
+    startExport: PropTypes.func.isRequired,
+    exportStep: PropTypes.string.isRequired,
+    cancelExport: PropTypes.func.isRequired,
+    selectExportFileType: PropTypes.func.isRequired,
+    selectExportFileName: PropTypes.func.isRequired,
   };
 
   /**
@@ -84,39 +84,36 @@ class ExportSelectOutput extends PureComponent {
    * @returns {React.Component} The component.
    */
   render() {
-    if (this.props.exportStep === FILETYPE) {
-      return (
-        <div>
-          <form onSubmit={this.handleOnSubmit} className={style('form')}>
-            <SelectFileType
-              fileType={this.props.fileType}
-              onSelected={this.props.selectExportFileType}
-              label="Select Export File Type"
-            />
-            <FormGroup controlId="export-file">
-              <ControlLabel>Output</ControlLabel>
-              <InputGroup bsClass={style('browse-group')}>
-                <FormControl type="text" value={this.props.fileName} readOnly />
-                <IconTextButton
-                  text="Browse"
-                  clickHandler={this.handleChooseFile}
-                  className={classnames('btn btn-default btn-sm')}
-                  iconClassName="fa fa-folder-open-o"
-                />
-              </InputGroup>
-            </FormGroup>
-          </form>
-          <ProgressBar
-            progress={this.props.progress}
-            status={this.props.status}
-            message={MESSAGES[this.props.status]}
-            cancel={this.props.cancelExport}
-            docsWritten={this.props.exportedDocsCount}
-            docsTotal={this.props.count}
-          />
-        </div>
-      );
-    }
+    if (this.props.exportStep !== FILETYPE) return null;
+
+    return (
+      <div>
+        <form onSubmit={this.handleOnSubmit} className={style('form')}>
+          <SelectFileType
+            fileType={this.props.fileType}
+            label="Select Export File Type"
+            onSelected={this.props.selectExportFileType}/>
+          <FormGroup controlId="export-file">
+            <ControlLabel>Output</ControlLabel>
+            <InputGroup bsClass={style('browse-group')}>
+              <FormControl type="text" value={this.props.fileName} readOnly />
+              <IconTextButton
+                text="Browse"
+                iconClassName="fa fa-folder-open-o"
+                clickHandler={this.handleChooseFile}
+                className={classnames('btn btn-default btn-sm')}/>
+            </InputGroup>
+          </FormGroup>
+        </form>
+        <ProgressBar
+          status={this.props.status}
+          docsTotal={this.props.count}
+          progress={this.props.progress}
+          cancel={this.props.cancelExport}
+          message={MESSAGES[this.props.status]}
+          docsWritten={this.props.exportedDocsCount}/>
+      </div>
+    );
   }
 }
 export default ExportSelectOutput;
