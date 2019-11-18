@@ -163,7 +163,7 @@ describe.skip('export [module]', () => {
     });
 
     context('when the action type is CHANGE_EXPORT_STEP', () => {
-      const action = actions.changeModalProgressStatus(EXPORT_STEP.QUERY);
+      const action = actions.changeExportStep(EXPORT_STEP.QUERY);
 
       it('returns the new state', () => {
         expect(reducer(undefined, action)).to.deep.equal({
