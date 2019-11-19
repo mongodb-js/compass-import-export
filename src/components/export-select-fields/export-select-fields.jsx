@@ -24,8 +24,8 @@ class ExportSelectFields extends PureComponent {
   // }
 
   handleFieldCheckboxChange = (evt) => {
-    const fields = this.props.fields;
-    fields[`${evt.target.name}`] ^= fields[evt.target.name]; // flip 1/0 to its opposite
+    const fields = Object.assign({}, this.props.fields);
+    fields[`${evt.target.name}`] ^= 1; // flip 1/0 to its opposite
     this.props.updateFields(fields);
   }
 
