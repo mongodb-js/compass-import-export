@@ -4,7 +4,6 @@ import styles from './export-select-fields.less';
 import { FIELDS } from 'constants/export-step';
 import createStyler from 'utils/styler.js';
 import React, { PureComponent } from 'react';
-import isEqual from 'lodash.isequal';
 import PropTypes from 'prop-types';
 
 
@@ -25,7 +24,7 @@ class ExportSelectFields extends PureComponent {
     this.props.updateFields(fields);
   }
 
-  handleHeaderCheckboxChange = (evt) => {
+  handleHeaderCheckboxChange = () => {
     const fields = Object.assign({}, this.props.fields);
 
     if (this.isEveryFieldChecked()) {

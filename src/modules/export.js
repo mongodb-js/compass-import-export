@@ -280,6 +280,7 @@ export const closeExport = () => ({
 /**
  * Update export fields
  * @api public
+ * @param {Object} fields: currently selected/disselected fields to be exported
  */
 export const updateFields = (fields) => ({
   type: UPDATE_FIELDS,
@@ -289,6 +290,7 @@ export const updateFields = (fields) => ({
 /**
  * Select fields to be exported
  * @api public
+ * @param {String} status: next step in export
  */
 export const changeExportStep = (status) => ({
   type: CHANGE_EXPORT_STEP,

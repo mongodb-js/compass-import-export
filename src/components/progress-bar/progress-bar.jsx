@@ -65,6 +65,10 @@ class ProgressBar extends PureComponent {
     );
   }
 
+  /**
+   * Cancel import or export event.
+   * @param {Object} evt: click event
+   */
   handleCancel = (evt) => {
     evt.stopPropagation();
     evt.preventDefault();

@@ -126,6 +126,7 @@ class ExportModal extends PureComponent {
 
   /**
    * Start the next step of exporting: selecting fields
+   * @param {String} status: next export status
    */
   handleChangeModalStatus = (status) => {
     this.props.changeExportStep(status);
