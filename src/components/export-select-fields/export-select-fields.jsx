@@ -19,14 +19,28 @@ class ExportSelectFields extends PureComponent {
     updateFields: PropTypes.func.isRequired,
   };
 
-  // shouldComponentUpdate(nextProps) {
-  //   return !isEqual(this.props.fields, nextProps.fields);
-  // }
-
   handleFieldCheckboxChange = (evt) => {
     const fields = Object.assign({}, this.props.fields);
     fields[`${evt.target.name}`] ^= 1; // flip 1/0 to its opposite
     this.props.updateFields(fields);
+  }
+
+  handleHeaderCheckboxChange = (evt) => {
+    const fields = Object.assign({}, this.props.fields);
+
+    if (this.isEveryFieldChecked()) {
+      Object.keys(fields).map(f => (fields[f] = 0));
+    } else {
+      Object.keys(fields).map(f => (fields[f] = 1));
+    }
+
+    this.props.updateFields(fields);
+  }
+
+  isEveryFieldChecked() {
+    const fields = this.props.fields;
+
+    return Object.keys(fields).every(f => fields[f] === 1);
   }
 
   renderFieldRows() {
@@ -58,7 +72,13 @@ class ExportSelectFields extends PureComponent {
           <table className={style('table')}>
             <thead>
               <tr>
-                <th><input type="checkbox" name="Select All"/></th>
+                <th>
+                  <input
+                    type="checkbox"
+                    name="Select All"
+                    checked={this.isEveryFieldChecked()}
+                    onChange={this.handleHeaderCheckboxChange}/>
+                </th>
                 <th>&nbsp;</th>
                 <th colSpan="2" className={style('field-name')}>Field Name</th>
               </tr>
