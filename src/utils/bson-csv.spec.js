@@ -1,5 +1,5 @@
 import bsonCSV from './bson-csv';
-import bson from 'bson';
+// import bson from 'bson';
 
 // TODO: lucas: probably dumb but think about that later.
 

@@ -6,19 +6,8 @@ import { createLogger } from './logger';
 import parseJSON from 'parse-json';
 import throttle from 'lodash.throttle';
 import progressStream from 'progress-stream';
-import bsonCSV from './bson-csv';
 
 const debug = createLogger('parsers');
-
-/**
- * TODO: lucas: Add papaparse `dynamicTyping` of values
- * https://github.com/mholt/PapaParse/blob/5219809f1d83ffa611ebe7ed13e8224bcbcf3bd7/papaparse.js#L1216
- */
-
-/**
- * TODO: lucas: csv mapHeaders option to support existing `.<bson_type>()` caster
- * like `mongoimport` does today.
- */
 
 /**
  * A transform stream that turns file contents in objects
@@ -32,51 +21,6 @@ export const createCSVParser = function({ delimiter = ',' } = {}) {
     separator: delimiter
   });
 };
-
-/**
- * TODO: lucas: dot notation.
- */
-function getProjection(previewFields, key) {
-  return previewFields.filter((f) => {
-    return f.path === key;
-  })[0];
-}
-
-function transformProjectedTypes(previewFields, data) {
-  if (Array.isArray(data)) {
-    return data.map(transformProjectedTypes.bind(null, previewFields));
-  } else if (typeof data !== 'object' || data === null || data === undefined) {
-    return data;
-  }
-
-  const keys = Object.keys(data);
-  if (keys.length === 0) {
-    return data;
-  }
-  return keys.reduce(function(doc, key) {
-    const def = getProjection(previewFields, key);
-
-    // TODO: lucas: Relocate removeEmptyStrings() here?
-    // Avoid yet another recursive traversal of every document.
-    if (def && !def.checked) {
-      debug('dropping unchecked key', key);
-      return;
-    }
-
-    // TODO: lucas: Handle extended JSON case.
-    if (
-      def.type &&
-      bsonCSV[def.type] &&
-      data[key].prototype.constructor.toString().indexOf('Object') === -1 &&
-      !Array.isArray(data[key])
-    ) {
-      doc[key] = bsonCSV[def.type].fromString(data[key]);
-    } else {
-      doc[key] = transformProjectedTypes(previewFields, data[key]);
-    }
-    return doc;
-  }, {});
-}
 
 /**
  * A transform stream that parses JSON strings and deserializes

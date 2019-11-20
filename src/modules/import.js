@@ -18,6 +18,8 @@ import createPreviewWritable, { createPeekStream } from 'utils/preview';
 
 import createImportSizeGuesstimator from 'utils/import-size-guesstimator';
 import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
+import { transformProjectedTypesStream } from 'utils/apply-import-type-and-projection';
+
 import { createLogger } from 'utils/logger';
 
 const debug = createLogger('import');
@@ -329,6 +331,8 @@ export const startImport = () => {
 
     const removeEmptyFields = removeEmptyFieldsStream(ignoreEmptyFields);
 
+    const applyTypes = transformProjectedTypesStream(previewFields);
+
     const parser = createParser(
       fileName,
       fileType,
@@ -345,6 +349,7 @@ export const startImport = () => {
       stripBOM,
       parser,
       removeEmptyFields,
+      applyTypes,
       importSizeGuesstimator,
       progress,
       dest,
