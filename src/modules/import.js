@@ -58,17 +58,17 @@ export const INITIAL_STATE = {
   error: null,
   fileName: '',
   fileIsMultilineJSON: false,
-  fileDelimiter: undefined,
   useHeaderLines: true,
   status: PROCESS_STATUS.UNSPECIFIED,
   fileStats: null,
   docsWritten: 0,
   guesstimatedDocsTotal: 0,
-  delimiter: undefined,
+  delimiter: ',',
   stopOnErrors: false,
-  ignoreEmptyFields: true,
+  ignoreBlanks: true,
   fields: [],
-  values: []
+  values: [],
+  previewLoaded: false
 };
 
 /**
@@ -184,7 +184,8 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       values: action.values,
-      fields: action.fields
+      fields: action.fields,
+      previewLoaded: true
     };
   }
 
@@ -341,12 +342,12 @@ export const startImport = () => {
 
     const applyTypes = transformProjectedTypesStream(fields);
 
-    const parser = createParser(
+    const parser = createParser({
       fileName,
       fileType,
       delimiter,
       fileIsMultilineJSON
-    );
+    });
 
     debug('executing pipeline');
 
@@ -415,25 +416,34 @@ export const cancelImport = () => {
  * @param {String} fileType
  * @api private
  */
-const loadPreviewDocs = (fileName, fileType) => {
+const loadPreviewDocs = (
+  fileName,
+  fileType,
+  delimiter,
+  fileIsMultilineJSON
+) => {
   return (dispatch, getState) => {
-    // const { fileName, fileStats, fileIsMultilineJSON, fileType } = getState();
     /**
      * TODO: lucas: add dispatches for preview loading, error, etc.
      */
 
     const source = fs.createReadStream(fileName, 'utf8');
     const dest = createPreviewWritable();
-    stream.pipeline(source, createPeekStream(fileType), dest, function(err) {
-      if (err) {
-        throw err;
+    stream.pipeline(
+      source,
+      createPeekStream(fileType, delimiter, fileIsMultilineJSON),
+      dest,
+      function(err) {
+        if (err) {
+          throw err;
+        }
+        dispatch({
+          type: SET_PREVIEW,
+          fields: dest.fields,
+          values: dest.values
+        });
       }
-      dispatch({
-        type: SET_PREVIEW,
-        fields: dest.fields,
-        values: dest.values
-      });
-    });
+    );
   };
 };
 
@@ -476,7 +486,7 @@ export const setFieldType = (path, bsonType) => ({
  * @see utils/detect-import-file.js
  */
 export const selectImportFileName = (fileName) => {
-  return (dispatch) => {
+  return (dispatch, getState) => {
     let fileStats = {};
     checkFileExists(fileName)
       .then((exists) => {
@@ -493,6 +503,9 @@ export const selectImportFileName = (fileName) => {
         return promisify(detectImportFile)(fileName);
       })
       .then((detected) => {
+        // TODO: lucas: make detect-import-file also detect delimiter like papaparse.
+        const delimiter = getState().importData.delimiter;
+
         dispatch({
           type: FILE_SELECTED,
           fileName: fileName,
@@ -500,7 +513,14 @@ export const selectImportFileName = (fileName) => {
           fileIsMultilineJSON: detected.fileIsMultilineJSON,
           fileType: detected.fileType
         });
-        dispatch(loadPreviewDocs(fileName, detected.fileType));
+        dispatch(
+          loadPreviewDocs(
+            fileName,
+            detected.fileType,
+            delimiter,
+            detected.fileIsMultilineJSON
+          )
+        );
       })
       .catch((err) => dispatch(onError(err)));
   };
@@ -512,10 +532,27 @@ export const selectImportFileName = (fileName) => {
  * @param {String} fileType
  * @api public
  */
-export const selectImportFileType = (fileType) => ({
-  type: FILE_TYPE_SELECTED,
-  fileType: fileType
-});
+export const selectImportFileType = (fileType) => {
+  return (dispatch, getState) => {
+    const {
+      previewLoaded,
+      fileName,
+      delimiter,
+      fileIsMultilineJSON
+    } = getState().importData;
+    dispatch({
+      type: FILE_TYPE_SELECTED,
+      fileType: fileType
+    });
+
+    if (previewLoaded) {
+      debug('preview needs updated because fileType changed');
+      dispatch(
+        loadPreviewDocs(fileName, fileType, delimiter, fileIsMultilineJSON)
+      );
+    }
+  };
+};
 
 /**
  * Open the import modal.
@@ -548,10 +585,33 @@ export const setStep = (step) => ({
  *
  * @api public
  */
-export const setDelimiter = (delimiter) => ({
-  type: SET_DELIMITER,
-  delimiter: delimiter
-});
+export const setDelimiter = (delimiter) => {
+  return (dispatch, getState) => {
+    const {
+      previewLoaded,
+      fileName,
+      fileType,
+      fileIsMultilineJSON
+    } = getState().importData;
+    dispatch({
+      type: SET_DELIMITER,
+      delimiter: delimiter
+    });
+
+    if (previewLoaded) {
+      debug(
+        'preview needs updated because delimiter changed',
+        fileName,
+        fileType,
+        delimiter,
+        fileIsMultilineJSON
+      );
+      dispatch(
+        loadPreviewDocs(fileName, fileType, delimiter, fileIsMultilineJSON)
+      );
+    }
+  };
+};
 
 /**
  * Stop the import if mongo returns an error for a document write

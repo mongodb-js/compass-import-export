@@ -9,7 +9,8 @@ import {
   STARTED,
   COMPLETED,
   CANCELED,
-  FAILED
+  FAILED,
+  UNSPECIFIED
 } from 'constants/process-status';
 
 import {
@@ -43,7 +44,8 @@ const MESSAGES = {
   [STARTED]: 'Importing documents...',
   [CANCELED]: 'Import canceled',
   [COMPLETED]: 'Import completed',
-  [FAILED]: 'Error importing'
+  [FAILED]: 'Error importing',
+  [UNSPECIFIED]: ''
 };
 
 class ImportModal extends PureComponent {
@@ -179,30 +181,25 @@ class ImportModal extends PureComponent {
           Import To Collection {this.props.ns}
         </Modal.Header>
         <Modal.Body>
-          {this.props.step === OPTIONS_STEP && (
-            <ImportOptions
-              delimiter={this.props.delimiter}
-              setDelimiter={this.props.setDelimiter}
-              fileType={this.props.fileType}
-              selectImportFileType={this.props.selectImportFileType}
-              fileName={this.props.fileName}
-              selectImportFileName={this.props.selectImportFileName}
-              stopOnErrors={this.props.stopOnErrors}
-              setStopOnErrors={this.props.setStopOnErrors}
-              ignoreBlanks={this.props.ignoreBlanks}
-              setIgnoreBlanks={this.props.setIgnoreBlanks}
-              fileOpenDialog={fileOpenDialog}
-            />
-          )}
-
-          {this.props.step === PREVIEW_STEP && (
-            <ImportPreview
-              onFieldCheckedChanged={this.props.toggleIncludeField}
-              setFieldType={this.props.setFieldType}
-              values={this.props.values}
-              fields={this.props.fields}
-            />
-          )}
+          <ImportOptions
+            delimiter={this.props.delimiter}
+            setDelimiter={this.props.setDelimiter}
+            fileType={this.props.fileType}
+            selectImportFileType={this.props.selectImportFileType}
+            fileName={this.props.fileName}
+            selectImportFileName={this.props.selectImportFileName}
+            stopOnErrors={this.props.stopOnErrors}
+            setStopOnErrors={this.props.setStopOnErrors}
+            ignoreBlanks={this.props.ignoreBlanks}
+            setIgnoreBlanks={this.props.setIgnoreBlanks}
+            fileOpenDialog={fileOpenDialog}
+          />
+          <ImportPreview
+            onFieldCheckedChanged={this.props.toggleIncludeField}
+            setFieldType={this.props.setFieldType}
+            values={this.props.values}
+            fields={this.props.fields}
+          />
 
           <ProgressBar
             progress={this.props.progress}
