@@ -119,3 +119,13 @@ export default {
     }
   }
 };
+
+export function detectType(value) {
+  if (value === undefined) {
+    return 'Undefined';
+  }
+  if (value === null) {
+    return 'Null';
+  }
+  return /function ([A-Za-z]+)/.exec(value.constructor.toString())[1];
+}
