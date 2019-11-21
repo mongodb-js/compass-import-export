@@ -17,7 +17,7 @@ const debug = createLogger('parsers');
  */
 export const createCSVParser = function({ delimiter = ',' } = {}) {
   return csv({
-    strict: true,
+    // strict: true,
     separator: delimiter
   });
 };
