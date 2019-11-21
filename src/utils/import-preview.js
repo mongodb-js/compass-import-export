@@ -3,10 +3,11 @@ import peek from 'peek-stream';
 import createParser from './parsers';
 import { flatten } from 'flat';
 import { createLogger } from './logger';
-const debug = createLogger('preview');
+const debug = createLogger('import-preview');
 
 const warn = (msg, ...args) => {
-  console.warn('compass-import-export:preview: ' + msg, args);
+  // eslint-disable-next-line no-console
+  console.warn('compass-import-export:import-preview: ' + msg, args);
 };
 
 /**
@@ -36,7 +37,6 @@ export default function({ MAX_SIZE = 10 } = {}) {
       }
 
       if (this.docs.length >= MAX_SIZE) {
-        // debug('reached %d. done!', this.docs.length);
         return next();
       }
       this.docs.push(doc);
@@ -45,7 +45,7 @@ export default function({ MAX_SIZE = 10 } = {}) {
       const flat = flatten(doc);
 
       if (this.fields.length === 0) {
-        Object.keys(flat).map(k => {
+        Object.keys(flat).map((k) => {
           this.fields.push({
             path: k,
             checked: true,
@@ -61,13 +61,13 @@ export default function({ MAX_SIZE = 10 } = {}) {
       // handle sparse/polymorphic. For now, the world is pretty tabular.
       if (flattenedKeys.length !== this.fields.length) {
         warn('invariant detected!', {
-          expected: this.fields.map(f => f.path),
+          expected: this.fields.map((f) => f.path),
           got: flattenedKeys
         });
       }
 
       const v = [];
-      flattenedKeys.map(k => {
+      flattenedKeys.map((k) => {
         v.push(flat[k]);
       });
       this.values.push(v);

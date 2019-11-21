@@ -9,16 +9,17 @@ import stripBomStream from 'strip-bom-stream';
 import mime from 'mime-types';
 
 import PROCESS_STATUS from 'constants/process-status';
+import STEP from 'constants/import-step';
 import { appRegistryEmit } from 'modules/compass';
 
 import detectImportFile from 'utils/detect-import-file';
 import { createCollectionWriteStream } from 'utils/collection-stream';
 import createParser, { createProgressStream } from 'utils/parsers';
-import createPreviewWritable, { createPeekStream } from 'utils/preview';
+import createPreviewWritable, { createPeekStream } from 'utils/import-preview';
 
 import createImportSizeGuesstimator from 'utils/import-size-guesstimator';
-import { removeEmptyFieldsStream } from 'utils/remove-empty-fields';
-import { transformProjectedTypesStream } from 'utils/apply-import-type-and-projection';
+import { removeBlanksStream } from 'utils/remove-blanks';
+import { transformProjectedTypesStream } from 'utils/apply-import-types-and-projection';
 
 import { createLogger } from 'utils/logger';
 
@@ -37,13 +38,14 @@ const FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
 const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
 const OPEN = `${PREFIX}/OPEN`;
 const CLOSE = `${PREFIX}/CLOSE`;
-const SET_PREVIEW_DOCS = `${PREFIX}/SET_PREVIEW_DOCS`;
+const SET_PREVIEW = `${PREFIX}/SET_PREVIEW`;
 const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
 const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
 const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
-const SET_IGNORE_EMPTY_FIELDS = `${PREFIX}/SET_IGNORE_EMPTY_FIELDS`;
+const SET_IGNORE_BLANKS = `${PREFIX}/SET_IGNORE_BLANKS`;
 const TOGGLE_INCLUDE_FIELD = `${PREFIX}/TOGGLE_INCLUDE_FIELD`;
 const SET_FIELD_TYPE = `${PREFIX}/SET_FIELD_TYPE`;
+const SET_STEP = `${PREFIX}/SET_STEP`;
 
 /**
  * Initial state.
@@ -51,6 +53,7 @@ const SET_FIELD_TYPE = `${PREFIX}/SET_FIELD_TYPE`;
  */
 export const INITIAL_STATE = {
   isOpen: false,
+  step: STEP.OPTIONS,
   progress: 0,
   error: null,
   fileName: '',
@@ -64,9 +67,8 @@ export const INITIAL_STATE = {
   delimiter: undefined,
   stopOnErrors: false,
   ignoreEmptyFields: true,
-  previewDocs: [],
-  previewFields: [],
-  previewValues: []
+  fields: [],
+  values: []
 };
 
 /**
@@ -144,11 +146,18 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
+  if (action.type === SET_STEP) {
+    return {
+      ...state,
+      step: action.step
+    };
+  }
+
   if (action.type === TOGGLE_INCLUDE_FIELD) {
     const newState = {
       ...state
     };
-    newState.previewFields = newState.previewFields.map((field) => {
+    newState.fields = newState.fields.map((field) => {
       if (field.path === action.path) {
         field.checked = !field.checked;
       }
@@ -161,7 +170,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     const newState = {
       ...state
     };
-    newState.previewFields = newState.previewFields.map((field) => {
+    newState.fields = newState.fields.map((field) => {
       if (field.path === action.path) {
         field.checked = true;
         field.type = action.bsonType;
@@ -171,12 +180,11 @@ const reducer = (state = INITIAL_STATE, action) => {
     return newState;
   }
 
-  if (action.type === SET_PREVIEW_DOCS) {
+  if (action.type === SET_PREVIEW) {
     return {
       ...state,
-      previewDocs: action.previewDocs,
-      previewValues: action.previewValues,
-      previewFields: action.previewFields
+      values: action.values,
+      fields: action.fields
     };
   }
 
@@ -187,10 +195,10 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === SET_IGNORE_EMPTY_FIELDS) {
+  if (action.type === SET_IGNORE_BLANKS) {
     return {
       ...state,
-      ignoreEmptyFields: action.ignoreEmptyFields
+      ignoreBlanks: action.ignoreBlanks
     };
   }
 
@@ -301,9 +309,9 @@ export const startImport = () => {
       fileIsMultilineJSON,
       fileStats: { size },
       delimiter,
-      ignoreEmptyFields,
+      ignoreBlanks,
       stopOnErrors,
-      previewFields
+      fields
     } = importData;
 
     const source = fs.createReadStream(fileName, 'utf8');
@@ -329,16 +337,15 @@ export const startImport = () => {
 
     const stripBOM = stripBomStream();
 
-    const removeEmptyFields = removeEmptyFieldsStream(ignoreEmptyFields);
+    const removeBlanks = removeBlanksStream(ignoreBlanks);
 
-    const applyTypes = transformProjectedTypesStream(previewFields);
+    const applyTypes = transformProjectedTypesStream(fields);
 
     const parser = createParser(
       fileName,
       fileType,
       delimiter,
-      fileIsMultilineJSON,
-      previewFields
+      fileIsMultilineJSON
     );
 
     debug('executing pipeline');
@@ -348,7 +355,7 @@ export const startImport = () => {
       source,
       stripBOM,
       parser,
-      removeEmptyFields,
+      removeBlanks,
       applyTypes,
       importSizeGuesstimator,
       progress,
@@ -379,6 +386,8 @@ export const startImport = () => {
 };
 
 /**
+ * Cancels an active import if there is one, noop if not.
+ *
  * @api public
  */
 export const cancelImport = () => {
@@ -392,14 +401,18 @@ export const cancelImport = () => {
     }
     debug('cancelling');
     source.unpipe();
-    // dest.end();
+
     debug('import canceled by user');
     dispatch({ type: CANCELED });
   };
 };
 
 /**
+ * Load a preview of the first few documents in the selected file
+ * which is used to calculate an inital set of `fields` and `values`.
  *
+ * @param {String} fileName
+ * @param {String} fileType
  * @api private
  */
 const loadPreviewDocs = (fileName, fileType) => {
@@ -416,13 +429,9 @@ const loadPreviewDocs = (fileName, fileType) => {
         throw err;
       }
       dispatch({
-        type: SET_PREVIEW_DOCS,
-        // TODO: lucas: `previewDocs` can go away from state.
-        previewDocs: dest.docs,
-        // TODO: lucas: rename... this defines the typed projection
-        // passed down to the parsers.
-        previewFields: dest.fields,
-        previewValues: dest.values
+        type: SET_PREVIEW,
+        fields: dest.fields,
+        values: dest.values
       });
     });
   };
@@ -430,6 +439,8 @@ const loadPreviewDocs = (fileName, fileType) => {
 
 /**
  * Mark a field to be included or excluded from the import.
+ *
+ * @param {String} path Dot notation path of the field.
  * @api public
  */
 export const toggleIncludeField = (path) => ({
@@ -459,9 +470,10 @@ export const setFieldType = (path, bsonType) => ({
 });
 
 /**
- * Gather file metadata quickly when the user specifies `fileName`.
+ * Gather file metadata quickly when the user specifies `fileName`
  * @param {String} fileName
  * @api public
+ * @see utils/detect-import-file.js
  */
 export const selectImportFileName = (fileName) => {
   return (dispatch) => {
@@ -522,7 +534,17 @@ export const closeImport = () => ({
 });
 
 /**
+ * Change pages within the modal.
+ * @api public
+ */
+export const setStep = (step) => ({
+  type: SET_STEP,
+  step: step
+});
+
+/**
  * Set the tabular delimiter.
+ * @param {String} delimiter One of `,` for csv, `\t` for csv
  *
  * @api public
  */
@@ -532,7 +554,17 @@ export const setDelimiter = (delimiter) => ({
 });
 
 /**
+ * Stop the import if mongo returns an error for a document write
+ * such as a duplicate key for a unique index. In practice,
+ * the cases for this being false when importing are very minimal.
+ * For example, a duplicate unique key on _id is almost always caused
+ * by the user attempting to resume from a previous import without
+ * removing all documents sucessfully imported.
+ *
+ * @param {Boolean} stopOnErrors To stop or not to stop
  * @api public
+ * @see utils/collection-stream.js
+ * @see https://docs.mongodb.com/manual/reference/program/mongoimport/#cmdoption-mongoimport-stoponerror
  */
 export const setStopOnErrors = (stopOnErrors) => ({
   type: SET_STOP_ON_ERRORS,
@@ -540,11 +572,17 @@ export const setStopOnErrors = (stopOnErrors) => ({
 });
 
 /**
+ * Any `value` that is `''` will not have this field set in the final
+ * document written to mongo.
+ *
+ * @param {Boolean} ignoreBlanks
  * @api public
+ * @see https://docs.mongodb.com/manual/reference/program/mongoimport/#cmdoption-mongoimport-ignoreblanks
+ * @todo lucas: Standardize as `setIgnoreBlanks`?
  */
-export const setIgnoreEmptyFields = (setignoreEmptyFields) => ({
-  type: SET_IGNORE_EMPTY_FIELDS,
-  setignoreEmptyFields: setignoreEmptyFields
+export const setIgnoreBlanks = (ignoreBlanks) => ({
+  type: SET_IGNORE_BLANKS,
+  ignoreBlanks: ignoreBlanks
 });
 
 export default reducer;

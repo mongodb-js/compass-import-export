@@ -44,11 +44,11 @@ export default {
   },
   Boolean: {
     fromString: function(s) {
-      if (BOOLEAN_TRUE.indexOf(s)) {
+      if (BOOLEAN_TRUE.includes(s)) {
         return true;
       }
 
-      if (BOOLEAN_FALSE.indexOf(s)) {
+      if (BOOLEAN_FALSE.includes(s)) {
         return false;
       }
 
@@ -63,7 +63,7 @@ export default {
   ObjectId: {
     fromString: function(s) {
       // eslint-disable-next-line new-cap
-      return bson.ObjectId(s);
+      return new bson.ObjectId(s);
     }
   },
   Long: {
