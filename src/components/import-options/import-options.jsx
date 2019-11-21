@@ -78,8 +78,8 @@ class ImportOptions extends PureComponent {
                 Select delimiter
               </label>
               <select
-                onChange={() => {
-                  this.props.setDelimiter(!this.props.delimiter);
+                onChange={(evt) => {
+                  this.props.setDelimiter(evt.currentTarget.value);
                 }}
                 defaultValue={this.props.delimiter}
                 className={style('option-select')}>
