@@ -34,17 +34,12 @@ function transformProjectedTypes(fields, data) {
     // TODO: lucas: Relocate removeEmptyStrings() here?
     // Avoid yet another recursive traversal of every document.
     if (def && !def.checked) {
-      debug('dropping unchecked key', key);
+      // debug('dropping unchecked key', key);
       return doc;
     }
-    debug('Has type cast?', {
-      defType: def.type,
-      hasCaster: bsonCSV[def.type],
-      notObjectLike: !isObjectLike(data[key])
-    });
     if (def.type && bsonCSV[def.type] && !isObjectLike(data[key])) {
       doc[key] = bsonCSV[def.type].fromString(data[key]);
-      debug('deserialized %s', key, { from: data[key], to: doc[key] });
+      // debug('deserialized %s', key, { from: data[key], to: doc[key] });
     } else {
       doc[key] = transformProjectedTypes(fields, data[key]);
     }
