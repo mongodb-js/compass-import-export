@@ -13,11 +13,6 @@ import {
   UNSPECIFIED
 } from 'constants/process-status';
 
-import {
-  OPTIONS as OPTIONS_STEP,
-  PREVIEW as PREVIEW_STEP
-} from 'constants/import-step';
-
 import ProgressBar from 'components/progress-bar';
 import ErrorBox from 'components/error-box';
 import ImportPreview from 'components/import-preview';
@@ -26,7 +21,6 @@ import ImportOptions from 'components/import-options';
 import {
   startImport,
   cancelImport,
-  setStep,
   selectImportFileType,
   selectImportFileName,
   setDelimiter,
@@ -55,8 +49,6 @@ class ImportModal extends PureComponent {
     startImport: PropTypes.func.isRequired,
     cancelImport: PropTypes.func.isRequired,
     closeImport: PropTypes.func.isRequired,
-    step: PropTypes.string.isRequired,
-    setStep: PropTypes.func.isRequired,
 
     /**
      * Shared
@@ -120,6 +112,8 @@ class ImportModal extends PureComponent {
   // have better names.
   // COMPLETED = Done and Successful
   // FINISHED_STATUSES = Done and maybe success|error|canceled
+  // @irina: "maybe call it IMPORT_STATUS ? since technically a cancelled status means it's not finished"
+
   /**
    * Has the import completed successfully?
    * @returns {Boolean}
@@ -212,16 +206,6 @@ class ImportModal extends PureComponent {
           <ErrorBox error={this.props.error} />
         </Modal.Body>
         <Modal.Footer>
-          {this.props.step === PREVIEW_STEP && (
-            <TextButton
-              className="btn btn-default btn-sm"
-              text={this.props.status === STARTED ? '< SELECT IMPORT FILE' : ''}
-              disabled={this.props.status === STARTED}
-              clickHandler={() => {
-                this.props.setStep(OPTIONS_STEP);
-              }}
-            />
-          )}
           {this.renderCancelButton()}
           {this.renderImportButton()}
           {this.renderDoneButton()}
@@ -241,7 +225,6 @@ class ImportModal extends PureComponent {
  */
 const mapStateToProps = (state) => ({
   ns: state.ns,
-  step: state.importData.step,
   progress: state.importData.progress,
   open: state.importData.isOpen,
   error: state.importData.error,
@@ -254,7 +237,8 @@ const mapStateToProps = (state) => ({
   stopOnErrors: state.importData.stopOnErrors,
   ignoreBlanks: state.importData.ignoreBlanks,
   fields: state.importData.fields,
-  values: state.importData.values
+  values: state.importData.values,
+  previewLoaded: state.importData.previewLoaded
 });
 
 /**
@@ -265,7 +249,6 @@ export default connect(
   {
     startImport,
     cancelImport,
-    setStep,
     selectImportFileType,
     selectImportFileName,
     setDelimiter,

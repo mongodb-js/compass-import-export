@@ -33,7 +33,6 @@ class ImportOptions extends PureComponent {
   /**
    * Handle choosing a file from the file dialog.
    */
-  // eslint-disable-next-line react/sort-comp
   handleChooseFile = () => {
     const file = this.props.fileOpenDialog();
     if (file) {
@@ -46,9 +45,11 @@ class ImportOptions extends PureComponent {
     evt.stopPropagation();
   };
 
-  // TODO: lucas: Move `Select File` to a new component that
-  // can be shared with export.
   render() {
+    /**
+     * TODO: lucas: Reuse `Select File` component shared with export.
+     */
+
     const isCSV = this.props.fileType === FILE_TYPES.CSV;
 
     return (

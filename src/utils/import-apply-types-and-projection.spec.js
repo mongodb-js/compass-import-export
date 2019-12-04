@@ -1,6 +1,6 @@
-import apply from './apply-import-types-and-projection';
+import apply from './import-apply-types-and-projection';
 
-describe('apply-import-types-and-projection', () => {
+describe('import-apply-types-and-projection', () => {
   it('should include all fields by default', () => {
     const res = apply([{ path: '_id', checked: true, type: 'String' }], {
       _id: 'arlo'

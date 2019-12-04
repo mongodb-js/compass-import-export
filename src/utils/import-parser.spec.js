@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import stream from 'stream';
 
-import createParser from './parsers';
+import createParser from './import-parser';
 
 const TEST_DIR = path.join(__dirname, '..', '..', '..', 'test');
 const FIXTURES = {
@@ -37,7 +37,7 @@ function runParser(src, parser) {
   });
 }
 
-describe('parsers', () => {
+describe('import-parser', () => {
   describe('json', () => {
     it('should parse a file', () => {
       return runParser(FIXTURES.GOOD_JSON, createParser()).then((docs) => {
@@ -94,8 +94,9 @@ describe('parsers', () => {
         expect(docs).to.have.length(3);
       });
     });
-    // TODO: lucas: See other todos on having to disable strict
-    // for csv parser for import preview.
+    /**
+     * TODO: lucas: Revisit and unskip if we really want csv to be strict.
+     */
     describe.skip('errors', () => {
       let parseError;
       before((done) => {

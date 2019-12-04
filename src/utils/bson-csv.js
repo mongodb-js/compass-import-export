@@ -17,6 +17,8 @@
  * TODO: lucas: If we want to support types via CSV headers
  * for compatibility with mongoimport, that all happens in:
  * https://github.com/mongodb/mongo-tools/blob/master/mongoimport/typed_fields.go
+ *
+ * And https://www.npmjs.com/package/flat#transformkey can be used to prototype.
  */
 
 /**

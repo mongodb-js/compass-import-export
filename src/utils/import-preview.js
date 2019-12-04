@@ -1,15 +1,11 @@
 import { Writable } from 'stream';
 import peek from 'peek-stream';
-import createParser from './parsers';
-import { flatten } from 'flat';
+import createParser from './import-parser';
+import dotnotation from './dotnotation';
+
 import { detectType } from './bson-csv';
 import { createLogger } from './logger';
 const debug = createLogger('import-preview');
-
-const warn = (msg, ...args) => {
-  // eslint-disable-next-line no-console
-  console.warn('compass-import-export:import-preview: ' + msg, args);
-};
 
 /**
  * Peek the first 20k of a file and parse it.
@@ -37,13 +33,9 @@ export const createPeekStream = function(
 };
 
 /**
- * TODO: lucas: Preview could have partial objects if
- * spill over into next buffer. Can we back pressure against
- * the input source for real instead of this hacky impl?
- */
-
-/**
  * Collects 10 parsed documents from createPeekStream().
+ *
+ * @option {Number} MAX_SIZE The number of documents/rows we want to preview [Default `10`]
  * @returns {stream.Writable}
  */
 export default function({ MAX_SIZE = 10 } = {}) {
@@ -61,13 +53,13 @@ export default function({ MAX_SIZE = 10 } = {}) {
       }
       this.docs.push(doc);
 
-      // TODO: lucas: Don't unflatten bson internal props.
-      const flat = flatten(doc);
+      const docAsDotnotation = dotnotation.serialize(doc);
 
       if (this.fields.length === 0) {
         // eslint-disable-next-line prefer-const
-        for (let [key, value] of Object.entries(flat)) {
+        for (let [key, value] of Object.entries(docAsDotnotation)) {
           // TODO: lucas: Document this weird bug I found with my apple health data.
+          // eslint-disable-next-line no-control-regex
           key = key.replace(/[^\x00-\x7F]/g, '');
           this.fields.push({
             path: key,
@@ -78,18 +70,14 @@ export default function({ MAX_SIZE = 10 } = {}) {
         debug('set fields', this.fields, { from: doc });
       }
 
-      const flattenedKeys = Object.keys(flat);
-
-      // TODO: lucas: For JSON, use schema parser or something later to
-      // handle sparse/polymorphic. For now, the world is pretty tabular
-      // and wait for user reports.
-      if (flattenedKeys.length !== this.fields.length) {
-        warn('invariant detected!', {
+      const keys = Object.keys(docAsDotnotation);
+      if (keys.length !== this.fields.length) {
+        debug('invariant detected!', {
           expected: this.fields.map((f) => f.path),
-          got: flattenedKeys
+          got: keys
         });
       }
-      this.values.push(Object.values(flat));
+      this.values.push(Object.values(docAsDotnotation));
 
       return next(null);
     }

@@ -32,6 +32,13 @@ class PreviewRow extends PureComponent {
           </td>
         );
       }
+      /**
+       * TODO: lucas: Use highlight.js, mongodb-ace-mode, or something
+       * so the text style of the value matches its destination type.
+       * This is particular important for the user to be able to descern
+       * numbers/booleans that are strings from csv are actually being
+       * cast to those types the user expects.
+       */
       return <td key={i}>{v}</td>;
     });
 

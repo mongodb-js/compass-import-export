@@ -31,15 +31,15 @@ function transformProjectedTypes(fields, data) {
   return keys.reduce(function(doc, key) {
     const def = getProjection(fields, key);
 
-    // TODO: lucas: Relocate removeEmptyStrings() here?
-    // Avoid yet another recursive traversal of every document.
+    /**
+     * TODO: lucas: Relocate removeEmptyStrings() here?
+     * Avoid yet another recursive traversal of every document.
+     */
     if (def && !def.checked) {
-      // debug('dropping unchecked key', key);
       return doc;
     }
     if (def.type && bsonCSV[def.type] && !isObjectLike(data[key])) {
       doc[key] = bsonCSV[def.type].fromString(data[key]);
-      // debug('deserialized %s', key, { from: data[key], to: doc[key] });
     } else {
       doc[key] = transformProjectedTypes(fields, data[key]);
     }
