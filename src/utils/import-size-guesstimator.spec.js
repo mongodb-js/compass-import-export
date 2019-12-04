@@ -10,7 +10,7 @@
 // import-size-guesstimator.js?6e25:46 bytesPerDoc 458.752
 // import-size-guesstimator.js?6e25:47 docs seen 1000
 // import-size-guesstimator.js?6e25:48 est docs 202250.81743512835
-import { createCSVParser } from './parsers';
+import { createCSVParser } from './import-parser';
 import createImportSizeGuesstimator from './import-size-guesstimator';
 import { pipeline } from 'stream';
 

@@ -32,7 +32,6 @@ import stripBomStream from 'strip-bom-stream';
 import mime from 'mime-types';
 
 import PROCESS_STATUS from 'constants/process-status';
-import STEP from 'constants/import-step';
 import { appRegistryEmit } from 'modules/compass';
 
 import detectImportFile from 'utils/detect-import-file';
@@ -68,7 +67,6 @@ const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
 const SET_IGNORE_BLANKS = `${PREFIX}/SET_IGNORE_BLANKS`;
 const TOGGLE_INCLUDE_FIELD = `${PREFIX}/TOGGLE_INCLUDE_FIELD`;
 const SET_FIELD_TYPE = `${PREFIX}/SET_FIELD_TYPE`;
-const SET_STEP = `${PREFIX}/SET_STEP`;
 
 /**
  * ## Initial state.
@@ -77,7 +75,6 @@ const SET_STEP = `${PREFIX}/SET_STEP`;
  */
 export const INITIAL_STATE = {
   isOpen: false,
-  step: STEP.OPTIONS,
   progress: 0,
   error: null,
   fileName: '',
@@ -536,13 +533,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     return {
       ...state,
       delimiter: action.delimiter
-    };
-  }
-
-  if (action.type === SET_STEP) {
-    return {
-      ...state,
-      step: action.step
     };
   }
 
