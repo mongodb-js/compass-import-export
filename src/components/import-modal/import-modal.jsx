@@ -108,12 +108,6 @@ class ImportModal extends PureComponent {
     this.props.startImport();
   };
 
-  // TODO: lucas: Make COMPLETED, FINISHED_STATUSES
-  // have better names.
-  // COMPLETED = Done and Successful
-  // FINISHED_STATUSES = Done and maybe success|error|canceled
-  // @irina: "maybe call it IMPORT_STATUS ? since technically a cancelled status means it's not finished"
-
   /**
    * Has the import completed successfully?
    * @returns {Boolean}

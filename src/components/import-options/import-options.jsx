@@ -46,10 +46,6 @@ class ImportOptions extends PureComponent {
   };
 
   render() {
-    /**
-     * TODO: lucas: Reuse `Select File` component shared with export.
-     */
-
     const isCSV = this.props.fileType === FILE_TYPES.CSV;
 
     return (
