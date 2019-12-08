@@ -251,6 +251,19 @@ export const startImport = () => {
         });
         dispatch(onFinished(dest.docsWritten));
         dispatch(appRegistryEmit('import-finished', size, fileType));
+        /**
+         * TODO: lucas: For metrics:
+         *
+         * "resource": "Import",
+         * "action": "completed",
+         * "user_id": "bce2e94b-7e2f-463d-9555-4a6586322cc4",
+         * "created_at": "2017-10-18T19:47:49.085Z",
+         * "metadata": {
+         * "compass_version": "1.21.0",
+         * "file_type": "<csv|json_array|json_lines>",
+         * "num_docs": "<how many docs imported>",
+         * "datatypes_selected": true|false
+         */
         dispatch(globalAppRegistryEmit('import-finished', size, fileType));
       }
     );
