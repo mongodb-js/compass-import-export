@@ -1,7 +1,10 @@
 import { flatten, unflatten } from 'flat';
 import { getTypeDescriptorForValue } from './bson-csv';
 /**
- * TODO: lucas: Some overlap w/ bson-csv but they do 
+ * TODO: lucas: Some overlap w/ bson-csv but they do
+ * have difference! Can't quite name it yet, but something
+ * to sort in the future.
+ */
 
 /**
  * Converts any nested objects into a single depth object with `dotnotation` keys.

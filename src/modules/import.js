@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable valid-jsdoc */
 /**
  * # Import
