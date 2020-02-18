@@ -76,7 +76,7 @@
     "cheerio": "^1.0.0-rc.3",
     "classnames": "^2.2.5",
     "cross-env": "^7.0.0",
-    "css-loader": "^0.28.1",
+    "css-loader": "^3.4.2",
     "debug": "^4.1.1",
     "electron": "^6.1.7",
     "electron-rebuild": "^1.8.6",
