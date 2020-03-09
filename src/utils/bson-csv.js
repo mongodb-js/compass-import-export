@@ -6,6 +6,8 @@
  * 1. All bson type defs had a consistent `.fromString()` * method
  * 2. Castings/detection used by fromString() today were exposed
  * (e.g. JS Number float -> bson.Double).
+ * 
+ * Related: https://github.com/mongodb-js/hadron-type-checker/blob/master/src/type-checker.js
  */
 
 /**
@@ -169,13 +171,21 @@ export const serialize = function(doc) {
 
       // BSON values
       if (isBSON) {
-        output[newKey] = value.toString('hex');
+        if (type === 'BSONRegExp') {
+          /**
+           * TODO (lucas) Upstream to `bson` as `BSONRegExp` toString()
+           * returns `'[object Object]'` today.
+           */
+          output[newKey] = `/${value.pattern}/${value.options}`;
+        } else {
+          output[newKey] = value.toString();
+        }
         return;
       }
 
       // Embedded arrays
       if (type === 'Array') {
-        output[newKey] = bson.EJSON.serialize(value);
+        output[newKey] = bson.EJSON.stringify(value, null, null);
         return;
       }
 
@@ -188,8 +198,13 @@ export const serialize = function(doc) {
         return step(value, newKey, currentDepth + 1);
       }
 
+      if (type === 'Date') {
+        output[newKey] = value.toISOString();
+        return;
+      }
+
       // All other values
-      output[newKey] = value;
+      output[newKey] = '' + value;
     });
   }
   step(doc);

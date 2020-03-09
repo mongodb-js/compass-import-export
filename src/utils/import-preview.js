@@ -1,9 +1,8 @@
 import { Writable } from 'stream';
 import peek from 'peek-stream';
 import createParser from './import-parser';
-import dotnotation from './dotnotation';
 
-import { detectType } from './bson-csv';
+import { detectType, serialize as toTabular } from './bson-csv';
 import { createLogger } from './logger';
 const debug = createLogger('import-preview');
 
@@ -53,7 +52,7 @@ export default function({ MAX_SIZE = 10 } = {}) {
       }
       this.docs.push(doc);
 
-      const docAsDotnotation = dotnotation.serialize(doc);
+      const docAsDotnotation = toTabular(doc);
 
       if (this.fields.length === 0) {
         // eslint-disable-next-line prefer-const
