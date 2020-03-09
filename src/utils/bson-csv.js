@@ -189,6 +189,11 @@ export const serialize = function(doc) {
         return;
       }
 
+      if (type === 'Date') {
+        output[newKey] = value.toISOString();
+        return;
+      }
+
       // Embedded documents
       if (
         type === 'Object' &&
@@ -198,15 +203,41 @@ export const serialize = function(doc) {
         return step(value, newKey, currentDepth + 1);
       }
 
-      if (type === 'Date') {
-        output[newKey] = value.toISOString();
-        return;
-      }
-
       // All other values
       output[newKey] = '' + value;
     });
   }
   step(doc);
   return output;
+};
+
+/**
+ * TODO (lucas) Consolidate valueToString with dupe logic in serialize() later.
+ */
+export const valueToString = function(value) {
+  const { type, isBSON } = getTypeDescriptorForValue(value);
+
+  // BSON values
+  if (isBSON) {
+    if (type === 'BSONRegExp') {
+      /**
+       * TODO (lucas) Upstream to `bson` as `BSONRegExp` toString()
+       * returns `'[object Object]'` today.
+       */
+      return `/${value.pattern}/${value.options}`;
+    }
+    return value.toString();
+  }
+
+  // Embedded arrays
+  if (type === 'Array') {
+    return bson.EJSON.stringify(value, null, null);
+  }
+
+  if (type === 'Date') {
+    return value.toISOString();
+  }
+
+  // All other values
+  return '' + value;
 };
