@@ -20,6 +20,7 @@
     "prestart": "electron-rebuild --force --only keytar",
     "start": "webpack-dev-server --config ./config/webpack.dev.config.js",
     "test": "cross-env NODE_ENV=test mocha-webpack \"./src/**/*.spec.js\"",
+    "test:dev": "cross-env NODE_ENV=test mocha-webpack",
     "cover": "nyc npm run test",
     "check": "mongodb-js-precommit './src/**/*{.js,.jsx}' './test/**/*.js'",
     "prepublishOnly": "npm run compile",
