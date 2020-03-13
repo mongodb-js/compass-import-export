@@ -1,4 +1,4 @@
-import { createJSONFormatter, createCSVFormatter } from './formatters';
+import { createJSONFormatter } from './formatters';
 import stream from 'stream';
 import bson, { EJSON } from 'bson';
 import fs from 'fs';
