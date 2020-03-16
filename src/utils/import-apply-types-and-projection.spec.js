@@ -125,4 +125,28 @@ describe('import-apply-types-and-projection', () => {
       expect(apply.bind(null, spec, data)).to.not.throw();
     });
   });
+  describe('Regression Tests', () => {
+    // COMPASS-4204 Data type is not being set during import
+    it('should transform csv strings to Number', () => {
+      const res = apply(
+        {
+          exclude: [],
+          transform: {
+            age: 'Number'
+          }
+        },
+        {
+          _id: 'arlo',
+          name: 'Arlo',
+          age: '5'
+        }
+      );
+
+      expect(res).to.deep.equal({
+        _id: 'arlo',
+        name: 'Arlo',
+        age: 5
+      });
+    });
+  });
 });

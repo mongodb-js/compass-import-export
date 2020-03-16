@@ -30,7 +30,7 @@ export default {
   },
   Number: {
     fromString: function(s) {
-      return parseFloat(s);
+      return Number(s);
     }
   },
   Boolean: {
