@@ -30,7 +30,11 @@ export default {
   },
   Number: {
     fromString: function(s) {
-      return Number(s);
+      s = '' + s;
+      if (s.includes('.')) {
+        return parseFloat(s);
+      }
+      return parseInt(s, 10);
     }
   },
   Boolean: {
