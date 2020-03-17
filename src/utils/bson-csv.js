@@ -52,12 +52,15 @@ export default {
   },
   Date: {
     fromString: function(s) {
-      return new Date(s);
+      return new Date('' + s);
     }
   },
   ObjectId: {
     fromString: function(s) {
-      // eslint-disable-next-line new-cap
+      if (s instanceof bson.ObjectId) {
+        // EJSON being imported
+        return s;
+      }
       return new bson.ObjectId(s);
     }
   },
