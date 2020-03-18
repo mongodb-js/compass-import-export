@@ -21,6 +21,7 @@ const debug = createLogger('apply-import-type-and-projection');
  * @param {any} data
  * @param {String} [keyPrefix] Used internally when recursing into nested objects.
  * @returns {Object}
+ * TODO (lucas) make not disgusting. Update tests to use right transform type shap of arrays not object.!!!!!
  */
 function transformProjectedTypes(spec, data, keyPrefix = '') {
   if (Array.isArray(data)) {
@@ -31,29 +32,51 @@ function transformProjectedTypes(spec, data, keyPrefix = '') {
 
   const keys = Object.keys(data);
   if (keys.length === 0) {
+    debug('empty doc');
     return data;
   }
-  return keys.reduce(function(doc, key) {
-    const fullKey = `${keyPrefix}${key}`;
-
+  const result = keys.reduce(function(doc, key) {
     /**
      * TODO: lucas: Relocate removeEmptyStrings() here?
      * Avoid yet another recursive traversal of every document.
      */
-    if (spec.exclude.includes(fullKey)) {
+    if (spec.exclude.includes(`${keyPrefix}${key}`)) {
       // Drop the key if unchecked
+      debug('dropped excluded key', `${keyPrefix}${key}`);
       return doc;
     }
+    
+    const trans = spec.transform.filter(function(f) {
+      debug('transform pick', f[0], `${keyPrefix}${key}`, f[0] === `${keyPrefix}${key}`);
+      return f[0] === `${keyPrefix}${key}`;
+    });
 
-    const toBSON = bsonCSV[spec.transform[fullKey]];
+    if (trans.length > 1) {
+      debug('Ach~! too many keys');
+      throw new TypeError('Ach~! too many keys');
+    }
+    if (!trans || trans.length === 0 || trans[0].length === 0) {
+      debug('wtf');
+      // throw new TypeError('wtfs');
+      
+      return doc;
+    } 
+    const [k, targetTypeName] = trans[0];
 
-    if (toBSON && !isObjectLike(data[key])) {
+    debug('match!', k, targetTypeName);
+
+    const toBSON = bsonCSV[targetTypeName];
+
+    if (toBSON && !isObjectLike(data[k])) {
       doc[key] = toBSON.fromString(data[key]);
     } else {
-      doc[key] = transformProjectedTypes(spec, data[key], `${fullKey}.`);
+      doc[key] = transformProjectedTypes(spec, data[key], `${keyPrefix}${key}`);
     }
     return doc;
   }, {});
+  
+  debug('result', result);
+  return result;
 }
 
 export default transformProjectedTypes;
@@ -65,7 +88,7 @@ export default transformProjectedTypes;
  * @returns {TransformStream}
  */
 export function transformProjectedTypesStream(spec) {
-  if (Object.keys(spec.transform).length === 0 && spec.exclude.length === 0) {
+  if (spec.transform.length === 0 && spec.exclude.length === 0) {
     debug('spec is a noop. passthrough stream');
     return new PassThrough({ objectMode: true });
   }
@@ -73,7 +96,8 @@ export function transformProjectedTypesStream(spec) {
   return new Transform({
     objectMode: true,
     transform: function(doc, encoding, cb) {
-      cb(null, transformProjectedTypes(spec, doc));
+      const result = transformProjectedTypes(spec, doc);
+      cb(null, );
     }
   });
 }

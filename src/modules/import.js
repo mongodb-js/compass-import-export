@@ -250,12 +250,13 @@ export const startImport = () => {
       source,
       stripBOM,
       parser,
-      removeBlanks,
       applyTypes,
+      removeBlanks,
       importSizeGuesstimator,
       progress,
       dest,
       function(err) {
+        debugger;
         console.timeEnd('import:start');
         console.groupEnd();
         /**
