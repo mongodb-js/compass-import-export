@@ -52,22 +52,22 @@ const debug = createLogger('import');
  * ## Action names
  */
 const PREFIX = 'import-export/import';
-const STARTED = `${PREFIX}/STARTED`;
-const CANCELED = `${PREFIX}/CANCELED`;
-const PROGRESS = `${PREFIX}/PROGRESS`;
-const FINISHED = `${PREFIX}/FINISHED`;
-const FAILED = `${PREFIX}/FAILED`;
-const FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
-const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
-const OPEN = `${PREFIX}/OPEN`;
-const CLOSE = `${PREFIX}/CLOSE`;
-const SET_PREVIEW = `${PREFIX}/SET_PREVIEW`;
-const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
-const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
-const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
-const SET_IGNORE_BLANKS = `${PREFIX}/SET_IGNORE_BLANKS`;
-const TOGGLE_INCLUDE_FIELD = `${PREFIX}/TOGGLE_INCLUDE_FIELD`;
-const SET_FIELD_TYPE = `${PREFIX}/SET_FIELD_TYPE`;
+export const STARTED = `${PREFIX}/STARTED`;
+export const CANCELED = `${PREFIX}/CANCELED`;
+export const PROGRESS = `${PREFIX}/PROGRESS`;
+export const FINISHED = `${PREFIX}/FINISHED`;
+export const FAILED = `${PREFIX}/FAILED`;
+export const FILE_TYPE_SELECTED = `${PREFIX}/FILE_TYPE_SELECTED`;
+export const FILE_SELECTED = `${PREFIX}/FILE_SELECTED`;
+export const OPEN = `${PREFIX}/OPEN`;
+export const CLOSE = `${PREFIX}/CLOSE`;
+export const SET_PREVIEW = `${PREFIX}/SET_PREVIEW`;
+export const SET_DELIMITER = `${PREFIX}/SET_DELIMITER`;
+export const SET_GUESSTIMATED_TOTAL = `${PREFIX}/SET_GUESSTIMATED_TOTAL`;
+export const SET_STOP_ON_ERRORS = `${PREFIX}/SET_STOP_ON_ERRORS`;
+export const SET_IGNORE_BLANKS = `${PREFIX}/SET_IGNORE_BLANKS`;
+export const TOGGLE_INCLUDE_FIELD = `${PREFIX}/TOGGLE_INCLUDE_FIELD`;
+export const SET_FIELD_TYPE = `${PREFIX}/SET_FIELD_TYPE`;
 
 /**
  * ## Initial state.
@@ -92,7 +92,8 @@ export const INITIAL_STATE = {
   values: [],
   previewLoaded: false,
   exclude: [],
-  transform: []
+  transform: [],
+  fileType: ''
 };
 
 /**
@@ -256,7 +257,7 @@ export const startImport = () => {
       dest,
       function(err) {
         console.timeEnd('import:start');
-        console.groupEnd('import:start');
+        console.groupEnd();
         /**
          * Refresh data (docs, aggregations) regardless of whether we have a
          * partial import or full import
