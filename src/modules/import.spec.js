@@ -7,6 +7,7 @@ import reducer, {
   FILE_TYPE_SELECTED,
   selectImportFileType,
   FILE_SELECTED,
+  selectImportFileName,
   OPEN,
   CLOSE,
   SET_PREVIEW,
@@ -26,63 +27,126 @@ import thunk from 'redux-thunk';
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
-function setupMockStore() {
+/**
+ * Sets up a fresh store using 'redux-mock-store'
+ * providing a shortcut that does not use block scoped variables.
+ *
+ * @param {Object} test `this` inside an `it()` block.
+ */
+function setupMockStore(test) {
   const state = {
     importData: {
       ...INITIAL_STATE
     }
   };
   const store = mockStore(state);
-  return { state, store };
+  test.store = store;
+  test.state = test.state;
 }
 
+/**
+ * Boiler plate that I can set file types.
+ *
+ * @param {Object} test `this` inside an `it()` block.
+ * @param {String} fileType json or csv.
+ * @returns {Promise}
+ */
+function testSetFileType(test, fileType) {
+  return new Promise(function(resolve) {
+    // See https://github.com/dmitry-zaets/redux-mock-store/issues/71#issuecomment-369546064
+    // redux-mock-store does not update state automatically.
+    test.store.subscribe(() => {
+      const expected = {
+        fileType: fileType,
+        type: FILE_TYPE_SELECTED
+      };
+
+      expect(reducer(test.state, expected).fileType).to.be.deep.equal(fileType);
+    });
+    test.store.dispatch(selectImportFileType(fileType));
+
+    expect(test.store.getActions()).to.deep.equal([
+      {
+        fileType: fileType,
+        type: FILE_TYPE_SELECTED
+      }
+    ]);
+    resolve(test);
+  });
+}
 
 describe('import [module]', () => {
   describe('selectImportFileType', () => {
-    let state;
-    let store;
-
-    before(() => {
-      const mock = setupMockStore();
-      this.state = mock.state;
-      this.store = mock.store;
+    beforeEach(function() {
+      setupMockStore(this);
     });
 
-    it('dispatch a FILE_TYPE_SELECTED action', done => {
-      console.log('can i do this?', { test: this });
-      // See https://github.com/dmitry-zaets/redux-mock-store/issues/71#issuecomment-369546064
-      // redux-mock-store does not update state automatically.
-      store.subscribe(() => {
-        const expected = {
-          fileType: 'csv',
-          type: FILE_TYPE_SELECTED
-        };
-
-        expect(reducer(state, expected).fileType).to.be.deep.equal('csv');
-        done();
-      });
-      store.dispatch(selectImportFileType('csv'));
-
-      expect(store.getActions()).to.deep.equal([
-        {
-          fileType: 'csv',
-          type: FILE_TYPE_SELECTED
-        }
-      ]);
+    it('dispatch a FILE_TYPE_SELECTED action and the reducer should update fileType to csv', function() {
+      return testSetFileType(this, 'csv');
+    });
+    it('dispatch a FILE_TYPE_SELECTED action and the reducer should update fileType to json', function() {
+      return testSetFileType(this, 'JSON');
     });
 
-    afterEach(() => {
-      store.resetActions();
+    afterEach(function() {
+      this.store.clearActions();
     });
   });
-  // });
-  // describe('#selectImportFileName', () => {
-  //   it('returns the action', () => {
-  //     expect(actions.selectImportFileName('test.json')).to.deep.equal({
-  //       type: actions.SELECT_FILE_NAME,
-  //       fileName: 'test.json'
-  //     });
-  //   });
+
+  describe('#selectImportFileName', () => {
+    beforeEach(function() {
+      setupMockStore(this);
+    });
+
+    it('dispatch a FILE_SELECTED action', function() {
+      const test = this;
+      return new Promise(function(resolve) {
+        // See https://github.com/dmitry-zaets/redux-mock-store/issues/71#issuecomment-369546064
+        // redux-mock-store does not update state automatically.
+        test.store.subscribe(() => {
+          const expected = {
+            fileName: 'import-me.json',
+            fileIsMultilineJSON: false,
+            fileType: 'json',
+            status: PROCESS_STATUS.UNSPECIFIED,
+            progress: 0,
+            docsWritten: 0,
+            source: undefined,
+            dest: undefined
+          };
+          const result = reducer(test.state, expected);
+
+          expect(result).to.be.deep.equal({
+            fileName: 'import-me.json',
+            fileIsMultilineJSON: false,
+            fileType: 'json',
+            status: PROCESS_STATUS.UNSPECIFIED,
+            progress: 0,
+            docsWritten: 0,
+            source: undefined,
+            dest: undefined
+          });
+
+          test.store.dispatch(selectImportFileName('import-me.json'));
+
+          expect(test.store.getActions()).to.deep.equal([
+            {
+              fileName: 'import-me.json',
+              fileType: 'json',
+              fileStats: {},
+              fileIsMultilineJSON: false,
+              type: FILE_SELECTED
+            }
+          ]);
+          resolve(test);
+        });
+      });
+    });
+
+    afterEach(function() {
+      this.store.clearActions();
+    });
+  });
 
   // describe('#reducer', () => {
   //   context('when the action type is FINISHED', () => {
