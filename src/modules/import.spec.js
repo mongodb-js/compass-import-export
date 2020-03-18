@@ -26,42 +26,54 @@ import thunk from 'redux-thunk';
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
-// allows us to easily return reponses and/or success/fail for a thunk that calls a service
-// const mockServiceCreator = (body, succeeds = true) => () =>
-//   new Promise((resolve, reject) => {
-//     setTimeout(() => (succeeds ? resolve(body) : reject(body)), 10);
-//   });
+function setupMockStore() {
+  const state = {
+    importData: {
+      ...INITIAL_STATE
+    }
+  };
+  const store = mockStore(state);
+  return { state, store };
+}
+
 
 describe('import [module]', () => {
-  // beforeEach(() => {
+  describe('selectImportFileType', () => {
+    let state;
+    let store;
 
-  // });
-  it('fires a FILE_TYPE_SELECTED action', done => {
-    const state = {
-      importData: {
-        ...INITIAL_STATE
-      }
-    };
-    const store = mockStore(state);
-
-    // See https://github.com/dmitry-zaets/redux-mock-store/issues/71#issuecomment-369546064
-    // redux-mock-store does not update state automatically.
-    store.subscribe(function() {
-      const expected = {
-        fileType: 'csv',
-        type: FILE_TYPE_SELECTED
-      };
-
-      expect(reducer(state, expected).fileType).to.be.deep.equal('csv');
-      done();
+    before(() => {
+      const mock = setupMockStore();
+      this.state = mock.state;
+      this.store = mock.store;
     });
-    store.dispatch(selectImportFileType('csv'));
 
-    expect(store.getActions()[0]).to.deep.equal({
-      fileType: 'csv',
-      type: FILE_TYPE_SELECTED
+    it('dispatch a FILE_TYPE_SELECTED action', done => {
+      console.log('can i do this?', { test: this });
+      // See https://github.com/dmitry-zaets/redux-mock-store/issues/71#issuecomment-369546064
+      // redux-mock-store does not update state automatically.
+      store.subscribe(() => {
+        const expected = {
+          fileType: 'csv',
+          type: FILE_TYPE_SELECTED
+        };
+
+        expect(reducer(state, expected).fileType).to.be.deep.equal('csv');
+        done();
+      });
+      store.dispatch(selectImportFileType('csv'));
+
+      expect(store.getActions()).to.deep.equal([
+        {
+          fileType: 'csv',
+          type: FILE_TYPE_SELECTED
+        }
+      ]);
     });
-    // done();
+
+    afterEach(() => {
+      store.resetActions();
+    });
   });
   // });
   // describe('#selectImportFileName', () => {
