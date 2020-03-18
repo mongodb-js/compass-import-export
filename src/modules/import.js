@@ -447,6 +447,7 @@ export const selectImportFileName = fileName => {
         return promisify(detectImportFile)(fileName);
       })
       .then(detected => {
+        debug('get detection results');
         dispatch({
           type: FILE_SELECTED,
           fileName: fileName,
@@ -468,7 +469,10 @@ export const selectImportFileName = fileName => {
           )
         );
       })
-      .catch(err => dispatch(onError(err)));
+      .catch(err => {
+        debug('dispatching error', err);
+        dispatch(onError(err));
+      });
   };
 };
 
@@ -597,6 +601,7 @@ export const closeImport = () => ({
  */
 // eslint-disable-next-line complexity
 const reducer = (state = INITIAL_STATE, action) => {
+  debug('reducer handling action', action);
   if (action.type === FILE_SELECTED) {
     return {
       ...state,

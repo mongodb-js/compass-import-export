@@ -23,6 +23,7 @@ import PROCESS_STATUS from 'constants/process-status';
 
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import path from 'path';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -100,46 +101,89 @@ describe('import [module]', () => {
 
     it('dispatch a FILE_SELECTED action', function() {
       const test = this;
-      return new Promise(function(resolve) {
+      const fileName = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'test',
+        'docs.json'
+      );
+      return new Promise(function(resolve, reject) {
         // See https://github.com/dmitry-zaets/redux-mock-store/issues/71#issuecomment-369546064
         // redux-mock-store does not update state automatically.
         test.store.subscribe(() => {
+          // const expected = {
+          //   fileName: fileName,
+          //   fileIsMultilineJSON: false,
+          //   fileType: 'json',
+          //   status: PROCESS_STATUS.UNSPECIFIED,
+          //   progress: 0,
+          //   docsWritten: 0,
+          //   source: undefined,
+          //   dest: undefined
+          // };
+          console.log('subscribe touched', { args: arguments, actions: test.store.getActions()});
           const expected = {
-            fileName: 'import-me.json',
-            fileIsMultilineJSON: false,
-            fileType: 'json',
-            status: PROCESS_STATUS.UNSPECIFIED,
+            isOpen: false,
             progress: 0,
+            error: null,
+            fileName: '',
+            fileIsMultilineJSON: false,
+            useHeaderLines: true,
+            status: 'UNSPECIFIED',
+            fileStats: null,
             docsWritten: 0,
-            source: undefined,
-            dest: undefined
+            guesstimatedDocsTotal: 0,
+            delimiter: ',',
+            stopOnErrors: false,
+            ignoreBlanks: true,
+            fields: [],
+            values: [],
+            previewLoaded: false,
+            exclude: [],
+            transform: [],
+            fileType: ''
           };
+
           const result = reducer(test.state, expected);
 
           expect(result).to.be.deep.equal({
-            fileName: 'import-me.json',
-            fileIsMultilineJSON: false,
-            fileType: 'json',
-            status: PROCESS_STATUS.UNSPECIFIED,
+            isOpen: false,
             progress: 0,
+            error: null,
+            fileName: '',
+            fileIsMultilineJSON: false,
+            useHeaderLines: true,
+            status: 'UNSPECIFIED',
+            fileStats: null,
             docsWritten: 0,
-            source: undefined,
-            dest: undefined
+            guesstimatedDocsTotal: 0,
+            delimiter: ',',
+            stopOnErrors: false,
+            ignoreBlanks: true,
+            fields: [],
+            values: [],
+            previewLoaded: false,
+            exclude: [],
+            transform: [],
+            fileType: ''
           });
 
-          test.store.dispatch(selectImportFileName('import-me.json'));
-
-          expect(test.store.getActions()).to.deep.equal([
-            {
-              fileName: 'import-me.json',
-              fileType: 'json',
-              fileStats: {},
-              fileIsMultilineJSON: false,
-              type: FILE_SELECTED
-            }
-          ]);
           resolve(test);
+          // done();
         });
+        test.store.dispatch(selectImportFileName(fileName));
+
+        expect(test.store.getActions()).to.deep.equal([
+          // {
+          //   fileName: fileName,
+          //   fileType: 'json',
+          //   fileStats: {},
+          //   fileIsMultilineJSON: false,
+          //   type: FILE_SELECTED
+          // }
+        ]);
       });
     });
 
