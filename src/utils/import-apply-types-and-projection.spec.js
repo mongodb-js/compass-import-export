@@ -90,7 +90,7 @@ describe('import-apply-types-and-projection', () => {
   });
   describe('transformProjectedTypesStream', () => {
     it('should return a passthrough if nothing to actually transform', () => {
-      const res = transformProjectedTypesStream({ exclude: [], transform: {} });
+      const res = transformProjectedTypesStream({ exclude: [], transform: [] });
       expect(res.constructor.name).to.equal('PassThrough');
     });
   });
@@ -294,10 +294,10 @@ describe('import-apply-types-and-projection', () => {
       const res = apply(
         {
           exclude: [],
-          transform: {
-            LATITUDE: 'Number',
-            LONGITUDE: 'Number'
-          }
+          transform: [
+            ['LATITUDE', 'Number'],
+            ['LONGITUDE', 'Number']
+          ]
         },
         {
           LATITUDE: '40.601732',

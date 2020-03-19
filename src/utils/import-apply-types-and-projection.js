@@ -25,8 +25,10 @@ const debug = createLogger('apply-import-type-and-projection');
  */
 function transformProjectedTypes(spec, data, keyPrefix = '') {
   if (Array.isArray(data)) {
+    debug('data is an array');
     return data.map(transformProjectedTypes.bind(null, spec));
-  } else if (!isPlainObject(data) || data === null || data === undefined) {
+  } else if (data === null || data === undefined) {
+    debug('data is null or undefined');
     return data;
   }
 
@@ -45,9 +47,19 @@ function transformProjectedTypes(spec, data, keyPrefix = '') {
       debug('dropped excluded key', `${keyPrefix}${key}`);
       return doc;
     }
-    
+    if (!Array.isArray(spec.transform)) {
+      throw new TypeError(
+        `spec.transform must be an array. Got ${JSON.stringify(spec.transform)}`
+      );
+    }
+
     const trans = spec.transform.filter(function(f) {
-      debug('transform pick', f[0], `${keyPrefix}${key}`, f[0] === `${keyPrefix}${key}`);
+      debug(
+        'transform pick',
+        f[0],
+        `${keyPrefix}${key}`,
+        f[0] === `${keyPrefix}${key}`
+      );
       return f[0] === `${keyPrefix}${key}`;
     });
 
@@ -56,9 +68,10 @@ function transformProjectedTypes(spec, data, keyPrefix = '') {
       throw new TypeError('Ach~! too many keys');
     }
     if (!trans || trans.length === 0 || trans[0].length === 0) {
-      debug('TODO (lucas) handle this stupid edge case');
-      throw new TypeError('wtfs');
-    } 
+      debug('no transforms found for key', `${keyPrefix}${key}`);
+      doc[`${key}`] = data[key];
+      return doc;
+    }
     const [k, targetTypeName] = trans[0];
 
     debug('match!', k, targetTypeName);
@@ -69,13 +82,17 @@ function transformProjectedTypes(spec, data, keyPrefix = '') {
      */
     const toBSON = bsonCSV[targetTypeName];
     if (toBSON && !isObjectLike(data[k])) {
-      doc[key] = toBSON.fromString(data[key]);
+      doc[`${key}`] = toBSON.fromString(data[`${keyPrefix}${key}`]);
     } else {
-      doc[key] = transformProjectedTypes(spec, data[key], `${keyPrefix}${key}`);
+      doc[`${key}`] = transformProjectedTypes(
+        spec,
+        data[key],
+        `${keyPrefix}.`
+      );
     }
     return doc;
   }, {});
-  
+
   debug('result', result);
   return result;
 }
@@ -89,10 +106,17 @@ export default transformProjectedTypes;
  * @returns {TransformStream}
  */
 export function transformProjectedTypesStream(spec) {
+  if (!Array.isArray(spec.transform)) {
+    throw new TypeError('spec.transform must be an array');
+  }
+  if (!Array.isArray(spec.exclude)) {
+    throw new TypeError('spec.exclude must be an array');
+  }
   if (spec.transform.length === 0 && spec.exclude.length === 0) {
     debug('spec is a noop. passthrough stream');
     return new PassThrough({ objectMode: true });
   }
+
   debug('creating transform stream for spec', spec);
   return new Transform({
     objectMode: true,
