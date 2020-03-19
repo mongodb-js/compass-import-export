@@ -136,14 +136,16 @@ const TYPE_FOR_TO_STRING = new Map([
 ]);
 
 export function detectType(value) {
-  return TYPE_FOR_TO_STRING.get(Object.prototype.toString.call(value));
+  const l = Object.prototype.toString.call(value);
+  const t = TYPE_FOR_TO_STRING.get(l);
+  return t;
 }
 
 export function getTypeDescriptorForValue(value) {
   const t = detectType(value);
   const _bsontype = t === 'Object' && value._bsontype;
   return {
-    type: _bsontype || t,
+    type: _bsontype ? _bsontype : t,
     isBSON: !!_bsontype
   };
 }

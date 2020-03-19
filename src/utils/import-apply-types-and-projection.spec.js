@@ -125,6 +125,19 @@ describe('import-apply-types-and-projection', () => {
       expect(apply.bind(null, spec, data)).to.not.throw();
     });
   });
+  // describe('bson', () => {
+  //   it('should cast an ObjectId to an ObjectId', () => {
+  //     const res = apply(
+  //       { exclude: [], transform: [] },
+  //       {
+  //         _id: 'arlo'
+  //       }
+  //     );
+  //     expect(res).to.deep.equal({
+  //       _id: 'arlo'
+  //     });
+  //   });
+  // });
   describe('Regression Tests', () => {
     // COMPASS-4204 Data type is not being set during import
     it('should transform csv strings to Number', () => {
