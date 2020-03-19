@@ -2,6 +2,8 @@ import apply, {
   transformProjectedTypesStream
 } from './import-apply-types-and-projection';
 
+import bson from 'bson';
+
 describe('import-apply-types-and-projection', () => {
   it('should include all fields by default', () => {
     const res = apply(
@@ -125,19 +127,30 @@ describe('import-apply-types-and-projection', () => {
       expect(apply.bind(null, spec, data)).to.not.throw();
     });
   });
-  // describe('bson', () => {
-  //   it('should cast an ObjectId to an ObjectId', () => {
-  //     const res = apply(
-  //       { exclude: [], transform: [] },
-  //       {
-  //         _id: 'arlo'
-  //       }
-  //     );
-  //     expect(res).to.deep.equal({
-  //       _id: 'arlo'
-  //     });
-  //   });
-  // });
+  describe('bson', () => {
+    it('should preserve an ObjectId to an ObjectId', () => {
+      const res = apply(
+        { exclude: [], transform: [] },
+        {
+          _id: new bson.ObjectId('5e739e27a4c96922d4435c59')
+        }
+      );
+      expect(res).to.deep.equal({
+        _id: new bson.ObjectId('5e739e27a4c96922d4435c59')
+      });
+    });
+    it('should preserve a Date', () => {
+      const res = apply(
+        { exclude: [], transform: [] },
+        {
+          _id: new Date('2020-03-19T16:40:38.010Z')
+        }
+      );
+      expect(res).to.deep.equal({
+        _id: new Date('2020-03-19T16:40:38.010Z')
+      });
+    });
+  });
   describe('Regression Tests', () => {
     // COMPASS-4204 Data type is not being set during import
     it('should transform csv strings to Number', () => {
