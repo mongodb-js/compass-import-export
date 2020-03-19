@@ -5,7 +5,7 @@ import apply, {
 describe('import-apply-types-and-projection', () => {
   it('should include all fields by default', () => {
     const res = apply(
-      { exclude: [], transform: {} },
+      { exclude: [], transform: [] },
       {
         _id: 'arlo'
       }
@@ -18,7 +18,7 @@ describe('import-apply-types-and-projection', () => {
     const res = apply(
       {
         exclude: ['name'],
-        transform: {}
+        transform: []
       },
       {
         _id: 'arlo',
@@ -34,9 +34,9 @@ describe('import-apply-types-and-projection', () => {
     const res = apply(
       {
         exclude: [],
-        transform: {
-          birthday: 'Date'
-        }
+        transform: [
+          ['birthday', 'Date']
+        ]
       },
       {
         _id: 'arlo',
@@ -67,10 +67,10 @@ describe('import-apply-types-and-projection', () => {
 
     const spec = {
       exclude: [],
-      transform: {
-        age: 'Number',
-        'location.activity.sleeping': 'Boolean'
-      }
+      transform: [
+        ['age', 'Number'],
+        ['location.activity.sleeping', 'Boolean']
+      ]
     };
 
     const res = apply(spec, doc);
@@ -104,12 +104,12 @@ describe('import-apply-types-and-projection', () => {
        */
       const spec = {
         exclude: ['﻿type'],
-        transform: {
-          sourceVersion: 'Number',
-          creationDate: 'Date',
-          startDate: 'Date',
-          endDate: 'Date'
-        }
+        transform: [
+          ['sourceVersion', 'Number'],
+          ['creationDate', 'Date'],
+          ['startDate', 'Date'],
+          ['endDate', 'Date']
+        ]
       };
 
       const data = {
@@ -131,9 +131,9 @@ describe('import-apply-types-and-projection', () => {
       const res = apply(
         {
           exclude: [],
-          transform: {
-            age: 'Number'
-          }
+          transform: [
+            ['age', 'Number']
+          ]
         },
         {
           _id: 'arlo',
@@ -151,17 +151,17 @@ describe('import-apply-types-and-projection', () => {
     it('should transform floats if Number specified', () => {
       const spec = {
         exclude: [],
-        transform: {
-          'Bin_#': 'Number',
-          'House_#': 'Number',
-          'Job_#': 'Number',
-          'Job_doc_#': 'String',
-          Block: 'Number',
-          Lot: 'String',
-          Community_Board: 'Number',
-          Zip_Code: 'Number',
-          'Permit_Sequence_#': 'String'
-        }
+        transform: [
+          [ 'Bin_#', 'Number'],
+          [ 'House_#', 'Number'],
+          [ 'Job_#', 'Number'],
+          [ 'Job_doc_#', 'String'],
+          [ 'Block', 'Number'],
+          [ 'Lot', 'String'],
+          [ 'Community_Board', 'Number'],
+          [ 'Zip_Code', 'Number'],
+          [ 'Permit_Sequence_#', 'String']
+        ]
       };
       
       const doc = {

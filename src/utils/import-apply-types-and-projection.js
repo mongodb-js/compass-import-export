@@ -56,17 +56,18 @@ function transformProjectedTypes(spec, data, keyPrefix = '') {
       throw new TypeError('Ach~! too many keys');
     }
     if (!trans || trans.length === 0 || trans[0].length === 0) {
-      debug('wtf');
-      // throw new TypeError('wtfs');
-      
-      return doc;
+      debug('TODO (lucas) handle this stupid edge case');
+      throw new TypeError('wtfs');
     } 
     const [k, targetTypeName] = trans[0];
 
     debug('match!', k, targetTypeName);
 
+    /**
+     * TODO: (lucas) Add a `sourceType` to import fields so we can skip
+     * casting actual noops like String -> String.
+     */
     const toBSON = bsonCSV[targetTypeName];
-
     if (toBSON && !isObjectLike(data[k])) {
       doc[key] = toBSON.fromString(data[key]);
     } else {
@@ -97,7 +98,7 @@ export function transformProjectedTypesStream(spec) {
     objectMode: true,
     transform: function(doc, encoding, cb) {
       const result = transformProjectedTypes(spec, doc);
-      cb(null, );
+      cb(null, result);
     }
   });
 }
