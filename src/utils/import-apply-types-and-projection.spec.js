@@ -10,7 +10,8 @@ describe('import-apply-types-and-projection', () => {
     const res = apply(
       {
         _id: 'arlo'
-      }
+      },
+      { transform: [], excludeBlanks: true }
     );
     expect(res).to.deep.equal({
       _id: 'arlo'
@@ -329,7 +330,7 @@ describe('import-apply-types-and-projection', () => {
         _id: 1,
         empty: ''
       };
-      const result = apply(source);
+      const result = apply(source, { transform: [], exclude: []});
       expect(result).to.deep.equal(source);
     });
 
@@ -338,7 +339,7 @@ describe('import-apply-types-and-projection', () => {
         _id: 1,
         empty: ''
       };
-      const result = apply(source, { removeBlanks: true });
+      const result = apply(source, { transform: [], exclude: [], removeBlanks: true });
       expect(result).to.deep.equal({ _id: 1 });
     });
     it('should not convert ObjectID to Object', () => {

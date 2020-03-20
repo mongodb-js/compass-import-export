@@ -26,7 +26,7 @@ export function serialize(obj) {
      * https://github.com/hughsk/flat/pull/93
      */
     ignoreValue: function(value) {
-      var t = getTypeDescriptorForValue(value);
+      let t = getTypeDescriptorForValue(value);
       if (t.isBSON) {
         return true;
       }
