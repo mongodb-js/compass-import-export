@@ -53,11 +53,23 @@ function transformProjectedTypes(spec, data, keyPrefix = '') {
   const lookupKeys = _.keys(lookup);
   lookupKeys.forEach(function(keyPath) {
     const targetType = _.get(lookup, keyPath);
+    const value = _.get(data, keyPath);
     const typeDescriptor = getTypeDescriptorForValue(_.get(data, keyPath));
-    const sourceType = typeDescriptor.t;
+    const sourceType = typeDescriptor.type;
     const isBSON = typeDescriptor.isBSON;
 
-    const casted = bsonCSV[targetType].fromString(_.get(data, keyPath));
+    let casted = value;
+    if (targetType !== sourceType) {
+      casted = bsonCSV[targetType].fromString(value);
+      debug('Target type differs from source type. Casting.', {
+        targetType,
+        sourceType,
+        value, 
+        keyPath,
+        casted
+      });
+    }
+
     _.set(result, keyPath, casted);
 
     debug(`${keyPath} casted`, {
@@ -85,6 +97,11 @@ export function transformProjectedTypesStream(spec) {
   if (!Array.isArray(spec.transform)) {
     throw new TypeError('spec.transform must be an array');
   }
+
+  // if (spec.transform.length === 0) {
+  //   throw new TypeError('spec.transform must have at least 1');
+  // }
+
   if (!Array.isArray(spec.exclude)) {
     throw new TypeError('spec.exclude must be an array');
   }

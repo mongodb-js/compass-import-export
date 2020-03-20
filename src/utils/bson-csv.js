@@ -22,7 +22,7 @@ import _ from 'lodash';
 
 import { createLogger } from './logger';
 
-const debug = createLogger('apply-import-type-and-projection');
+const debug = createLogger('bson-csv');
 
 const BOOLEAN_TRUE = ['1', 'true', 'TRUE', true];
 const BOOLEAN_FALSE = ['0', 'false', 'FALSE', 'null', '', 'NULL', false];
@@ -65,7 +65,8 @@ const casters = {
   },
   ObjectID: {
     fromString: function(s) {
-      if (s instanceof bson.ObjectID) {
+      const { type, isBSON } = getTypeDescriptorForValue(s);
+      if (isBSON) {
         // EJSON being imported
         return s;
       }
@@ -145,7 +146,7 @@ const casters = {
     }
   }
 };
-casters.ObjectId = casters.ObjectID;
+// casters.ObjectId = casters.ObjectID;
 casters.BSONRegExp = casters.RegExpr;
 export default casters;
 
@@ -166,17 +167,44 @@ const TYPE_FOR_TO_STRING = new Map([
   ['[object Undefined]', 'Undefined']
 ]);
 
-export function detectType(value) {
-  if (value && value._bsontype) {
-    return value._bsontype;
+// const WEIRD_BSON_TYPES = [
+//   'bsonregexp',
+//   'objectid'
+// ];
+
+export function getBSONTypeForValue(value) {
+  const type = value && value._bsontype;
+  if (type === 'ObjectId') {
+    return 'ObjectID';
   }
+  
+  if (type) {
+    return type;
+  }
+  // console.error("WTF", value, value._bsontype);
+  // debugger;
+  return undefined;
+  
+}
+
+export function detectType(value) {
+  var bsonType = getBSONTypeForValue(value);
+  if (bsonType) {
+    return bsonType;
+  }
+
   const o = Object.prototype.toString.call(value);
-  return TYPE_FOR_TO_STRING.get(o);
+  let t = TYPE_FOR_TO_STRING.get(o);
+  if(!t) {
+    console.warn('Value is not a primitive!', value);
+    return getBSONTypeForValue(value);
+  }
+  return t;
 }
 
 export function getTypeDescriptorForValue(value) {
   const t = detectType(value);
-  const _bsontype = (t === 'Object' && value._bsontype) || (t === 'BSONRegExp' ? 'BSONRegExp' : '') || (t === 'ObjectID' ? 'ObjectID' : '');
+  const _bsontype = getBSONTypeForValue(value);
   debug('detected type', {t, _bsontype});
   return {
     type: _bsontype ? _bsontype : t,
@@ -280,7 +308,9 @@ export const valueToString = function(value) {
        */
       return `/${value.pattern}/${value.options}`;
     }
-    return value.toString();
+    if (type === 'ObjectID') {
+      return value.toString('hex');
+    }
   }
 
   // Embedded arrays

@@ -1,6 +1,6 @@
 import { createJSONFormatter, createCSVFormatter } from './formatters';
 import stream from 'stream';
-import bson, { EJSON } from 'bson';
+import bson, { EJSON, ObjectID } from 'bson';
 import { createCSVParser } from './import-parser'; 
 import fs from 'fs';
 import path from 'path';
@@ -29,7 +29,7 @@ const FIXTURES = {
 describe('formatters', () => {
   describe('json', () => {
     it('should format a single docment in an array', () => {
-      const source = stream.Readable.from([{_id: new bson.ObjectId('5e5ea7558d35931a05eafec0')}]);
+      const source = stream.Readable.from([{_id: new bson.ObjectID('5e5ea7558d35931a05eafec0')}]);
       const formatter = createJSONFormatter({brackets: true});
       const dest = fs.createWriteStream(FIXTURES.JSON_SINGLE_DOC);
 

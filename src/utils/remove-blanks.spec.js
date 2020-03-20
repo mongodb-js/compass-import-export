@@ -1,6 +1,7 @@
 import removeBlanks, { removeBlanksStream } from './remove-blanks';
 import stream from 'stream';
-import { Stream } from 'mongodb-stitch-browser-sdk';
+import { ObjectID } from 'bson';
+import { getTypeDesciptorForValue } from './bson-csv';
 
 describe('remove-blanks', () => {
   it('should remove empty strings', () => {
@@ -10,6 +11,14 @@ describe('remove-blanks', () => {
     };
     const result = removeBlanks(source);
     expect(result).to.deep.equal({ _id: 1 });
+  });
+  it('should not convert ObjectID to Object', () => {
+    const source = {
+      _id: new ObjectID('5e74f99c182d2e9e6572c388'),
+      empty: ''
+    };
+    const result = removeBlanks(source);
+    expect(result).to.deep.equal({ _id: new ObjectID('5e74f99c182d2e9e6572c388')});
   });
 
   it('should remove empty strings but leave falsy values', () => {

@@ -128,15 +128,15 @@ describe('import-apply-types-and-projection', () => {
     });
   });
   describe('bson', () => {
-    it('should preserve an ObjectId to an ObjectId', () => {
+    it('should preserve an ObjectID to an ObjectID', () => {
       const res = apply(
         { exclude: [], transform: [] },
         {
-          _id: new bson.ObjectId('5e739e27a4c96922d4435c59')
+          _id: new bson.ObjectID('5e739e27a4c96922d4435c59')
         }
       );
       expect(res).to.deep.equal({
-        _id: new bson.ObjectId('5e739e27a4c96922d4435c59')
+        _id: new bson.ObjectID('5e739e27a4c96922d4435c59')
       });
     });
     it('should preserve a Date', () => {

@@ -1,5 +1,6 @@
 import { Transform, PassThrough } from 'stream';
 import { createLogger } from './logger';
+import { getTypeDescriptorForValue } from './bson-csv';
 const debug = createLogger('remove-blanks-preview');
 
 /**
@@ -11,15 +12,25 @@ const debug = createLogger('remove-blanks-preview');
 function removeBlanks(data) {
   if (Array.isArray(data)) {
     return data.map(removeBlanks);
-  } else if (typeof data !== 'object' || data === null || data === undefined) {
+  }
+  var { type, isBSON } = getTypeDescriptorForValue(data);
+  debug('isBSON?', {type, data, isBSON});
+  if (isBSON) {
     return data;
   }
-
+  if (typeof data !== 'object' || data === null || data === undefined) {
+    return data;
+  }
   const keys = Object.keys(data);
-  if (keys.length === 0) {
-    return data;
-  }
+  // if (keys.length === 0) {
+  //   return data;
+  // }
   return keys.reduce(function(doc, key) {
+
+    if (isBSON) {
+      return doc;
+    }
+
     if (typeof data[key] === 'string' && data[key] === '') {
       return doc;
     }

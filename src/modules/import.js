@@ -45,6 +45,7 @@ import { removeBlanksStream } from 'utils/remove-blanks';
 import { transformProjectedTypesStream } from 'utils/import-apply-types-and-projection';
 
 import { createLogger } from 'utils/logger';
+import { ObjectID } from 'bson';
 
 const debug = createLogger('import');
 
@@ -250,7 +251,7 @@ export const startImport = () => {
       source,
       stripBOM,
       parser,
-      removeBlanks,
+      // removeBlanks,
       applyTypes,
       importSizeGuesstimator,
       progress,
@@ -410,19 +411,21 @@ export const toggleIncludeField = path => ({
  * @param {String} bsonType A bson type identifier.
  * @example
  * ```javascript
- * //  Cast string _id from a csv to a bson.ObjectId
- * setFieldType('_id', 'ObjectId');
+ * //  Cast string _id from a csv to a bson.ObjectID
+ * setFieldType('_id', 'ObjectID');
  * // Cast `{stats: {flufiness: "100"}}` to
  * // `{stats: {flufiness: 100}}`
  * setFieldType('stats.flufiness', 'Int32');
  * ```
  * @api public
  */
-export const setFieldType = (path, bsonType) => ({
-  type: SET_FIELD_TYPE,
-  path: path,
-  bsonType: bsonType
-});
+export const setFieldType = (path, bsonType) => {
+  return {
+    type: SET_FIELD_TYPE,
+    path: path,
+    bsonType: bsonType
+  };
+};
 
 /**
  * Gather file metadata quickly when the user specifies `fileName`
@@ -653,14 +656,18 @@ const reducer = (state = INITIAL_STATE, action) => {
    * ## Preview and projection/data type options
    */
   if (action.type === SET_PREVIEW) {
-    return {
+    const newState = {
       ...state,
       values: action.values,
       fields: action.fields,
       previewLoaded: true,
-      exclude: [],
-      transforms: []
+      exclude: []
     };
+
+    newState.transform = newState.fields
+      .filter(field => field.checked)
+      .map(field => [field.path, field.type]);
+    return newState;
   }
   /**
    * When checkbox next to a field is checked/unchecked
@@ -669,7 +676,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     /**
      * TODO: lucas: Move away from `state.fields` being
      * array of objects to using all array's of strings.
-     * For now, there is some duplication of fields+transforms+excludes
+     * For now, there is some duplication of fields+transform+exclude
      * we'll come back to and fixup.
      */
     const newState = {
@@ -683,12 +690,14 @@ const reducer = (state = INITIAL_STATE, action) => {
       return field;
     });
 
+    newState.transform = newState.fields
+      .map(field => [field.path, field.type]);
+
+
     newState.exclude = newState.fields
       .filter(field => !field.checked)
       .map(field => field.path);
-    newState.transform = newState.fields
-      .filter(field => field.checked)
-      .map(field => [field.path, field.type]);
+    
     return newState;
   }
   /**
@@ -714,6 +723,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     newState.transform = newState.fields
       .filter(field => field.checked)
       .map(field => [field.path, field.type]);
+      
     return newState;
   }
 
