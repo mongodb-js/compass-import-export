@@ -1,6 +1,6 @@
 import { Transform, PassThrough } from 'stream';
 import bsonCSV, { getTypeDescriptorForValue } from './bson-csv';
-import { serialize, deserialize } from './dotnotation';
+import { serialize } from './dotnotation';
 
 import _ from 'lodash';
 
@@ -51,7 +51,6 @@ function transformProjectedTypes(data, { transform = [], exclude = [], removeBla
     },
     {}
   );
-  
 
   const keyPathToTransform = _.fromPairs(transform);
 

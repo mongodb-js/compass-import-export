@@ -61,7 +61,6 @@ export const createJSONParser = function({
       bsonRegExp: true
     });
     debug('JSON parser on data', {d, doc });
-    
     stream.push(doc);
   });
 
