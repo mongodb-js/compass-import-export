@@ -23,7 +23,7 @@ function runParser(src, parser) {
   const source = fs.createReadStream(src);
   const dest = new stream.Writable({
     objectMode: true,
-    write(chunk, encoding, callback) {
+    write(chunk, _encoding, callback) {
       docs.push(chunk);
       callback(null, chunk);
     }
@@ -55,7 +55,9 @@ describe('import-parser', () => {
       return runParser(
         FIXTURES.LINE_DELIMITED_JSON_EXTRA_LINE,
         createParser({ fileIsMultilineJSON: true })
-      ).then((docs) => expect(docs).to.have.length(3));
+      ).then((docs) => {
+        expect(docs).to.have.length(3);
+      });
     });
     describe('deserialize', () => {
       const BSON_DOCS = [];

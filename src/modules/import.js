@@ -41,11 +41,9 @@ import createParser, { createProgressStream } from 'utils/import-parser';
 import createPreviewWritable, { createPeekStream } from 'utils/import-preview';
 
 import createImportSizeGuesstimator from 'utils/import-size-guesstimator';
-import { removeBlanksStream } from 'utils/remove-blanks';
 import { transformProjectedTypesStream } from 'utils/import-apply-types-and-projection';
 
 import { createLogger } from 'utils/logger';
-import { ObjectID } from 'bson';
 
 const debug = createLogger('import');
 
@@ -198,11 +196,10 @@ export const startImport = () => {
       fileIsMultilineJSON
     });
 
-    const removeBlanks = removeBlanksStream(ignoreBlanks);
-
     const applyTypes = transformProjectedTypesStream({
-      exclude: exclude,
-      transform: transform
+      exclude,
+      transform,
+      ignoreBlanks
     });
 
     const dest = createCollectionWriteStream(dataService, ns, stopOnErrors);
@@ -223,8 +220,7 @@ export const startImport = () => {
       }
     );
 
-    debug('executing pipeline');
-    console.time('import:start');
+    console.time('import');
     console.group('import:start');
 
     console.group('Import Options:');
@@ -251,13 +247,12 @@ export const startImport = () => {
       source,
       stripBOM,
       parser,
-      // removeBlanks,
       applyTypes,
       importSizeGuesstimator,
       progress,
       dest,
       function(err) {
-        console.timeEnd('import:start');
+        console.timeEnd('import');
         /**
          * Refresh data (docs, aggregations) regardless of whether we have a
          * partial import or full import

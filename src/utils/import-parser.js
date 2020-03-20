@@ -53,10 +53,10 @@ export const createJSONParser = function({
       relaxed: false,
       promoteValues: true,
       bsonRegExp: true,
-      legacy: true
+      legacy: false
     }), {
       relaxed: false,
-      legacy: true,
+      legacy: false,
       promoteValues: true,
       bsonRegExp: true
     });
