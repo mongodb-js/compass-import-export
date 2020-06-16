@@ -44,6 +44,12 @@ class WritableCollectionStream extends Writable {
   }
 
   _write(chunk, encoding, next) {
+    if (Array.isArray(chunk)) {
+      const err = new Error('JSON file supplied contains a malformatted document.');
+      this._errors.push(err);
+      return next(err);
+    }
+
     this.batch.insert(chunk);
     if (this.batch.length === this.BATCH_SIZE) {
       // TODO: lucas: expose finer-grained bulk op results:
