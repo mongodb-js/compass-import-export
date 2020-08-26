@@ -118,11 +118,9 @@ export function transformProjectedTypesStream({ transform = [], exclude = [], re
     transform: function(doc, _encoding, cb) {
       try {
         const result = transformProjectedTypes(doc, { transform, exclude, removeBlanks });
-        cb(null, result);
-        return;
+        return cb(null, result);
       } catch (err) {
-        cb(err);
-        return;
+        return cb(err);
       }
     }
   });
