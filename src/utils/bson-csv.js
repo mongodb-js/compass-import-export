@@ -19,7 +19,7 @@
  * 2. {foo: bar} => nested object
  * 3. etc.
  */
-import bson from 'bson';
+import { EJSON, Long, ObjectID, BSONRegExp, Binary, Timestamp, Double, Decimal128 } from 'bson';
 
 import { createLogger } from './logger';
 
@@ -71,21 +71,21 @@ const casters = {
         // EJSON being imported
         return s;
       }
-      return new bson.ObjectID(s);
+      return new ObjectID(s);
     }
   },
   Long: {
     fromString: function(s) {
-      if (s instanceof bson.Long) {
+      if (s instanceof Long) {
         // EJSON being imported
         return s;
       }
-      return bson.Long.fromString(s);
+      return Long.fromString(s);
     }
   },
   RegExpr: {
     fromString: function(s) {
-      if (s instanceof bson.BSONRegExp) {
+      if (s instanceof BSONRegExp) {
         // EJSON being imported
         return s;
       }
@@ -94,46 +94,46 @@ const casters = {
       // if (s.startsWith('/')) {
       //   var regexRegex = '/(.*)/([imxlsu]+)$'
       //   var [pattern, options];
-      //   return new bson.BSONRegExp(pattern, options);
+      //   return new BSONRegExp(pattern, options);
       // }
-      return new bson.BSONRegExp(s);
+      return new BSONRegExp(s);
     }
   },
   Binary: {
     fromString: function(s) {
-      if (s instanceof bson.Binary) {
+      if (s instanceof Binary) {
         return s;
       }
-      return new bson.Binary(s, bson.Binary.SUBTYPE_DEFAULT);
+      return new Binary(s, Binary.SUBTYPE_DEFAULT);
     }
   },
   UUID: {
     fromString: function(s) {
-      if (s instanceof bson.Binary) {
+      if (s instanceof Binary) {
         return s;
       }
-      return new bson.Binary(s, bson.Binary.SUBTYPE_UUID);
+      return new Binary(s, Binary.SUBTYPE_UUID);
     }
   },
   MD5: {
     fromString: function(s) {
-      if (s instanceof bson.Binary) {
+      if (s instanceof Binary) {
         return s;
       }
-      return new bson.Binary(s, bson.Binary.SUBTYPE_MD5);
+      return new Binary(s, Binary.SUBTYPE_MD5);
     }
   },
   Timestamp: {
     fromString: function(s) {
-      if (s instanceof bson.Timestamp) {
+      if (s instanceof Timestamp) {
         return s;
       }
-      return bson.Timestamp.fromString(s);
+      return Timestamp.fromString(s);
     }
   },
   Double: {
     fromString: function(s) {
-      return new bson.Double(s);
+      return new Double(s);
     }
   },
   Int32: {
@@ -143,7 +143,7 @@ const casters = {
   },
   Decimal128: {
     fromString: function(s) {
-      return bson.Decimal128.fromString(s);
+      return Decimal128.fromString(s);
     }
   }
 };
@@ -240,7 +240,7 @@ export const serialize = function(doc) {
 
       // Embedded arrays
       if (type === 'Array') {
-        output[newKey] = bson.EJSON.stringify(value, null, null);
+        output[newKey] = EJSON.stringify(value, null, null);
         return;
       }
 
@@ -304,7 +304,7 @@ export const valueToString = function(value) {
 
   // Embedded arrays
   if (type === 'Array') {
-    return bson.EJSON.stringify(value, null, null);
+    return EJSON.stringify(value, null, null);
   }
 
   if (type === 'Date') {

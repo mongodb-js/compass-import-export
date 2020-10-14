@@ -3,7 +3,7 @@ import apply, {
 } from './import-apply-types-and-projection';
 
 import stream from 'stream';
-import bson, { ObjectID } from 'bson';
+import { ObjectID } from 'bson';
 
 describe('import-apply-types-and-projection', () => {
   it('should include all fields by default', () => {
@@ -149,10 +149,10 @@ describe('import-apply-types-and-projection', () => {
   describe('bson', () => {
     it('should preserve an ObjectID to an ObjectID', () => {
       const res = apply({
-        _id: new bson.ObjectID('5e739e27a4c96922d4435c59')
+        _id: new ObjectID('5e739e27a4c96922d4435c59')
       });
       expect(res).to.deep.equal({
-        _id: new bson.ObjectID('5e739e27a4c96922d4435c59')
+        _id: new ObjectID('5e739e27a4c96922d4435c59')
       });
     });
     it('should preserve a Date', () => {
