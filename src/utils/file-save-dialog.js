@@ -4,14 +4,14 @@ export default function fileSaveDialog(fileType, prefillFileName) {
   const filters = [
     {
       name: `${fileType} file`,
-      extensions: [fileType.toLowerCase()],
-      defaultPath: prefillFileName
+      extensions: [fileType.toLowerCase()]
     }
   ];
   const title = `Select ${fileType} target file`;
   const buttonLabel = 'Select';
   return dialog.showSaveDialog(getCurrentWindow(), {
     title,
+    defaultPath: prefillFileName,
     filters,
     buttonLabel
   });
