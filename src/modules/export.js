@@ -1,6 +1,7 @@
 /* eslint-disable valid-jsdoc */
 import fs from 'fs';
 import stream from 'stream';
+import { stream as schemaStream } from 'mongodb-schema';
 
 import PROCESS_STATUS from 'constants/process-status';
 import EXPORT_STEP from 'constants/export-step';
@@ -342,20 +343,43 @@ export const sampleFields = () => {
       ? { filter: {} }
       : exportData.query;
 
-    dataService.find(ns, spec.filter, {limit: 1}, function(findErr, docs) {
-      if (findErr) {
-        return onError(findErr);
-      }
+    const sampleOptions = {
+      query: spec.filter,
+      size: 100,
+      promoteValues: true 
+    };
 
-      // Use `dotnotation.serialize()` to recurse into documents and
-      // pick up all possible paths.
-      const fields = Object.keys(dotnotation.serialize(docs[0])).sort().reduce((obj, field) => {
-        obj[field] = 1;
+    // To make sure we have less errors in the fields we generate for export, we
+    // are sampling 100 documents from the current collection and then sending
+    // those documents through mongodb-schema.
+    const samplingStream = dataService.sample(ns, sampleOptions);
+    const analyzingStream = schemaStream();
 
-        return obj;
-      }, {});
+    // Grab all the field paths that mongodb-schema generates for us.
+    const parseSchema = new stream.Transform({
+      writableObjectMode: true,
+      transform(chunk, encoding, callback) {
+        const fields = chunk.fields.reduce((obj, field)=> {
+          if (field.type.includes('Document')) {
+            const doc = field.types.find(type => type.name === 'Document');
+            doc.fields.map((field_) => {
+              obj[field_.path] = 1;
+              return obj;
+            });
+          } else {
+            obj[field.path] = 1;
+          }
 
-      dispatch(updateFields(fields));
+          return obj;
+        }, {});
+
+        dispatch(updateFields(fields));
+        callback(null, fields);
+      },
+    });
+
+    stream.pipeline(samplingStream, analyzingStream, parseSchema, function(samplingErr) {
+      if (samplingErr) return onError(samplingErr);
     });
   };
 };
