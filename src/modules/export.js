@@ -14,7 +14,6 @@ const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
 import { createCSVFormatter, createJSONFormatter } from 'utils/formatters';
-import dotnotation from '../utils/dotnotation';
 
 const debug = createLogger('export');
 
@@ -346,7 +345,7 @@ export const sampleFields = () => {
     const sampleOptions = {
       query: spec.filter,
       size: 100,
-      promoteValues: true 
+      promoteValues: true
     };
 
     // To make sure we have less errors in the fields we generate for export, we
