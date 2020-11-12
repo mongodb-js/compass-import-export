@@ -19,25 +19,25 @@ const debug = createLogger('export');
 
 const PREFIX = 'import-export/export';
 
-const STARTED = `${PREFIX}/STARTED`;
-const CANCELED = `${PREFIX}/CANCELED`;
+export const STARTED = `${PREFIX}/STARTED`;
+export const CANCELED = `${PREFIX}/CANCELED`;
 
-const PROGRESS = `${PREFIX}/PROGRESS`;
-const FINISHED = `${PREFIX}/FINISHED`;
-const ERROR = `${PREFIX}/ERROR`;
+export const PROGRESS = `${PREFIX}/PROGRESS`;
+export const FINISHED = `${PREFIX}/FINISHED`;
+export const ERROR = `${PREFIX}/ERROR`;
 
-const SELECT_FILE_TYPE = `${PREFIX}/SELECT_FILE_TYPE`;
-const SELECT_FILE_NAME = `${PREFIX}/SELECT_FILE_NAME`;
+export const SELECT_FILE_TYPE = `${PREFIX}/SELECT_FILE_TYPE`;
+export const SELECT_FILE_NAME = `${PREFIX}/SELECT_FILE_NAME`;
 
-const ON_MODAL_OPEN = `${PREFIX}/ON_MODAL_OPEN`;
-const CLOSE = `${PREFIX}/CLOSE`;
+export const ON_MODAL_OPEN = `${PREFIX}/ON_MODAL_OPEN`;
+export const CLOSE = `${PREFIX}/CLOSE`;
 
-const CHANGE_EXPORT_STEP = `${PREFIX}/CHANGE_EXPORT_STEP`;
+export const CHANGE_EXPORT_STEP = `${PREFIX}/CHANGE_EXPORT_STEP`;
 
-const UPDATE_FIELDS = `${PREFIX}/UPDATE_FIELDS`;
+export const UPDATE_FIELDS = `${PREFIX}/UPDATE_FIELDS`;
 
-const QUERY_CHANGED = `${PREFIX}/QUERY_CHANGED`;
-const TOGGLE_FULL_COLLECTION = `${PREFIX}/TOGGLE_FULL_COLLECTION`;
+export const QUERY_CHANGED = `${PREFIX}/QUERY_CHANGED`;
+export const TOGGLE_FULL_COLLECTION = `${PREFIX}/TOGGLE_FULL_COLLECTION`;
 
 /**
  * A full collection query.
@@ -165,7 +165,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     );
     return {
       ...state,
-      // isOpen: !isComplete,
       status: isComplete ? PROCESS_STATUS.COMPLETED : state.status,
       exportedDocsCount: action.exportedDocsCount,
       source: undefined,
@@ -272,7 +271,8 @@ export const queryChanged = query => ({
  */
 export const onModalOpen = (count, query) => ({
   type: ON_MODAL_OPEN,
-  count: count, query: query
+  count: count,
+  query: query
 });
 
 /**
