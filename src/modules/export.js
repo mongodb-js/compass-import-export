@@ -344,7 +344,7 @@ export const sampleFields = () => {
 
     const sampleOptions = {
       query: spec.filter,
-      size: 100,
+      size: 50,
       promoteValues: true
     };
 
