@@ -48,15 +48,68 @@ describe('loadFields', () => {
     });
   });
 
+  it('truncates fields to maxDepth', async() => {
+    const dataService = fakeDataService(null, [
+      {
+        a: { b: { c: { d: 'x' } }}
+      }
+    ]);
+
+    const table = [
+      [1, 'a'],
+      [2, 'a.b'],
+      [3, 'a.b.c']
+    ];
+
+    for (const [maxDepth, expected] of table) {
+      const fields = await loadFields(
+        dataService, 'db1.coll1', {maxDepth}, {});
+
+      expect(fields).to.deep.equal({[expected]: 1});
+    }
+  });
+
+  it('works for docs with multiple fields', async() => {
+    const dataService = fakeDataService(null, [
+      {
+        _id: '1',
+        title: 'doc1',
+        year: '2003'
+      },
+      {
+        _id: '2',
+        title: 'doc2',
+        year: '2004'
+      }
+    ]);
+    const fields = await loadFields(dataService, 'db1.coll1', {}, {});
+
+    expect(fields).to.deep.equal({
+      _id: 1,
+      title: 1,
+      year: 1
+    });
+  });
+
   it('pass down arguments', async() => {
     const dataService = fakeDataService(null, []);
-    await loadFields(dataService, 'db1.coll1', { x: 1 }, { maxTimeMs: 123 });
-
-    expect(dataService.find).to.have.been.calledOnceWith('db1.coll1', {
-      x: 1
+    await loadFields(dataService, 'db1.coll1', {
+      filter: { x: 1 },
+      sampleSize: 10,
+      maxDepth: 3,
     }, {
-      limit: 50,
       maxTimeMs: 123
     });
+
+    expect(dataService.find).to.have.been.calledOnceWith(
+      'db1.coll1',
+      {
+        x: 1
+      },
+      {
+        limit: 10,
+        maxTimeMs: 123
+      }
+    );
   });
 });

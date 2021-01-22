@@ -346,11 +346,13 @@ export const sampleFields = () => {
       const fields = await loadFields(
         dataService,
         ns,
-        spec.filter,
-        { limit: 50 }
+        {
+          filter: spec.filter,
+          sampleSize: 50,
+          maxDepth: 2
+        }
       );
 
-      console.log('*** fields', fields);
       dispatch(updateFields(fields));
     } catch (err) {
       // ignoring the error here so users can still insert
@@ -391,7 +393,6 @@ export const startExport = () => {
       }
 
       debug('count says to expect %d docs in export', numDocsToExport);
-
       const source = createReadableCollectionStream(dataService, ns, spec, projection);
 
       const progress = createProgressStream({
