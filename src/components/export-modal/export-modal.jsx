@@ -33,7 +33,7 @@ import {
   startExport,
   sampleFields,
   cancelExport,
-  updateFields,
+  updateSelectableFields,
   changeExportStep,
   selectExportFileType,
   selectExportFileName,
@@ -82,7 +82,7 @@ class ExportModal extends PureComponent {
     cancelExport: PropTypes.func.isRequired,
     exportStep: PropTypes.string.isRequired,
     sampleFields: PropTypes.func.isRequired,
-    updateFields: PropTypes.func.isRequired,
+    updateSelectableFields: PropTypes.func.isRequired,
     isFullCollection: PropTypes.bool.isRequired,
     changeExportStep: PropTypes.func.isRequired,
     toggleFullCollection: PropTypes.func.isRequired,
@@ -220,7 +220,7 @@ class ExportModal extends PureComponent {
       <ExportSelectFields
         fields={this.props.fields}
         exportStep={this.props.exportStep}
-        updateFields={this.props.updateFields}/>
+        updateSelectableFields={this.props.updateSelectableFields}/>
     );
   }
 
@@ -364,7 +364,7 @@ export default connect(
     closeExport,
     sampleFields,
     cancelExport,
-    updateFields,
+    updateSelectableFields,
     changeExportStep,
     selectExportFileType,
     selectExportFileName,

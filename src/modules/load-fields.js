@@ -32,17 +32,18 @@ export default async function loadFields(
     ...driverOptions
   });
 
-  const fieldsSet = docs.reduce((previousSet, doc) => {
-    const fields = extractFieldsFromDocument(doc)
-      .map(field => truncateFieldToDepth(field, maxDepth));
+  const allFieldsSet = new Set();
+  for (const doc of docs) {
+    for (const field of extractFieldsFromDocument(doc)) {
+      allFieldsSet.add(field);
+    }
+  }
+  const allFields = [...allFieldsSet].sort();
+  const selectableFields = allFields
+    .map(field => truncateFieldToDepth(field, maxDepth));
 
-    return new Set([ ...previousSet, ...fields]);
-  }, new Set());
-
-  return Array
-    .from(fieldsSet)
-    .sort()
-    .reduce((folded, field) => {
-      return { ...folded, [field]: ENABLED };
-    }, {});
+  return {
+    all: Object.fromEntries(allFields.map(field => [field, ENABLED])),
+    selectable: Object.fromEntries(selectableFields.map(field => [field, ENABLED]))
+  };
 }

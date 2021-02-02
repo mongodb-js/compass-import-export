@@ -15,8 +15,14 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      a: 1,
-      b: 1
+      all: {
+        a: 1,
+        b: 1
+      },
+      selectable: {
+        a: 1,
+        b: 1
+      }
     });
   });
 
@@ -29,8 +35,14 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      'a.b': 1,
-      c: 1
+      all: {
+        'a.b': 1,
+        c: 1
+      },
+      selectable: {
+        'a.b': 1,
+        c: 1
+      }
     });
   });
 
@@ -43,8 +55,14 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      'a.b': 1,
-      'a.c': 1
+      all: {
+        'a.b': 1,
+        'a.c': 1
+      },
+      selectable: {
+        'a.b': 1,
+        'a.c': 1
+      }
     });
   });
 
@@ -65,7 +83,14 @@ describe('loadFields', () => {
       const fields = await loadFields(
         dataService, 'db1.coll1', {maxDepth}, {});
 
-      expect(fields).to.deep.equal({[expected]: 1});
+      expect(fields).to.deep.equal({
+        all: {
+          'a.b.c.d': 1
+        },
+        selectable: {
+          [expected]: 1
+        }
+      });
     }
   });
 
@@ -85,9 +110,16 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      _id: 1,
-      title: 1,
-      year: 1
+      all: {
+        _id: 1,
+        title: 1,
+        year: 1
+      },
+      selectable: {
+        _id: 1,
+        title: 1,
+        year: 1
+      }
     });
   });
 

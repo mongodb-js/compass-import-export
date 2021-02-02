@@ -34,7 +34,8 @@ export const CLOSE = `${PREFIX}/CLOSE`;
 
 export const CHANGE_EXPORT_STEP = `${PREFIX}/CHANGE_EXPORT_STEP`;
 
-export const UPDATE_FIELDS = `${PREFIX}/UPDATE_FIELDS`;
+export const UPDATE_ALL_FIELDS = `${PREFIX}/UPDATE_ALL_FIELDS`;
+export const UPDATE_SELECTABLE_FIELDS = `${PREFIX}/UPDATE_SELECTABLE_FIELDS`;
 
 export const QUERY_CHANGED = `${PREFIX}/QUERY_CHANGED`;
 export const TOGGLE_FULL_COLLECTION = `${PREFIX}/TOGGLE_FULL_COLLECTION`;
@@ -58,6 +59,7 @@ export const INITIAL_STATE = {
   query: FULL_QUERY,
   error: null,
   fields: {},
+  allFields: {},
   fileName: '',
   fileType: FILE_TYPES.JSON,
   status: PROCESS_STATUS.UNSPECIFIED,
@@ -181,10 +183,17 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === UPDATE_FIELDS) {
+  if (action.type === UPDATE_SELECTABLE_FIELDS) {
     return {
       ...state,
       fields: action.fields
+    };
+  }
+
+  if (action.type === UPDATE_ALL_FIELDS) {
+    return {
+      ...state,
+      allFields: action.fields
     };
   }
 
@@ -284,12 +293,22 @@ export const closeExport = () => ({
 });
 
 /**
- * Update export fields
+ * Update export fields (list of truncated, selectable field names)
  * @api public
  * @param {Object} fields: currently selected/disselected fields to be exported
  */
-export const updateFields = (fields) => ({
-  type: UPDATE_FIELDS,
+export const updateSelectableFields = (fields) => ({
+  type: UPDATE_SELECTABLE_FIELDS,
+  fields: fields
+});
+
+/**
+ * Update export fields (list of full field names)
+ * @api public
+ * @param {Object} fields: currently selected/disselected fields to be exported
+ */
+export const updateAllFields = (fields) => ({
+  type: UPDATE_ALL_FIELDS,
   fields: fields
 });
 
@@ -353,7 +372,8 @@ export const sampleFields = () => {
         }
       );
 
-      dispatch(updateFields(fields));
+      dispatch(updateSelectableFields(fields.selectable));
+      dispatch(updateAllFields(fields.all));
     } catch (err) {
       // ignoring the error here so users can still insert
       // fields manually
@@ -379,13 +399,9 @@ export const startExport = () => {
       : exportData.query;
 
     // filter out only the fields we want to include in our export data
-    const projection = Object.keys(exportData.fields)
-      .filter(field => exportData.fields[field] === 1)
-      .reduce((obj, field) => {
-        obj[field] = exportData.fields[field];
-
-        return obj;
-      }, {});
+    const projection = Object.fromEntries(
+      Object.entries(exportData.fields)
+        .filter((keyAndValue) => keyAndValue[1] === 1));
 
     dataService.estimatedCount(ns, {query: spec.filter}, function(countErr, numDocsToExport) {
       if (countErr) {
@@ -405,9 +421,15 @@ export const startExport = () => {
         dispatch(onProgress(info.percentage, info.transferred));
       });
 
+      // Pick the columns that are going to be matched by the projection,
+      // where some prefix the field (e.g. ['a', 'a.b', 'a.b.c'] for 'a.b.c')
+      // has an entry in the projection object.
+      const columns = Object.keys(exportData.allFields)
+        .filter(field => field.split('.').some(
+          (_part, index, parts) => projection[parts.slice(0, index + 1).join('.')]));
       let formatter;
       if (exportData.fileType === 'csv') {
-        formatter = createCSVFormatter();
+        formatter = createCSVFormatter({ columns });
       } else {
         formatter = createJSONFormatter();
       }
