@@ -19,10 +19,10 @@ function truncateFieldToDepth(field, depth) {
     .join('.');
 }
 
-export default async function loadFields(
+export async function loadFields(
   dataService,
   ns,
-  { filter, sampleSize, maxDepth } = {},
+  { filter, sampleSize } = {},
   driverOptions = {}
 ) {
   const find = util.promisify(dataService.find.bind(dataService));
@@ -39,11 +39,11 @@ export default async function loadFields(
     }
   }
   const allFields = [...allFieldsSet].sort();
-  const selectableFields = allFields
-    .map(field => truncateFieldToDepth(field, maxDepth));
+  return Object.fromEntries(allFields.map(field => [field, ENABLED]));
+}
 
-  return {
-    all: Object.fromEntries(allFields.map(field => [field, ENABLED])),
-    selectable: Object.fromEntries(selectableFields.map(field => [field, ENABLED]))
-  };
+export function getSelectableFields(fields, { maxDepth } = {}) {
+  const selectableFields = Object.keys(fields)
+    .map(field => truncateFieldToDepth(field, maxDepth));
+  return Object.fromEntries(selectableFields.map(field => [field, ENABLED]));
 }

@@ -221,9 +221,9 @@ describe('export [module]', () => {
       });
     });
 
-    context('when the action type is UPDATE_SELECTABLE_FIELDS', () => {
+    context('when the action type is UPDATE_SELECTED_FIELDS', () => {
       const fields = { 'field': 1, 'field2': 0 };
-      const action = actions.updateSelectableFields(fields);
+      const action = actions.updateSelectedFields(fields);
 
       it('returns the new state', () => {
         expect(reducer(undefined, action)).to.deep.equal({

@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import loadFields from './load-fields';
+import { loadFields, getSelectableFields } from './load-fields';
 
 describe('loadFields', () => {
   const fakeDataService = (err, docs) => {
@@ -15,14 +15,8 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      all: {
-        a: 1,
-        b: 1
-      },
-      selectable: {
-        a: 1,
-        b: 1
-      }
+      a: 1,
+      b: 1
     });
   });
 
@@ -35,14 +29,8 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      all: {
-        'a.b': 1,
-        c: 1
-      },
-      selectable: {
-        'a.b': 1,
-        c: 1
-      }
+      'a.b': 1,
+      c: 1
     });
   });
 
@@ -55,43 +43,24 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      all: {
-        'a.b': 1,
-        'a.c': 1
-      },
-      selectable: {
-        'a.b': 1,
-        'a.c': 1
-      }
+      'a.b': 1,
+      'a.c': 1
     });
   });
 
-  it('truncates fields to maxDepth', async() => {
+  it('does not truncate fields', async() => {
     const dataService = fakeDataService(null, [
       {
         a: { b: { c: { d: 'x' } }}
       }
     ]);
 
-    const table = [
-      [1, 'a'],
-      [2, 'a.b'],
-      [3, 'a.b.c']
-    ];
+    const fields = await loadFields(
+      dataService, 'db1.coll1', {}, {});
 
-    for (const [maxDepth, expected] of table) {
-      const fields = await loadFields(
-        dataService, 'db1.coll1', {maxDepth}, {});
-
-      expect(fields).to.deep.equal({
-        all: {
-          'a.b.c.d': 1
-        },
-        selectable: {
-          [expected]: 1
-        }
-      });
-    }
+    expect(fields).to.deep.equal({
+      'a.b.c.d': 1
+    });
   });
 
   it('works for docs with multiple fields', async() => {
@@ -110,16 +79,9 @@ describe('loadFields', () => {
     const fields = await loadFields(dataService, 'db1.coll1', {}, {});
 
     expect(fields).to.deep.equal({
-      all: {
-        _id: 1,
-        title: 1,
-        year: 1
-      },
-      selectable: {
-        _id: 1,
-        title: 1,
-        year: 1
-      }
+      _id: 1,
+      title: 1,
+      year: 1
     });
   });
 
@@ -128,7 +90,6 @@ describe('loadFields', () => {
     await loadFields(dataService, 'db1.coll1', {
       filter: { x: 1 },
       sampleSize: 10,
-      maxDepth: 3,
     }, {
       maxTimeMs: 123
     });
@@ -143,5 +104,26 @@ describe('loadFields', () => {
         maxTimeMs: 123
       }
     );
+  });
+});
+
+describe('getSelectableFields', () => {
+  it('truncates fields as specified by maxDepth', () => {
+    const allFields = { 'a.b.c.d': 1 };
+
+    const table = [
+      [1, 'a'],
+      [2, 'a.b'],
+      [3, 'a.b.c'],
+      [4, 'a.b.c.d']
+    ];
+
+    for (const [maxDepth, expected] of table) {
+      const fields = getSelectableFields(allFields, { maxDepth });
+
+      expect(fields).to.deep.equal({
+        [expected]: 1
+      });
+    }
   });
 });

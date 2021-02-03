@@ -13,7 +13,7 @@ const createProgressStream = require('progress-stream');
 
 import { createLogger } from 'utils/logger';
 import { createCSVFormatter, createJSONFormatter } from 'utils/formatters';
-import loadFields from './load-fields';
+import { loadFields, getSelectableFields } from './load-fields';
 
 const debug = createLogger('export');
 
@@ -35,7 +35,7 @@ export const CLOSE = `${PREFIX}/CLOSE`;
 export const CHANGE_EXPORT_STEP = `${PREFIX}/CHANGE_EXPORT_STEP`;
 
 export const UPDATE_ALL_FIELDS = `${PREFIX}/UPDATE_ALL_FIELDS`;
-export const UPDATE_SELECTABLE_FIELDS = `${PREFIX}/UPDATE_SELECTABLE_FIELDS`;
+export const UPDATE_SELECTED_FIELDS = `${PREFIX}/UPDATE_SELECTED_FIELDS`;
 
 export const QUERY_CHANGED = `${PREFIX}/QUERY_CHANGED`;
 export const TOGGLE_FULL_COLLECTION = `${PREFIX}/TOGGLE_FULL_COLLECTION`;
@@ -183,7 +183,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     };
   }
 
-  if (action.type === UPDATE_SELECTABLE_FIELDS) {
+  if (action.type === UPDATE_SELECTED_FIELDS) {
     return {
       ...state,
       fields: action.fields
@@ -297,8 +297,8 @@ export const closeExport = () => ({
  * @api public
  * @param {Object} fields: currently selected/disselected fields to be exported
  */
-export const updateSelectableFields = (fields) => ({
-  type: UPDATE_SELECTABLE_FIELDS,
+export const updateSelectedFields = (fields) => ({
+  type: UPDATE_SELECTED_FIELDS,
   fields: fields
 });
 
@@ -362,18 +362,20 @@ export const sampleFields = () => {
       : exportData.query;
 
     try {
-      const fields = await loadFields(
+      const allFields = await loadFields(
         dataService,
         ns,
         {
           filter: spec.filter,
-          sampleSize: 50,
-          maxDepth: 2
+          sampleSize: 50
         }
       );
+      const selectedFields = getSelectableFields(allFields, {
+        maxDepth: 2
+      });
 
-      dispatch(updateSelectableFields(fields.selectable));
-      dispatch(updateAllFields(fields.all));
+      dispatch(updateAllFields(allFields));
+      dispatch(updateSelectedFields(selectedFields));
     } catch (err) {
       // ignoring the error here so users can still insert
       // fields manually
