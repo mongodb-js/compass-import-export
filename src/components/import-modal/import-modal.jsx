@@ -62,7 +62,7 @@ function ErrorsList({ errors }) {
   const normalizedErrorMessages = useMemo(() => {
     // BulkWrite and WriteErrors can have identical messages, we want to leave
     // only unique errors for display. We also reversing to show recent errors
-    // higher in the list (TODO: check with Claudia)
+    // higher in the list
     return [...new Set(errors.map((err) => err.message))].reverse();
   }, [errors]);
 
