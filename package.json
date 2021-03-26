@@ -155,7 +155,7 @@
     "ansi-to-html": "^0.6.11",
     "bson": "github:addaleax/js-bson#after-the-next-bson-release-you-can-just-use-the-npm-package-again",
     "csv-parser": "^2.3.1",
-    "fast-csv": "^3.4.0",
+    "fast-csv": "^4.3.6",
     "flat": "cipacda/flat",
     "javascript-stringify": "^2.0.1",
     "lodash.isobjectlike": "^4.0.0",
