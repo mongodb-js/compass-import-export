@@ -156,7 +156,7 @@
     "bson": "github:addaleax/js-bson#after-the-next-bson-release-you-can-just-use-the-npm-package-again",
     "csv-parser": "^2.3.1",
     "fast-csv": "^3.4.0",
-    "flat": "cipacda/flat",
+    "@mongodb-js/flat": "^5.0.3",
     "javascript-stringify": "^2.0.1",
     "lodash.isobjectlike": "^4.0.0",
     "lodash.isplainobject": "^4.0.6",

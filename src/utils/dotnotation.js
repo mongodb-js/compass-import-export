@@ -1,4 +1,4 @@
-import { flatten, unflatten } from 'flat';
+import { flatten, unflatten } from '@mongodb-js/flat';
 import { getTypeDescriptorForValue } from './bson-csv';
 /**
  * TODO: lucas: Some overlap w/ bson-csv but they do
