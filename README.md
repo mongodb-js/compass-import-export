@@ -16,17 +16,44 @@ You can also utilize [Storybook](https://storybook.js.org/) when developing comp
 npm run storybook;
 ```
 
+### Code Tour
+
+- `./examples` - Storybook stories
+- `./test` - Test fixture file
+- `./src/utils` - Small, well-tested modules that do heavy lifting
+- `./src/modules` - Redux action creators+handlers that glue `./src/utils/*`
+- `./src/components` - React components
+- `./src/components/{import,export}-modal` - React HOC's components
+
+### Debugging
+
+We use [`debug`](https://npm.im/debug) so just set `DEBUG=mongo*` to get nice, grouped, colorized logging.
+
 ## Testing
 
 ```bash
 npm test
 ```
 
-### Import Test Cases
+Test fixture files are included in the `./test` directory.
 
-See files in the `./test` directory.
+## Contributing
 
-## TODO/Ideas
+- [Try to break things/force errors](#errors)
+- Implement your idea or [use our running list of neat things below for inspiration](#ideas)
+- Open question issues for unclear documentation or module design
+- Adding missing JS doc anywhere
+
+### Errors
+
+Yay! We love finding new edge cases.
+
+For import parsing:
+
+1. Add your source file (eg `.json`) to [./test](https://github.com/mongodb-js/compass-import-export/tree/master/test)
+2. Add a test to [parsers spec](https://github.com/mongodb-js/compass-import-export/blob/master/src/utils/parsers.spec.js#L40) that includes a failing test describing the behavior you are expecting
+
+### Ideas
 
 - [x] Import: Move away from `state.fields` being array of objects to using all array's of strings. For now, there is some duplication of fields+transforms+excludes we'll come back to and fixup.
 - [x] import-apply-type-and-projection supports nested dotnotation and only uses `state.importData.transforms`
