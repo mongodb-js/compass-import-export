@@ -1,0 +1,21 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "08:00"
+    timezone: Australia/Sydney
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: jsdom
+    versions:
+    - 16.4.0
+    - 16.5.0
+    - 16.5.1
+  - dependency-name: html-webpack-plugin
+    versions:
+    - 4.5.1
+  - dependency-name: elliptic
+    versions:
+    - 6.5.3
